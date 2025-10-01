@@ -114,7 +114,7 @@ class TestParseSourceType:
 
 class TestPROCESSFusionBenchmark:
     """
-    Benchmark to PROCESS version 3.x.x large tokamak solution values.
+    Benchmark to PROCESS version v3.2.0-52-gd3768e97f large tokamak solution values.
     """
 
     temperature_profile = ParabolicPedestalProfile(

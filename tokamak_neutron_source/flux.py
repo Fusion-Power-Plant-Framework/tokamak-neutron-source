@@ -607,6 +607,10 @@ class ParameterisationInterpolator(FluxInterpolator):
     ):
         self._parameterisation = parameterisation
         self._n_points = n_points
+
+        # Treat the core differently
+        rho_profile = rho_profile[rho_profile > 0.0]
+        
         flux_surfaces = self._parameterisation.flux_surface(rho_profile, self._n_points)
 
         x = np.concatenate([f.x for f in flux_surfaces])
@@ -615,11 +619,18 @@ class ParameterisationInterpolator(FluxInterpolator):
         # TODO @CorondelBuendia: Maybe need to have psi_norm profile
         # 1
         psi = np.concatenate([[1 - rho] * n_points for rho in rho_profile])
+
+        # Add the core
+        x = np.concatenate([x, [o_point.x]])
+        z = np.concatenate([z, [o_point.z]])
+        psi = np.concatenate([psi, [o_point.psi]])
+
         psi_norm = normalise_psi(psi, o_point.psi, 0.0, flux_convention)
         super().__init__(x, z, psi_norm, o_point)
         self._psi_norm_func = CloughTocher2DInterpolator(
             np.column_stack((x, z)),
             psi_norm,
+            fill_value=1.0,
         )
 
     def psi_norm(self, x: float, z: float) -> float:
