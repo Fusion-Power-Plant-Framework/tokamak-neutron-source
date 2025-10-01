@@ -610,7 +610,7 @@ class ParameterisationInterpolator(FluxInterpolator):
 
         # Treat the core differently
         rho_profile = rho_profile[rho_profile > 0.0]
-        
+
         flux_surfaces = self._parameterisation.flux_surface(rho_profile, self._n_points)
 
         x = np.concatenate([f.x for f in flux_surfaces])
