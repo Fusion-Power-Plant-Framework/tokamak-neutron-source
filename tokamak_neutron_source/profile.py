@@ -135,25 +135,27 @@ class ParabolicPedestalProfile(PlasmaProfile):
         values:
             The value(s) of the function at rho.
         """
-        rho = np.atleast_1d(np.asarray(rho, dtype=float))
+        rho = np.asarray(rho, dtype=float)
         rho = np.clip(rho, 0.0, 1.0)
-        values = np.zeros_like(rho)
 
-        for i in range(len(values)):
-            if rho[i] < self.rho_ped:
-                values[i] = (
-                    self.ped_value
-                    + (self.core_value - self.ped_value)
-                    * (1.0 - (rho[i] / self.rho_ped) ** self.beta) ** self.alpha
-                )
-            elif self.rho_ped == 1.0:
-                values[i] = self.sep_value
-            else:
-                values[i] = self.sep_value + (self.ped_value - self.sep_value) * (
-                    1 - rho[i]
-                ) / (1 - self.rho_ped)
+        # Core region: rho < rho_ped
+        core_part = (
+            self.ped_value
+            + (self.core_value - self.ped_value)
+            * (1.0 - (rho / self.rho_ped) ** self.beta) ** self.alpha
+        )
 
-        values *= self._scale
+        # Pedestal region: rho >= rho_ped
+        if self.rho_ped == 1.0:
+            ped_part = np.full_like(rho, self.sep_value)
+        else:
+            ped_part = self.sep_value + (self.ped_value - self.sep_value) * (1 - rho) / (
+                1 - self.rho_ped
+            )
 
-        # return scalar if input was scalar
-        return values.item() if values.size == 1 else values
+        # Combine regions
+        values = np.where(rho < self.rho_ped, core_part, ped_part)
+        values = values * self._scale
+
+        # Return scalar if input was scalar
+        return values.item() if np.isscalar(rho) or values.shape == () else values
