@@ -22,7 +22,7 @@ class PlasmaProfile(ABC):
         """Calculate the value of the profile at given value(s) of rho."""
 
     def set_scale(self, scale: float = 1.0):
-        """Set the scale of the rho value"""
+        """Set the scale of the rho value. Multiplies existing scale."""
         self._scale *= scale
 
 
@@ -155,7 +155,7 @@ class ParabolicPedestalProfile(PlasmaProfile):
 
         # Combine regions
         values = np.where(rho < self.rho_ped, core_part, ped_part)
-        values = values * self._scale
+        values *= self._scale
 
         # Return scalar if input was scalar
         return values.item() if np.isscalar(rho) or values.shape == () else values
