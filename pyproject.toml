@@ -1,0 +1,182 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source           = "vcs"
+fallback-version = "0.0.0"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "tokamak_neutron_source/_version.py"
+
+[project]
+name = "tokamak-neutron-source"
+authors=[{ name = "The tokamak neutron source team" }]
+readme = "README.md"
+requires-python = ">=3.10"
+license = "LGPL-2.1-or-later"
+dynamic = ['version']
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+]
+
+dependencies= [
+    "numpy >=1.26",
+    "matplotlib >=3.8",
+    "scipy>=1.11.2",
+    "contourpy>=1.0",
+    "eqdsk>=0.5.0, <0.6.0",
+    "numba>=0.59",
+    "pint",
+    "periodictable",
+    "Babel",
+]
+
+[project.optional-dependencies]
+openmc = ["openmc"]
+dev = ["pre-commit", "ruff", "ty"]
+test = [
+  "pytest",
+  "pytest-cov",
+  "pytest-html",
+  "pytest-metadata",
+  "pytest-json-report",
+]
+docs = [
+  "mkdocs",
+  "mkdocs-material",
+  "mkdocstrings[python]",
+  "mkdocs-gen-files",
+  "mkdocs-section-index",
+  "mkdocs-literate-nav",
+  "mkdocs-jupyter",
+  "jupytext",
+]
+
+[tool.hatch.envs.default]
+features = ["test", "lint"]
+
+[tool.hatch.envs.test]
+features = ["test"]
+[[tool.hatch.envs.test.matrix]]
+python = ["3.10", "3.11", "3.12", "3.13"]
+
+[tool.hatch.envs.test.scripts]
+tests      = "pytest {args:tests}"
+tests-cov  = "pytest --cov csl_reference --cov-report html:htmlcov --cov-report xml {args:tests}"
+
+[tool.hatch.envs.lint]
+detached     = true                           # Don't inherit from default (does not download project dependencies)
+dependencies = ["pre-commit", "ruff","ty"]
+[tool.hatch.envs.lint.scripts]
+fmt    = ["pre-commit run --all-files --hook-stage manual"]
+
+
+[tool.ty.terminal]
+output-format = "concise"
+
+[tool.ty.rules]
+unresolved-import = "ignore"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 89
+output-format = "concise"
+exclude = [
+  ".git",
+  "__pycache__",
+  "documentation",
+  ".env",
+  ".idea",
+  ".pytest_cache",
+  "htmlcov",
+]
+
+[tool.ruff.format]
+preview = true
+
+[tool.ruff.lint]
+preview = true
+select = ["ALL"]
+ignore = [
+  "ANN",     # type annotations
+  "EM",      # string in error messages
+  "PD",      # Pandas
+  "B019",    # using cache memory leaks
+  "COM812",  # enforce trailing comma, disagrees with black/ruff format
+  "D200",    # docs stuff
+  "D203",
+  "D205",
+  "D301",
+  "D400",
+  "D401",
+  "DOC502",  # Raises sections not in top level function
+  "DTZ005",  # datetime timezone arg
+  "E203",    # black/ruff format conflicts
+  "FIX002",  # Line contains todo
+  "G004",    # f-string in logs
+  "ISC001",  # ruff format conflict
+  "PLW1514", # Specify file open encoding
+  "PTH123",  # use Path.open
+  "TRY003",  # put error messages in error class
+  "FURB152", # 3.14 != pi
+  "ERA",  # remove commented out code
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests can use magic values, assertions, and relative imports
+"tests/**" = [
+  "INP001",
+  "D100",
+  "D101",
+  "D102",
+  "D103",
+  "D104",
+  "ERA001",
+  "PLC2701",
+  "PLR2004",
+  "PLR0912",
+  "PLR0914",
+  "PLR6301",
+  "N802",
+  "N806",
+  "N815",
+  "S101",
+  "TID252",
+]
+"examples/*" = ["INP001", "T201", "DOC201"]
+
+
+[tool.ruff.lint.isort]
+known-first-party = ["tokamak_neutron_source"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.flake8-copyright]
+notice-rgx = "(?i)# SPDX-FileCopyrightText:\\s\\d{4}(-(\\d{4}|present))*"
+
+[tool.ruff.lint.pep8-naming]
+ignore-names = [
+    "*eV*",
+    "*He*",
+]
+
+[tool.ruff.lint.pylint]
+max-args = 6
+
+[tool.coverage.report]
+"exclude_also" = [
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@nb"  # awaiting https://github.com/numba/numba/issues/4268
+]
+"omit"        = ["tokamak_neutron_source/_version.py"]
+
+[tool.pytest.ini_options]
+addopts = "--html=report.html --self-contained-html --strict-markers -r fEX"

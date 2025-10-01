@@ -1,0 +1,93 @@
+site_name: Tokamak Neutron Source Documentation
+site_description: Tokamak Neutron Source, a python package for materials that are dependent on conditions
+site_url: https://example.com
+
+repo_name: Fusion-Power-Plant-Framework/tokamak_neutron_source
+repo_url: https://github.com/Fusion-Power-Plant-Framework/tokamak_neutron_source
+
+watch:
+  - tokamak_neutron_source
+
+plugins:
+  - search
+  - autorefs
+  - gen-files:
+      scripts:
+        - documentation/gen_api_ref.py
+  - literate-nav:
+      nav_file: overview.md
+  - mkdocs-jupyter:
+      ignore: ["tokamak_neutron_source/*.py"]
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            show_if_no_docstring: true
+            members_order: source
+            filters:
+              - "!^_" # Ignore private members starting with underscore
+              - "!log"
+
+docs_dir: "documentation/source"
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      primary: orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      primary: black
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+  features:
+    - navigation.tabs
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.sections
+    - navigation.path
+    - navigation.top
+    - navigation.tracking
+    - content.code.copy
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      use_pygments: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+  - admonition
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js
+
+nav:
+  - User Guide:
+      - index.md
+      - theory.md
+      - profiles.md
+      - equilibrium.md
+      - codes.md
+  - Examples:
+      - examples/*.ex.py
+  - API Reference: source/reference/

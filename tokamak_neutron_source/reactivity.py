@@ -1,0 +1,520 @@
+# SPDX-FileCopyrightText: 2024-present Tokamak Neutron Source Maintainers
+#
+# SPDX-License-Identifier: LGPL-2.1-or-later
+"""
+A module taken from bluemira (https://github.com/Fusion-Power-Plant-Framework/bluemira)
+(bluemira.plasma_physics.reactions).
+"""
+
+import logging
+from dataclasses import dataclass
+from enum import Enum, auto
+from pathlib import Path
+from typing import TypeAlias
+
+import numpy as np
+import numpy.typing as npt
+from scipy.interpolate import interp1d
+
+from tokamak_neutron_source.constants import (
+    E_DD_HE3N_FUSION,
+    E_DD_NEUTRON,
+    E_DD_TP_FUSION,
+    E_DHE3_FUSION,
+    E_DT_FUSION,
+    E_DT_NEUTRON,
+    E_TT_FUSION,
+    MOLAR_MASSES,
+    raw_uc,
+)
+from tokamak_neutron_source.error import ReactivityError
+from tokamak_neutron_source.tools import get_tns_path
+
+__all__ = ["Reactions", "reactivity"]
+
+logger = logging.getLogger(__name__)
+
+
+class ReactivityMethod(Enum):
+    """Reactivity calculation method."""
+
+    XS = auto()
+    BOSCH_HALE = auto()
+
+
+class ReactionCrossSection:
+    """
+    Fusion reaction cross-section.
+
+    Parameters
+    ----------
+    file_name:
+        Cross-sectional data file (ENDF format)
+    """
+
+    def __init__(self, file_name: str):
+        path = get_tns_path("data")
+        path = Path(path, file_name)
+        if not path.is_file():
+            raise ReactivityError(f"Cross-section data file {path} is not a file!")
+
+        file = path.as_posix()
+        # Read in the cross section (in barn) as a function of energy (MeV).
+        energy, sigma = np.genfromtxt(file, comments="#", skip_footer=2, unpack=True)
+
+        split = file_name.split(".", maxsplit=1)[0].split("_")
+        collider, target = split[:2]
+        self.name = f"{collider} + {target} -> {split[2]} + {split[3]}"
+
+        mass_1, mass_2 = MOLAR_MASSES[collider], MOLAR_MASSES[target]
+
+        self.reduced_mass = raw_uc(mass_1 * mass_2 / (mass_1 + mass_2), "amu", "kg")
+
+        # Convert to center of mass frame
+        # NOTE MC: Choice of target/collider thing makes Bosch-Hale line up...
+        energy *= mass_2 / (mass_1 + mass_2)
+
+        # Convert to kev / m^2
+        self._cross_section = interp1d(energy * 1e3, sigma * 1e-28)
+
+    def __call__(self, temp_kev: float | npt.NDArray) -> float | npt.NDArray:
+        return self._cross_section(temp_kev)
+
+
+TT_XS = ReactionCrossSection("T_T_He_2n.txt")
+DT_XS = ReactionCrossSection("D_T_He_n.txt")
+DD_TP_XS = ReactionCrossSection("D_D_T_p.txt")
+DD_HE3N_XS = ReactionCrossSection("D_D_He3_n.txt")
+DHE3_HEP_XS = ReactionCrossSection("D_He3_He_p.txt")
+
+
+# BoschHale model coefficients
+@dataclass
+class BoschHaleCoefficients:
+    """
+    Bosch-Hale parameterisation dataclass.
+
+    H.-S. Bosch and G.M. Hale 1992 Nucl. Fusion 32 611
+    DOI 10.1088/0029-5515/32/4/I07
+    """
+
+    name: str
+    t_min: float  # [keV]
+    t_max: float  # [keV]
+    bg: float  # [keV**0.5]
+    mrc2: float  # [keV]
+    c: npt.NDArray
+
+
+# Bosch-Hale parameterisation data for the reaction:  D + T --> 4He + n
+BOSCH_HALE_DT_4HEN = BoschHaleCoefficients(
+    name="D + T --> 4He + n",
+    t_min=0.2,
+    t_max=100.0,
+    bg=34.3827,
+    mrc2=1.124656e6,
+    c=np.array(
+        [
+            1.17302e-9,
+            1.51361e-2,
+            7.51886e-2,
+            4.60643e-3,
+            1.35000e-2,
+            -1.06750e-4,
+            1.36600e-5,
+        ],
+    ),
+)
+
+# Bosch-Hale parameterisation data for the reaction: D + D --> 3He + n
+BOSCH_HALE_DD_3HEN = BoschHaleCoefficients(
+    name="D + D --> 3He + n",
+    t_min=0.2,
+    t_max=100.0,
+    bg=31.3970,
+    mrc2=0.937814e6,
+    c=np.array(
+        [
+            5.43360e-12,
+            5.85778e-3,
+            7.68222e-3,
+            0.0,
+            -2.96400e-6,
+            0.0,
+            0.0,
+        ],
+    ),
+)
+
+# Bosch-Hale parameterisation data for the reaction: D + D --> T + p
+BOSCH_HALE_DD_TP = BoschHaleCoefficients(
+    name="D + D --> T + p",
+    t_min=0.2,
+    t_max=100.0,
+    bg=31.3970,
+    mrc2=0.937814e6,
+    c=np.array(
+        [
+            5.65718e-12,
+            3.41267e-3,
+            1.99167e-3,
+            0.0,
+            1.05060e-5,
+            0.0,
+            0.0,
+        ],
+    ),
+)
+
+
+@dataclass(frozen=True)
+class ReactionData:
+    """Reaction dataclass."""
+
+    label: str
+    total_energy: float
+    neutron_energies: list[float]
+    cross_section: ReactionCrossSection
+    bosch_hale_coefficients: BoschHaleCoefficients | None
+
+
+class ReactionEnumMixin:
+    """Provides convenient accessors to the underlying ReactionData."""
+
+    @property
+    def data(self) -> ReactionData:
+        return self.value
+
+    @property
+    def label(self) -> str:
+        return self.value.label
+
+    @property
+    def total_energy(self) -> float:
+        return self.value.total_energy
+
+    @property
+    def neutron_energies(self) -> list[float]:
+        return self.value.neutron_energies
+
+    @property
+    def total_neutron_energy(self) -> float:
+        return sum(self.value.neutron_energies)
+
+    @property
+    def cross_section(self) -> ReactionCrossSection:
+        return self.value.cross_section
+
+    @property
+    def bosch_hale_coefficients(self) -> BoschHaleCoefficients | None:
+        return self.value.bosch_hale_coefficients
+
+
+class Reactions(ReactionEnumMixin, Enum):
+    """Neutronic reaction channels."""
+
+    D_T = ReactionData(
+        label="D + T → ⁴He + n",
+        total_energy=E_DT_FUSION,
+        neutron_energies=[E_DT_NEUTRON],
+        cross_section=DT_XS,
+        bosch_hale_coefficients=BOSCH_HALE_DT_4HEN,
+    )
+    D_D = ReactionData(
+        label="D + D → ³He + n",
+        total_energy=E_DD_HE3N_FUSION,
+        neutron_energies=[E_DD_NEUTRON],
+        cross_section=DD_HE3N_XS,
+        bosch_hale_coefficients=BOSCH_HALE_DD_3HEN,
+    )
+    T_T = ReactionData(
+        label="T + T → ⁴He + 2n",
+        total_energy=E_TT_FUSION,
+        neutron_energies=[raw_uc(2.5, "MeV", "J"), raw_uc(9.0, "MeV", "J")],
+        cross_section=TT_XS,
+        bosch_hale_coefficients=None,
+    )
+
+
+class AneutronicReactions(ReactionEnumMixin, Enum):
+    """Aneutronic reaction channels."""
+
+    D_D = ReactionData(
+        label="D + D → T + p",
+        total_energy=E_DD_TP_FUSION,
+        neutron_energies=[],  # no neutrons in aneutronic branch
+        cross_section=DD_TP_XS,
+        bosch_hale_coefficients=BOSCH_HALE_DD_TP,
+    )
+    D_He3 = ReactionData(
+        label="D + ³He → ⁴He + p",
+        total_energy=E_DHE3_FUSION,
+        neutron_energies=[],
+        cross_section=DHE3_HEP_XS,
+        bosch_hale_coefficients=None,
+    )
+
+
+AllReactions: TypeAlias = Reactions | AneutronicReactions
+
+
+def _parse_reaction(reaction: str | AllReactions) -> AllReactions:
+    """
+    Parse a single reaction, possibly from a string.
+
+    Parameters
+    ----------
+    reaction:
+        The reaction to parse
+
+    Returns
+    -------
+    :
+        The parsed reaction
+
+    Notes
+    -----
+    Deliberate bias towards neutronic reactions (in the case of D-D).
+
+    Raises
+    ------
+    ReactivityError
+        If the specified reaction does not exist
+    """
+    if isinstance(reaction, str):
+        string = reaction.replace("-", "_")
+        try:
+            reaction = Reactions[string]
+        except KeyError:
+            try:
+                reaction = AneutronicReactions[string]
+            except KeyError:
+                raise ReactivityError(f"Unrecognised reaction: {string}") from None
+        return reaction
+    if isinstance(reaction, AllReactions):
+        return reaction
+
+    raise ReactivityError(f"Unrecognised reaction type: {type(reaction)}")
+
+
+def density_weighted_reactivity(
+    temp_kev: float | npt.NDArray,
+    density_d: float | npt.NDArray,
+    density_t: float | npt.NDArray,
+    density_he3: float | npt.NDArray,
+    reaction: str | AllReactions = Reactions.D_T,
+    method: ReactivityMethod = ReactivityMethod.BOSCH_HALE,
+) -> float | npt.NDArray:
+    """
+    Calculate the density-weighted thermal reactivity of a fusion reaction in
+    Maxwellian plasmas, \\t:math:`n_1 n_2 <\\sigma v>`.
+
+    Parameters
+    ----------
+    temp_keV:
+        Temperature [keV]
+    density_d:
+        Deuterium density [m^-3]
+    density_t:
+        Tritium density [m^-3]
+    density_he3:
+        Helium-3 density [m^-3]
+    reaction:
+        The fusion reaction
+    method:
+        The method to use when calculating the reactivity
+
+    Returns
+    -------
+    :
+        Density-weighted reactivity of the reaction at the specified temperature(s)
+    """
+    reaction = _parse_reaction(reaction)
+
+    match reaction:
+        case Reactions.D_D | AneutronicReactions.D_D:
+            n1_n2 = density_d * density_d / 2
+        case Reactions.D_T:
+            n1_n2 = density_d * density_t
+        case Reactions.T_T:
+            n1_n2 = density_t * density_t / 2
+        case AneutronicReactions.D_He3:
+            n1_n2 = density_d * density_he3
+        case _:
+            raise NotImplementedError(f"Reaction {reaction} not implemented.")
+
+    return n1_n2 * reactivity(temp_kev, reaction, method)
+
+
+def reactivity(
+    temp_kev: float | npt.NDArray,
+    reaction: str | AllReactions = Reactions.D_T,
+    method: ReactivityMethod = ReactivityMethod.BOSCH_HALE,
+) -> float | npt.NDArray:
+    """
+    Calculate the thermal reactivity of a fusion reaction in Maxwellian plasmas,
+    \\t:math:`<\\sigma v>`.
+
+    Parameters
+    ----------
+    temp_keV:
+        Temperature [keV]
+    reaction:
+        The fusion reaction
+    method:
+        The method to use when calculating the reactivity
+
+    Returns
+    -------
+    :
+        Reactivity of the reaction at the specified temperature(s) [cm^3/s]
+    """
+    reaction = _parse_reaction(reaction)
+
+    match method:
+        case ReactivityMethod.BOSCH_HALE:
+            if reaction.bosch_hale_coefficients is not None:
+                return _reactivity_bosch_hale(temp_kev, reaction)
+
+            logger.warning(
+                f"There is no Bosch-Hale parameterisation for reaction {reaction.name}, "
+                "returning reactivity calculated by cross-section."
+            )
+            return _reactivity_from_xs(temp_kev, reaction.cross_section)
+        case ReactivityMethod.XS:
+            return _reactivity_from_xs(temp_kev, reaction.cross_section)
+
+
+def _reactivity_bosch_hale(
+    temp_kev: float | npt.NDArray,
+    reaction: AllReactions,
+) -> float | npt.NDArray:
+    """
+    Bosch-Hale reactivity parameterisation for Maxwellian plasmas.
+
+    Parameters
+    ----------
+    temp_kev:
+        Temperature [keV]
+    reaction:
+        The fusion reaction
+
+    Returns
+    -------
+    :
+        Reactivity of the reaction at the specified temperature(s) [cm^3/s]
+
+    Raises
+    ------
+    ReactivityError
+        If no Bosch-Hale parameterisation is available.
+
+    Notes
+    -----
+    H.-S. Bosch and G.M. Hale 1992 Nucl. Fusion 32 611
+    DOI 10.1088/0029-5515/32/4/I07
+    """
+    if reaction.bosch_hale_coefficients is not None:
+        return _reactivity_channel_bosch_hale(temp_kev, reaction.bosch_hale_coefficients)
+
+    raise ReactivityError(
+        f"Reaction {reaction.name} does not have Bosch-Hale coefficients."
+    )
+
+
+def _reactivity_channel_bosch_hale(
+    temp_kev: float | npt.NDArray,
+    data: BoschHaleCoefficients,
+) -> float | npt.NDArray:
+    """
+    Bosch-Hale reactivity parameterisation for a single reaction channel in
+    Maxwellian plasmas.
+
+    Parameters
+    ----------
+    temp_kev:
+        Temperature [keV]
+    data:
+        The Bosch-Hale parameterisation data
+
+    Returns
+    -------
+    :
+        Reactivity of the reaction at the specified temperature(s) [m^3/s]
+    """
+    if not isinstance(temp_kev, np.ndarray):
+        temp_kev = np.array([temp_kev])
+
+    if np.min(temp_kev) < data.t_min or np.max(temp_kev) > data.t_max:
+        logger.warning(
+            f"The Bosch-Hale parameterisation for reaction {data.name} is only valid "
+            f"between {data.t_min} and {data.t_max} keV; but out of range energies "
+            f"{np.min(temp_kev)}keV -- {np.max(temp_kev)} is detected!",
+            stacklevel=4,
+        )
+
+    # mask calculation to avoid division by zero
+    safe = temp_kev > 0
+
+    frac = np.zeros_like(temp_kev, dtype=float)
+    theta = np.zeros_like(temp_kev, dtype=float)
+    chi = np.zeros_like(temp_kev, dtype=float)
+    result = np.zeros_like(temp_kev, dtype=float)
+
+    frac[safe] = (
+        temp_kev[safe]
+        * (data.c[1] + temp_kev[safe] * (data.c[3] + temp_kev[safe] * data.c[5]))
+        / (
+            1
+            + temp_kev[safe]
+            * (data.c[2] + temp_kev[safe] * (data.c[4] + temp_kev[safe] * data.c[6]))
+        )
+    )
+    theta[safe] = temp_kev[safe] / (1 - frac[safe])
+    chi[safe] = (data.bg**2 / (4 * theta[safe])) ** (1 / 3)
+    result[safe] = (
+        1e-6
+        * data.c[0]
+        * theta[safe]
+        * np.sqrt(chi[safe] / (data.mrc2 * temp_kev[safe] ** 3))
+        * np.exp(-3 * chi[safe])
+    )
+
+    return result if result.shape != () else float(result)
+
+
+def _reactivity_from_xs(
+    temp_kev: float | npt.NDArray,
+    xs: ReactionCrossSection,
+) -> float | npt.NDArray:
+    """
+    Calculate the thermal reactivity of a fusion reaction in Maxwellian plasmas,
+    \\t:math:`<\\sigma v>`.
+
+    Parameters
+    ----------
+    temp_keV:
+        Temperature [keV]
+    xs:
+        The reaction cross section data
+
+    Returns
+    -------
+    :
+        Reactivity of the reaction at the specified temperature(s) [m^3/s]
+    """
+    temp_kev = np.atleast_1d(temp_kev)
+    temp_j = raw_uc(temp_kev[:, None], "keV", "J")
+
+    t_grid_kev = np.logspace(0, 3, 1000)
+    t_grid_j = raw_uc(t_grid_kev, "keV", "J")
+
+    factor = 4 / np.sqrt(2 * np.pi * xs.reduced_mass) / temp_j**1.5
+
+    integrand = factor * xs(t_grid_kev) * t_grid_j * np.exp(-t_grid_j / temp_j)
+
+    # REMOVE ME on numpy >=2
+    trap = np.trapezoid if hasattr(np, "trapezoid") else np.trapz  # noqa: NPY201
+
+    sigma_v = trap(integrand, t_grid_j, axis=1)
+    return float(sigma_v) if np.isscalar(temp_kev) else sigma_v
