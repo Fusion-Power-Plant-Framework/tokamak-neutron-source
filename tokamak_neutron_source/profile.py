@@ -23,7 +23,7 @@ class PlasmaProfile(ABC):
 
     def set_scale(self, scale: float = 1.0):
         """Set the scale of the rho value"""
-        self._scale = scale
+        self._scale *= scale
 
 
 class DataProfile(PlasmaProfile):
