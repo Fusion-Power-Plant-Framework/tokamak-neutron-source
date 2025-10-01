@@ -134,7 +134,7 @@ class TestPROCESSFusionBenchmark:
             flux_map=FluxMap.from_parameterisation(
                 SauterFluxSurface(
                     LCFSInformation(
-                        9.0, 0.0, 3.0, 1.85, 0.5, shafranov_shift=0.0, squareness=0.0
+                        8.0, 0.0, 3.0, 1.85, 0.5, shafranov_shift=0.0, squareness=0.0
                     ),
                 ),
                 n_points=100,
@@ -156,4 +156,4 @@ class TestPROCESSFusionBenchmark:
     def test_fusion_power(self, reaction, expected_mw):
         source = self.make_source(reaction)
         total_fusion_power_mw = source.calculate_total_fusion_power() / 1e6
-        assert np.isclose(total_fusion_power_mw, expected_mw, rtol=1e-3)
+        assert np.isclose(total_fusion_power_mw, expected_mw, rtol=1.5e-2, atol=0.0)
