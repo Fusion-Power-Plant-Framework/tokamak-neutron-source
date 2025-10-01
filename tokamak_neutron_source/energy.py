@@ -11,6 +11,9 @@ from dataclasses import dataclass
 import numpy.typing as npt
 import numpy as np
 
+# 2.0 * np.sqrt(2.0 * np.log(2))
+TWO_SQRT_2LN2 = 2.3548200450309493
+
 
 @dataclass
 class BallabioCoefficients:
@@ -41,7 +44,25 @@ class BallabioEnergySpectrum:
     energy_shift: BallabioCoefficients
 
     """\delta_{\omega}"""
-    energy_correction: BallabioCoefficients
+    width_correction: BallabioCoefficients
+
+    def mean_energy(self, temp_kev: float | npt.NDArray) -> float | npt.NDArray:
+        """
+        Calculate the mean neutron energy at a given ion temperature (first moment: mu).
+        """
+        return self.energy_0 + ballabio_fit(temp_kev, self.energy_shift)
+
+    def std_deviation(self, temp_kev: float | npt.NDArray) -> float | npt.NDArray:
+        """
+        Calculate the standard deviation of the neutron energy spectrum at a given ion
+        temperature (second moment: sigma)
+        """
+        delta_omega = ballabio_fit(temp_kev, self.width_correction)
+
+        # Full width at half maximum
+        w_12 = self.omega_0 * (1 + delta_omega) * np.sqrt(temp_kev)
+
+        return w_12 / TWO_SQRT_2LN2
 
 
 BALLABIO_DT_NEUTRON = BallabioEnergySpectrum(
@@ -54,7 +75,7 @@ BALLABIO_DT_NEUTRON = BallabioEnergySpectrum(
         a3=1.84,
         a4=1.3818,
     ),
-    energy_correction=BallabioCoefficients(
+    width_correction=BallabioCoefficients(
         a1=5.1068e-4,
         a2=7.6223e-3,
         a3=1.78,
@@ -72,7 +93,7 @@ BALLABIO_DD_NEUTRON = BallabioEnergySpectrum(
         a3=0.47,
         a4=0.81844,
     ),
-    energy_correction=BallabioCoefficients(
+    width_correction=BallabioCoefficients(
         a1=1.7013e-3,
         a2=0.16888,
         a3=0.49,
