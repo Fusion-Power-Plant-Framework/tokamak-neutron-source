@@ -30,15 +30,13 @@ class BallabioCoefficients:
 @dataclass
 class BallabioEnergySpectrum:
     """
-    Ballabio et al. fit data for relativistic fusion reaction neutron energy spectra.
+    Ballabio et al. fit data for relativistic fusion reaction neutron energy Gaussian spectra.
     """
 
     """E_0"""
     energy_0: float  # [keV]
 
     omega_0: float  # [keV]
-
-    varepsilon_0: float  # [kev^0.5]
 
     """\Delta E_{th}"""
     energy_shift: BallabioCoefficients
@@ -68,7 +66,6 @@ class BallabioEnergySpectrum:
 BALLABIO_DT_NEUTRON = BallabioEnergySpectrum(
     energy_0=14021.0,
     omega_0=177.259,
-    varepsilon_0=8.113e-3,
     energy_shift=BallabioCoefficients(
         a1=5.30509,
         a2=2.4736e-3,
@@ -86,7 +83,6 @@ BALLABIO_DT_NEUTRON = BallabioEnergySpectrum(
 BALLABIO_DD_NEUTRON = BallabioEnergySpectrum(
     energy_0=2.4495e3,
     omega_0=82.542,
-    varepsilon_0=2.149e-2,
     energy_shift=BallabioCoefficients(
         a1=4.69515,
         a2=-0.040729,
@@ -115,3 +111,30 @@ def ballabio_fit(
         data.a1 / (1 + data.a2 * temp_kev**data.a3) * temp_kev ** (2 / 3)
         + data.a4 * temp_kev
     )
+
+
+if __name__ == "__main__":
+
+    def normal_pdf(x, mu, sigma):
+        return (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(
+            -((x - mu) ** 2) / (2 * sigma**2)
+        )
+
+    import matplotlib.pyplot as plt
+
+    s = BALLABIO_DT_NEUTRON
+
+    ti = 20.0
+    mu = s.mean_energy(ti)
+    sigma = s.std_deviation(ti)
+
+    spectrum = np.random.normal(mu, sigma, 10000)
+
+    energy = np.linspace(mu - 8 * sigma, mu + 8 * sigma, 1000)
+    prob = normal_pdf(energy, mu, sigma)
+
+    f, ax = plt.subplots()
+    ax.semilogy(energy, prob)
+    ax.set_xlim([12e3, 17e3])
+    ax.set_ylim([10e-11, 10e-3])
+    plt.show()
