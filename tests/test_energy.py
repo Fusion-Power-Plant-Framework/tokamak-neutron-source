@@ -30,10 +30,6 @@ class TestEnergyShift:
         assert np.isclose(e_shift, expected, rtol=1e-2, atol=0.0)
 
 
-def normal_pdf(x, mu, sigma):
-    return (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-((x - mu) ** 2) / (2 * sigma**2))
-
-
 def test_ballabio_dt_spectra_methods():
     """
     Comparison of normal vs modified Gaussian with Ballabio

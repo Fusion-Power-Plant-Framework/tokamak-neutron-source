@@ -9,14 +9,22 @@ import numpy as np
 import numpy.typing as npt
 from openmc import IndependentSource
 from openmc.data import combine_distributions
-from openmc.stats import CylindricalIndependent, Discrete, Isotropic, Uniform
+from openmc.stats import (
+    CylindricalIndependent,
+    Discrete,
+    Isotropic,
+    Uniform,
+    Tabular,
+    Mixture,
+)
 
 from tokamak_neutron_source.constants import raw_uc
+from tokamak_neutron_source.energy import energy_spectrum
 from tokamak_neutron_source.reactions import Reactions
 from tokamak_neutron_source.reactivity import AllReactions
 
 
-def get_neutron_energy(reaction: Reactions, _temperature: float) -> Discrete:
+def get_neutron_energy(reaction: Reactions, temp_kev: float) -> Discrete:
     """
     Returns
     -------
@@ -34,19 +42,14 @@ def get_neutron_energy(reaction: Reactions, _temperature: float) -> Discrete:
     Probabilities normalized.
     Temperature parameter left in for possible spectrum broadening.
     """
-    # TODO @CoronelBuendia: Include Maxwellian distribution of energy based on temp
-    # 1
-
+    energy, probability = energy_spectrum(reaction, temp_kev)
+    energy_ev = raw_uc(energy, "keV", "eV")
     match reaction:
-        case Reactions.D_T:
-            # Nearly monoenergetic 14.1 MeV neutrons
-            return Discrete(raw_uc(reaction.neutron_energies, "J", "eV"), [1.0])
-
-        case Reactions.D_D:
-            # Neutronic branch only
-            return Discrete(raw_uc(reaction.neutron_energies, "J", "eV"), [1.0])
+        case Reactions.D_T | Reactions.D_D:
+            return Tabular(energy_ev, probability)
 
         case Reactions.T_T:
+            # TODO: Add T-T spectral data
             # T + T → 4He + 2n
             # Neutrons have a broad spectrum, here approximated as two 2-9 MeV neutrons
             # (very simplified discrete placeholder)
@@ -135,6 +138,7 @@ def make_openmc_full_combined_source(
                 weights.append(s[i])
 
         total_strength = sum(weights)
+        # TODO: Replace with Mixture
         distribution = combine_distributions(
             distributions,
             np.array(weights) / total_strength,
