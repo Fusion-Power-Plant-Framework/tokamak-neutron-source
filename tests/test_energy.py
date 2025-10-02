@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from tokamak_neutron_source.energy import BALLABIO_DD_NEUTRON, BALLABIO_DT_NEUTRON
+from tokamak_neutron_source.energy_data import BALLABIO_DD_NEUTRON, BALLABIO_DT_NEUTRON
 
 
 class TestEnergyShift:

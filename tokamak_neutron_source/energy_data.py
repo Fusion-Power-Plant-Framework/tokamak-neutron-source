@@ -167,23 +167,3 @@ def ballabio_fit(
         data.a1 / (1 + data.a2 * temp_kev**data.a3) * temp_kev ** (2 / 3)
         + data.a4 * temp_kev
     )
-
-
-if __name__ == "__main__":
-    import os
-    from tokamak_neutron_source.tools import get_tns_path
-    import matplotlib.pyplot as plt
-
-    path = str(get_tns_path("data", subfolder="tokamak_neutron_source"))
-    filename = os.sep.join([path, "TT_spec_temprange.txt"])
-
-    tt_spectrum_data = np.loadtxt(filename)
-    tt_e = tt_spectrum_data[:, 0] * 1e3  # keV
-    tt_t = np.linspace(1.0, 20.0, 40)
-    tt_spec_dNdE = tt_spectrum_data[:, 1:] / 1e3  # 1/MeV to 1/keV
-    tt_spec_dNdE.reshape((500, 40))
-
-    f, ax = plt.subplots()
-    for i in [10, 20, 30, 40]:
-        ax.plot(tt_e, tt_spectrum_data[:, i], label=f"{tt_e[i]}")
-    plt.show()
