@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+authors:
+  - family-names: Coleman
+    given-names: M.
+    affiliation: United Kingdom Atomic Energy Authority, Culham Science Centre, Abingdon, Oxfordshire OX14 3DB, United Kingdom
+
+  - family-names: Cook
+    given-names: J. E.
+    affiliation: United Kingdom Atomic Energy Authority, Culham Science Centre, Abingdon, Oxfordshire OX14 3DB, United Kingdom
+
+  - family-names: Wong
+    given-names: O.
+    affiliation: United Kingdom Atomic Energy Authority, Culham Science Centre, Abingdon, Oxfordshire OX14 3DB, United Kingdom
+
+message: "If you use tokamak-neutron-source, please cite it as below."
+title: "tokamak-neutron-source"
+license: LGPL-2.1-or-later
+repository-code: "https://github.com/Fusion-Power-Plant-Framework/tokamak-neutron-source"
