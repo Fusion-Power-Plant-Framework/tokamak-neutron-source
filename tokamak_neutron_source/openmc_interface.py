@@ -13,9 +13,8 @@ from openmc.stats import (
     CylindricalIndependent,
     Discrete,
     Isotropic,
-    Uniform,
     Tabular,
-    Mixture,
+    Uniform,
 )
 
 from tokamak_neutron_source.constants import raw_uc
@@ -49,7 +48,8 @@ def get_neutron_energy(reaction: Reactions, temp_kev: float) -> Discrete:
             return Tabular(energy_ev, probability)
 
         case Reactions.T_T:
-            # TODO: Add T-T spectral data
+            # TODO @CoronelBuendia: Add T-T spectral data
+            # 8
             # T + T → 4He + 2n
             # Neutrons have a broad spectrum, here approximated as two 2-9 MeV neutrons
             # (very simplified discrete placeholder)
@@ -138,7 +138,8 @@ def make_openmc_full_combined_source(
                 weights.append(s[i])
 
         total_strength = sum(weights)
-        # TODO: Replace with Mixture
+        # TODO @CoronelBuendia: Replace with Mixture
+        # 9
         distribution = combine_distributions(
             distributions,
             np.array(weights) / total_strength,

@@ -25,6 +25,7 @@ from tokamak_neutron_source.reactivity_data import (
     BoschHaleCoefficients,
     ReactionCrossSection,
 )
+from tokamak_neutron_source.tools import trapezoid
 
 __all__ = ["density_weighted_reactivity", "reactivity"]
 
@@ -254,8 +255,5 @@ def _reactivity_from_xs(
 
     integrand = factor * xs(t_grid_kev) * t_grid_j * np.exp(-t_grid_j / temp_j)
 
-    # REMOVE ME on numpy >=2
-    trap = np.trapezoid if hasattr(np, "trapezoid") else np.trapz  # noqa: NPY201
-
-    sigma_v = trap(integrand, t_grid_j, axis=1)
+    sigma_v = trapezoid(integrand, t_grid_j, axis=1)
     return float(sigma_v) if np.isscalar(temp_kev) else sigma_v

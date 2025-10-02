@@ -8,8 +8,8 @@ Neutron energy spectrum data.
 
 from dataclasses import dataclass
 
-import numpy.typing as npt
 import numpy as np
+import numpy.typing as npt
 
 # 2.0 * np.sqrt(2.0 * np.log(2))
 TWO_SQRT_2LN2 = 2.3548200450309493
@@ -32,6 +32,8 @@ def ballabio_fit(
 ) -> float | npt.NDArray:
     """
 
+    TODO MATTI what is this returning
+
     Notes
     -----
     Valid over 0.0 to 40.0 keV
@@ -45,7 +47,8 @@ def ballabio_fit(
 @dataclass
 class BallabioEnergySpectrum:
     """
-    Ballabio et al. fit data for relativistic fusion reaction neutron energy Gaussian spectra.
+    Ballabio et al. fit data for relativistic fusion reaction neutron energy Gaussian
+    spectra.
     """
 
     """E_0"""
@@ -53,35 +56,36 @@ class BallabioEnergySpectrum:
 
     omega_0: float  # [keV]
 
-    """\Delta E_{th} coefficients"""
+    r"""\Delta E_{th} coefficients"""
     energy_shift_coeffs: BallabioCoefficients
 
-    """\delta_{\omega} coefficients"""
+    r"""\delta_{\omega} coefficients"""
     width_correction_coeffs: BallabioCoefficients
 
     def energy_shift(self, temp_kev: float | npt.NDArray) -> float | npt.NDArray:
-        """
+        r"""
         Calculate the energy shift \Delta E_{th} at a given ion temperature.
-        """
+        """  # noqa: DOC201
         return ballabio_fit(temp_kev, self.energy_shift_coeffs)
 
     def width_correction(self, temp_kev: float | npt.NDArray) -> float | npt.NDArray:
-        """
+        r"""
         Calculate the width correction \delta_{\omega} at a given ion temperature.
-        """
+        """  # noqa: DOC201
         return ballabio_fit(temp_kev, self.width_correction_coeffs)
 
     def mean_energy(self, temp_kev: float | npt.NDArray) -> float | npt.NDArray:
         """
-        Calculate the mean neutron energy at a given ion temperature (primary first moment: mu).
-        """
+        Calculate the mean neutron energy at a given ion temperature
+        (primary first moment: mu).
+        """  # noqa: DOC201
         return self.energy_0 + self.energy_shift(temp_kev)
 
     def std_deviation(self, temp_kev: float | npt.NDArray) -> float | npt.NDArray:
         """
         Calculate the standard deviation of the neutron energy spectrum at a given ion
         temperature (primary second moment: sigma)
-        """
+        """  # noqa: DOC201
         # Full width at half maximum (FWHM)
         w_12 = self.omega_0 * (1 + self.width_correction(temp_kev)) * np.sqrt(temp_kev)
         return w_12 / TWO_SQRT_2LN2

@@ -17,7 +17,6 @@ from tokamak_neutron_source.constants import (
     E_TT_FUSION,
     raw_uc,
 )
-
 from tokamak_neutron_source.energy_data import (
     BALLABIO_DD_NEUTRON,
     BALLABIO_DT_NEUTRON,
@@ -25,8 +24,6 @@ from tokamak_neutron_source.energy_data import (
 )
 from tokamak_neutron_source.error import ReactivityError
 from tokamak_neutron_source.reactivity_data import (
-    BoschHaleCoefficients,
-    ReactionCrossSection,
     BOSCH_HALE_DD_3HEN,
     BOSCH_HALE_DD_TP,
     BOSCH_HALE_DT_4HEN,
@@ -35,6 +32,8 @@ from tokamak_neutron_source.reactivity_data import (
     DHE3_HEP_XS,
     DT_XS,
     TT_XS,
+    BoschHaleCoefficients,
+    ReactionCrossSection,
 )
 
 
@@ -54,35 +53,35 @@ class ReactionEnumMixin:
     """Provides convenient accessors to the underlying ReactionData."""
 
     @property
-    def data(self) -> ReactionData:
+    def data(self) -> ReactionData:  # noqa: D102
         return self.value
 
     @property
-    def label(self) -> str:
+    def label(self) -> str:  # noqa: D102
         return self.value.label
 
     @property
-    def total_energy(self) -> float:
+    def total_energy(self) -> float:  # noqa: D102
         return self.value.total_energy
 
     @property
-    def neutron_energies(self) -> list[float]:
+    def neutron_energies(self) -> list[float]:  # noqa: D102
         return self.value.neutron_energies
 
     @property
-    def total_neutron_energy(self) -> float:
+    def total_neutron_energy(self) -> float:  # noqa: D102
         return sum(self.value.neutron_energies)
 
     @property
-    def cross_section(self) -> ReactionCrossSection:
+    def cross_section(self) -> ReactionCrossSection:  # noqa: D102
         return self.value.cross_section
 
     @property
-    def bosch_hale_coefficients(self) -> BoschHaleCoefficients | None:
+    def bosch_hale_coefficients(self) -> BoschHaleCoefficients | None:  # noqa: D102
         return self.value.bosch_hale_coefficients
 
     @property
-    def ballabio_spectrum(self) -> BallabioEnergySpectrum | None:
+    def ballabio_spectrum(self) -> BallabioEnergySpectrum | None:  # noqa: D102
         return self.value.ballabio_spectrum
 
 

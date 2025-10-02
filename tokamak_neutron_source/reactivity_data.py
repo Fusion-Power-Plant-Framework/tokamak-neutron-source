@@ -4,16 +4,15 @@
 """Reactivity data."""
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 import numpy.typing as npt
 from scipy.interpolate import interp1d
+
 from tokamak_neutron_source.constants import MOLAR_MASSES, raw_uc
 from tokamak_neutron_source.error import ReactivityError
 from tokamak_neutron_source.tools import get_tns_path
-
-
-from pathlib import Path
 
 
 class ReactionCrossSection:
@@ -52,6 +51,7 @@ class ReactionCrossSection:
         self._cross_section = interp1d(energy * 1e3, sigma * 1e-28)
 
     def __call__(self, temp_kev: float | npt.NDArray) -> float | npt.NDArray:
+        """Get cross section at a give temperature"""  # noqa: DOC201
         return self._cross_section(temp_kev)
 
 

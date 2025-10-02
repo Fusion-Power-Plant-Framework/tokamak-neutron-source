@@ -34,14 +34,13 @@ def test_ballabio_dt_spectra_methods():
     """
     Comparison of normal vs modified Gaussian with Ballabio
     """
-
     T = 20
     mu = Reactions.D_T.ballabio_spectrum.mean_energy(T)
     sigma = Reactions.D_T.ballabio_spectrum.std_deviation(T)
 
     energy1, g_pdf = _gaussian_energy_spectrum(mu, sigma)
     energy2, mg_pdf = _modified_gaussian_energy_spectrum(mu, sigma)
-    f, ax = plt.subplots()
+    _f, ax = plt.subplots()
     ax.plot(energy1, g_pdf, label="Gaussian")
     ax.plot(energy2, mg_pdf, label="Modified Gaussian")
     ax.legend()
@@ -63,7 +62,7 @@ def test_dt_sprectum_plot():
     energy = np.linspace(mu - 8 * sigma, mu + 8 * sigma, 1000)
     energy, prob = _modified_gaussian_energy_spectrum(mu, sigma)
 
-    f, ax = plt.subplots()
+    _f, ax = plt.subplots()
     ax.semilogy(energy, prob)
 
     ax.set_xlim([12e3, 17e3])
@@ -78,7 +77,7 @@ def test_dt_shift_plot():
     Attempt to match Fig 4 of Ballabio et al., 1998
     """
     s = BALLABIO_DT_NEUTRON
-    f, ax = plt.subplots()
+    _f, ax = plt.subplots()
     t = np.linspace(0, 20, 1000)  # [keV]
     delta_e_th = s.energy_shift(t)
     ax.plot(t, delta_e_th)

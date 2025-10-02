@@ -6,15 +6,15 @@
 Neutron energy spectrum calculations.
 """
 
-from enum import Enum, auto
 import logging
+from enum import Enum, auto
 
 import numpy as np
 import numpy.typing as npt
-from scipy.stats import norm
 
 from tokamak_neutron_source.energy_data import BallabioEnergySpectrum
 from tokamak_neutron_source.reactions import Reactions
+from tokamak_neutron_source.tools import trapezoid
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,6 @@ def energy_spectrum(
     probabilities:
         The probabilities
     """
-
     match method:
         case (
             EnergySpectrumMethod.BALLABIO_GAUSSIAN
@@ -94,13 +93,22 @@ def _gaussian_energy_spectrum(
     mask = pdf > 0
     pdf = pdf[mask]
     energy = energy[mask]
-    probability = pdf / np.trapz(pdf, energy)
+    probability = pdf / trapezoid(pdf, energy)
     return energy, probability
 
 
-def _modified_gaussian_energy_spectrum(mu: float, sigma: float) -> float | npt.NDArray:
+def _modified_gaussian_energy_spectrum(
+    mu: float, sigma: float
+) -> tuple[float | npt.NDArray, ...]:
     """
     Modified Gaussian spectrum (from e.g. Ballabio et al., 1998)
+
+    Returns
+    -------
+    energy:
+        MATTI TODO
+    probablity:
+        MATTI TODO
 
     Notes
     -----
@@ -117,5 +125,5 @@ def _modified_gaussian_energy_spectrum(mu: float, sigma: float) -> float | npt.N
     mask = pdf > 0
     pdf = pdf[mask]
     energy = energy[mask]
-    probability = pdf / np.trapz(pdf, energy)
+    probability = pdf / trapezoid(pdf, energy)
     return energy, probability
