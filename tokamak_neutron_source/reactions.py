@@ -3,7 +3,10 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 """Fusion reactions and their data."""
 
+from dataclasses import dataclass
+from enum import Enum
 from typing import TypeAlias
+
 from tokamak_neutron_source.constants import (
     E_DD_HE3N_FUSION,
     E_DD_NEUTRON,
@@ -14,9 +17,11 @@ from tokamak_neutron_source.constants import (
     E_TT_FUSION,
     raw_uc,
 )
-from enum import Enum
+
 from tokamak_neutron_source.error import ReactivityError
-from tokamak_neutron_source.reactivity import (
+from tokamak_neutron_source.reactivity_data import (
+    BoschHaleCoefficients,
+    ReactionCrossSection,
     BOSCH_HALE_DD_3HEN,
     BOSCH_HALE_DD_TP,
     BOSCH_HALE_DT_4HEN,
@@ -25,12 +30,7 @@ from tokamak_neutron_source.reactivity import (
     DHE3_HEP_XS,
     DT_XS,
     TT_XS,
-    BoschHaleCoefficients,
-    ReactionCrossSection,
 )
-
-
-from dataclasses import dataclass
 
 
 @dataclass(frozen=True)

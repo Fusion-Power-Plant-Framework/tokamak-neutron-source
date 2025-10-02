@@ -10,10 +10,10 @@ import pytest
 from tokamak_neutron_source.error import ReactivityError
 from tokamak_neutron_source.reactions import AneutronicReactions, Reactions
 from tokamak_neutron_source.reactivity import (
-    ReactionCrossSection,
     ReactivityMethod,
     reactivity,
 )
+from tokamak_neutron_source.reactivity_data import ReactionCrossSection
 from tokamak_neutron_source.tools import get_tns_path
 
 
