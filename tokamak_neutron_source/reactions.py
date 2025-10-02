@@ -18,7 +18,11 @@ from tokamak_neutron_source.constants import (
     raw_uc,
 )
 
-from tokamak_neutron_source.energy_data import BALLABIO_DD_NEUTRON, BALLABIO_DT_NEUTRON, BallabioEnergySpectrum
+from tokamak_neutron_source.energy_data import (
+    BALLABIO_DD_NEUTRON,
+    BALLABIO_DT_NEUTRON,
+    BallabioEnergySpectrum,
+)
 from tokamak_neutron_source.error import ReactivityError
 from tokamak_neutron_source.reactivity_data import (
     BoschHaleCoefficients,
@@ -76,7 +80,7 @@ class ReactionEnumMixin:
     @property
     def bosch_hale_coefficients(self) -> BoschHaleCoefficients | None:
         return self.value.bosch_hale_coefficients
-    
+
     @property
     def ballabio_spectrum(self) -> BallabioEnergySpectrum | None:
         return self.value.ballabio_spectrum

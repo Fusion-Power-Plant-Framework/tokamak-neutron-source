@@ -21,7 +21,10 @@ from tokamak_neutron_source.reactions import (
     Reactions,
     _parse_reaction,
 )
-from tokamak_neutron_source.reactivity_data import BoschHaleCoefficients, ReactionCrossSection
+from tokamak_neutron_source.reactivity_data import (
+    BoschHaleCoefficients,
+    ReactionCrossSection,
+)
 
 __all__ = ["density_weighted_reactivity", "reactivity"]
 

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 """
-Neutron energy spectrum calculations.
+Neutron energy spectrum data.
 """
 
 from dataclasses import dataclass
