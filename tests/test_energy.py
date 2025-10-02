@@ -5,7 +5,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
+from tokamak_neutron_source.energy import (
+    _gaussian_energy_spectrum,
+    _modified_gaussian_energy_spectrum,
+)
 from tokamak_neutron_source.energy_data import BALLABIO_DD_NEUTRON, BALLABIO_DT_NEUTRON
+from tokamak_neutron_source.reactions import Reactions
 
 
 class TestEnergyShift:
@@ -29,6 +34,25 @@ def normal_pdf(x, mu, sigma):
     return (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-((x - mu) ** 2) / (2 * sigma**2))
 
 
+def test_ballabio_dt_spectra_methods():
+    """
+    Comparison of normal vs modified Gaussian with Ballabio
+    """
+
+    T = 20
+    mu = Reactions.D_T.ballabio_spectrum.mean_energy(T)
+    sigma = Reactions.D_T.ballabio_spectrum.std_deviation(T)
+
+    energy1, g_pdf = _gaussian_energy_spectrum(mu, sigma)
+    energy2, mg_pdf = _modified_gaussian_energy_spectrum(mu, sigma)
+    f, ax = plt.subplots()
+    ax.plot(energy1, g_pdf, label="Gaussian")
+    ax.plot(energy2, mg_pdf, label="Modified Gaussian")
+    ax.legend()
+    ax.set_xlim([12.0e3, 16.0e3])
+    plt.show()
+
+
 def test_dt_sprectum_plot():
     """
     Attempt to match Fig 5 of Ballabio et al., 1998. Frustratingly don't know what
@@ -41,7 +65,7 @@ def test_dt_sprectum_plot():
     sigma = s.std_deviation(ti)
 
     energy = np.linspace(mu - 8 * sigma, mu + 8 * sigma, 1000)
-    prob = normal_pdf(energy, mu, sigma)
+    energy, prob = _modified_gaussian_energy_spectrum(mu, sigma)
 
     f, ax = plt.subplots()
     ax.semilogy(energy, prob)
