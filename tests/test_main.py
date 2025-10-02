@@ -15,9 +15,8 @@ from tokamak_neutron_source.flux import (
 )
 from tokamak_neutron_source.main import TokamakNeutronSource, _parse_source_type
 from tokamak_neutron_source.profile import ParabolicPedestalProfile
+from tokamak_neutron_source.reactions import AneutronicReactions, Reactions
 from tokamak_neutron_source.reactivity import (
-    AneutronicReactions,
-    Reactions,
     ReactivityMethod,
 )
 from tokamak_neutron_source.transport import (

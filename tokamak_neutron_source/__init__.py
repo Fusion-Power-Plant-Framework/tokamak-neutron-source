@@ -7,7 +7,8 @@ import logging
 
 from tokamak_neutron_source.flux import FluxConvention, FluxMap
 from tokamak_neutron_source.main import TokamakNeutronSource
-from tokamak_neutron_source.reactivity import AneutronicReactions, Reactions
+from tokamak_neutron_source.reactions import Reactions
+from tokamak_neutron_source.reactions import AneutronicReactions
 from tokamak_neutron_source.transport import (
     FractionalFuelComposition,
     TransportInformation,

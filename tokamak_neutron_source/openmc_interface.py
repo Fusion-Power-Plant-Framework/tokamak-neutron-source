@@ -12,7 +12,8 @@ from openmc.data import combine_distributions
 from openmc.stats import CylindricalIndependent, Discrete, Isotropic, Uniform
 
 from tokamak_neutron_source.constants import raw_uc
-from tokamak_neutron_source.reactivity import AllReactions, Reactions
+from tokamak_neutron_source.reactions import Reactions
+from tokamak_neutron_source.reactivity import AllReactions
 
 
 def get_neutron_energy(reaction: Reactions, _temperature: float) -> Discrete:

@@ -49,7 +49,7 @@ class BallabioEnergySpectrum:
         Calculate the energy shift \Delta E_{th} at a given ion temperature.
         """
         return ballabio_fit(temp_kev, self.energy_shift_coeffs)
-    
+
     def width_correction(self, temp_kev: float | npt.NDArray) -> float | npt.NDArray:
         """
         Calculate the width correction \delta_{\omega} at a given ion temperature.
@@ -70,7 +70,7 @@ class BallabioEnergySpectrum:
         # Full width at half maximum
         w_12 = self.omega_0 * (1 + self.width_correction(temp_kev)) * np.sqrt(temp_kev)
         return w_12 / TWO_SQRT_2LN2
-    
+
     def spectrum(self, temp_kev: float | npt.NDArray) -> float | npt.NDArray:
         """
         Modified Gaussian spectrum
@@ -81,14 +81,19 @@ class BallabioEnergySpectrum:
         """
         e_mean = self.mean_energy(temp_kev)
         sigma_th = self.std_deviation(temp_kev)
-        factor = 1.0 - 1.5 * (sigma_th/e_mean)**2
+        factor = 1.0 - 1.5 * (sigma_th / e_mean) ** 2
         sqrt_factor = np.sqrt(factor)
         e_bar = e_mean * sqrt_factor
-        sigma_sq = 4.0/3.0 * e_mean**2*(sqrt_factor - factor)
+        sigma_sq = 4.0 / 3.0 * e_mean**2 * (sqrt_factor - factor)
         norm = 1.0 / denominator_D(e_mean, sigma_sq**0.5)
-        return norm * np.exp(-2.0*e_bar * (np.sqrt(temp_kev) - np.sqrt(e_bar))**2 / sigma_sq)
+        return norm * np.exp(
+            -2.0 * e_bar * (np.sqrt(temp_kev) - np.sqrt(e_bar)) ** 2 / sigma_sq
+        )
+
 
 from scipy.special import erf
+
+
 def denominator_D(Ebar: float, sigma: float) -> float:
     """
     Compute the denominator D for the modified Gaussian distribution. Guessing here.
@@ -112,7 +117,6 @@ def denominator_D(Ebar: float, sigma: float) -> float:
     term1 = (sigma**2) / (2.0 * Ebar) * np.exp(-2.0 * (Ebar**2) / (sigma**2))
     term2 = sigma * np.sqrt(np.pi / 2.0) * (1.0 + erf(np.sqrt(2.0) * Ebar / sigma))
     return term1 + term2
-
 
 
 BALLABIO_DT_NEUTRON = BallabioEnergySpectrum(
@@ -169,12 +173,13 @@ if __name__ == "__main__":
     import os
     from tokamak_neutron_source.tools import get_tns_path
     import matplotlib.pyplot as plt
+
     path = str(get_tns_path("data", subfolder="tokamak_neutron_source"))
     filename = os.sep.join([path, "TT_spec_temprange.txt"])
 
     tt_spectrum_data = np.loadtxt(filename)
-    tt_e = tt_spectrum_data[:, 0] * 1e3 # keV
-    tt_t = np.linspace(1.0, 20.0, 40) 
+    tt_e = tt_spectrum_data[:, 0] * 1e3  # keV
+    tt_t = np.linspace(1.0, 20.0, 40)
     tt_spec_dNdE = tt_spectrum_data[:, 1:] / 1e3  # 1/MeV to 1/keV
     tt_spec_dNdE.reshape((500, 40))
 
@@ -182,8 +187,3 @@ if __name__ == "__main__":
     for i in [10, 20, 30, 40]:
         ax.plot(tt_e, tt_spectrum_data[:, i], label=f"{tt_e[i]}")
     plt.show()
-    
-        
-
-
- 

@@ -27,10 +27,10 @@ from tokamak_neutron_source import (
     FluxConvention,
     FluxMap,
     FractionalFuelComposition,
-    Reactions,
     TokamakNeutronSource,
     TransportInformation,
 )
+from tokamak_neutron_source.reactions import Reactions
 
 # %% [markdown]
 # # JETTO Source

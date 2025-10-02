@@ -14,12 +14,14 @@ import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from tokamak_neutron_source.error import ReactivityError, TNSError
-from tokamak_neutron_source.reactivity import (
-    AllReactions,
+from tokamak_neutron_source.reactions import (
     AneutronicReactions,
     Reactions,
-    ReactivityMethod,
     _parse_reaction,
+)
+from tokamak_neutron_source.reactivity import (
+    AllReactions,
+    ReactivityMethod,
     density_weighted_reactivity,
 )
 from tokamak_neutron_source.space import sample_space_2d

@@ -8,10 +8,9 @@ import numpy as np
 import pytest
 
 from tokamak_neutron_source.error import ReactivityError
+from tokamak_neutron_source.reactions import AneutronicReactions, Reactions
 from tokamak_neutron_source.reactivity import (
-    AneutronicReactions,
     ReactionCrossSection,
-    Reactions,
     ReactivityMethod,
     reactivity,
 )

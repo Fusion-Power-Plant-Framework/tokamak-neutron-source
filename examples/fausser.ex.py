@@ -26,12 +26,12 @@ import numpy as np
 from tokamak_neutron_source import (
     FluxMap,
     FractionalFuelComposition,
-    Reactions,
     TokamakNeutronSource,
     TransportInformation,
 )
 from tokamak_neutron_source.flux import FausserFluxSurface, LCFSInformation
 from tokamak_neutron_source.profile import ParabolicPedestalProfile
+from tokamak_neutron_source.reactions import Reactions
 
 # %% [markdown]
 # # Fausser Source
