@@ -7,9 +7,15 @@ Neutron energy spectrum data.
 """
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 import numpy.typing as npt
+from scipy.interpolate import RegularGridInterpolator
+
+from tokamak_neutron_source.constants import raw_uc
+from tokamak_neutron_source.error import EnergySpectrumError
+from tokamak_neutron_source.tools import get_tns_path
 
 # 2.0 * np.sqrt(2.0 * np.log(2))
 TWO_SQRT_2LN2 = 2.3548200450309493
@@ -24,14 +30,33 @@ class NeutronEnergySpectrum:
     file_name:
         Data file (ENDF format)
     """
+
     def __init__(self, file_name: str):
+        path = get_tns_path("data/spectra")
+        path = Path(path, file_name)
+        if not path.is_file():
+            raise EnergySpectrumError(f"Energy spectrum data file {path} is not a file!")
 
-        self._spectrum = None
+        file = path.as_posix()
+        data = np.genfromtxt(file, comments="#")
+        energy = data[:, 0]  # [MeV]
+        temperature = np.linspace(1.0, 20.0, 40)  # [keV]
+        spectra = data[:, 1:]  # [1/MeV]
+        self._interpolator = RegularGridInterpolator(
+            (raw_uc(energy, "MeV", "keV"), temperature),
+            raw_uc(spectra, "1/MeV", "1/keV"),
+            method="linear",
+            bounds_error=True,
+            fill_value=np.nan,
+        )
 
-    def __call__(self, temp_kev: float | npt.NDArray) -> tuple[npt.NDArray, npt.NDArray]:
+    def __call__(
+        self, energy_kev: float, temp_kev: float
+    ) -> tuple[npt.NDArray, npt.NDArray]:
         """Get spectrum at a give temperature"""  # noqa: DOC201
-        return self._spectrum(temp_kev)
-    
+        return self._interpolator(energy_kev, temp_kev)
+
+
 @dataclass
 class BallabioCoefficients:
     """

@@ -30,5 +30,9 @@ class ReactivityError(TNSError):
     """Reactivity error class"""
 
 
+class EnergySpectrumError(TNSError):
+    """Energy spectrum error class"""
+
+
 class FluxSurfaceError(TNSError):
     """Flux surface error class"""
