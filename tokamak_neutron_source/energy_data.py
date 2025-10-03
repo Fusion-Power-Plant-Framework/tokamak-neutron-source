@@ -47,7 +47,9 @@ class TTNeutronEnergyDataSpectrum:
         # (no sense in interpolating).
         self._energy = raw_uc(data[:, 0], "MeV", "keV")
 
-        temperature = np.linspace(1.0, 20.0, 40)  # [keV]
+        self._min_temp = 1.0  # [keV]
+        self._max_temp = 20.0  # [keV]
+        temperature = np.linspace(self._min_temp, self._max_temp, 40)  # [keV]
         spectra = raw_uc(data[:, 1:], "1/MeV", "1/keV")
         self._interpolator = RegularGridInterpolator(
             (self._energy, temperature),
@@ -59,12 +61,13 @@ class TTNeutronEnergyDataSpectrum:
 
     def __call__(self, temp_kev: float) -> tuple[npt.NDArray, npt.NDArray]:
         """Get spectrum at a given temperature"""  # noqa: DOC201
-        if not 1.0 < temp_kev < 20.0:
+        if not self._min_temp < temp_kev < self._max_temp:
             logger.warning(
-                "T-T spectral data only available for 1.0 < T < 20.0 keV, clipping to bounds",
+                f"T-T spectral data only available "
+                f" for {self._min_temp} < T < {self._max_temp} keV, clipping to bounds",
                 stacklevel=2,
             )
-            temp_kev = np.clip(temp_kev, 1.0, 20.0)
+            temp_kev = np.clip(temp_kev, self._min_temp, self._max_temp)
 
         return self._energy, self._interpolator((self._energy, temp_kev))
 

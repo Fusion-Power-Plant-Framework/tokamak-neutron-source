@@ -13,6 +13,7 @@ import numpy as np
 import numpy.typing as npt
 
 from tokamak_neutron_source.energy_data import TT_N_SPECTRUM, BallabioEnergySpectrum
+from tokamak_neutron_source.error import EnergySpectrumError
 from tokamak_neutron_source.reactions import Reactions
 from tokamak_neutron_source.tools import trapezoid
 
@@ -236,11 +237,16 @@ def _trim_zero_mask(vec):
     -------
     mask:
         Mask for vector
+
+    Raises
+    ------
+    EnergySpectrumError
+        If the vector is a zero-vector
     """
     vec = np.asarray(vec)
     nz = np.nonzero(vec)[0]
     if nz.size == 0:
-        raise EnergySpectrumMethod("Cannot trim the zeros off a full-0 vector!")
+        raise EnergySpectrumError("Cannot trim the zeros off a full-0 vector!")
     mask = np.zeros_like(vec, dtype=bool)
     mask[nz[0] : nz[-1] + 1] = True
     return mask
