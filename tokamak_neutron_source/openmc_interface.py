@@ -150,8 +150,7 @@ def make_openmc_full_combined_source(
                 weights.append(s[i])
 
         total_strength = sum(weights)
-        # TODO @CoronelBuendia: Replace with Mixture
-        # 9
+
         distribution = Mixture(np.array(weights) / total_strength, distributions)
 
         source = make_openmc_ring_source(ri, zi, distribution, total_strength)
