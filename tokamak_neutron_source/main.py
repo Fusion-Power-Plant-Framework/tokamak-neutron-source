@@ -175,7 +175,7 @@ class TokamakNeutronSource:
 
     def to_openmc_source(
         self,
-        energy_spectrum_method: EnergySpectrumMethod = EnergySpectrumMethod.BALLABIO_M_GAUSSIAN,
+        energy_method: EnergySpectrumMethod = EnergySpectrumMethod.BALLABIO_M_GAUSSIAN,
     ) -> list[IndependentSource]:
         """
         Create an OpenMC tokamak neutron source.
@@ -189,7 +189,7 @@ class TokamakNeutronSource:
         -------
         :
             List of native OpenMC source objects
-        """  # noqa: DOC201
+        """
         from tokamak_neutron_source.openmc_interface import (  # noqa: PLC0415
             make_openmc_full_combined_source,
         )
@@ -199,7 +199,7 @@ class TokamakNeutronSource:
             self.z,
             self.temperature,
             self.strength,
-            energy_spectrum_method,
+            energy_method,
         )
 
     def to_sdef_card(self):

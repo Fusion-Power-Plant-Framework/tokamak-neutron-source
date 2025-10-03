@@ -26,22 +26,28 @@ class BallabioCoefficients:
     a3: float
     a4: float
 
+    def fit(self, temp_kev: float | npt.NDArray) -> float | npt.NDArray:
+        """
+        Calculate the value of the parameterisation at given temperature(s).
 
-def ballabio_fit(
-    temp_kev: float | npt.NDArray, data: BallabioCoefficients
-) -> float | npt.NDArray:
-    """
+        Parameters
+        ----------
+        temp_kev:
+            Ion temperatures at which to calculate the fit
 
-    TODO MATTI what is this returning
+        Returns
+        -------
+        :
+            Values of the fit
 
-    Notes
-    -----
-    Valid over 0.0 to 40.0 keV
-    """
-    return (
-        data.a1 / (1 + data.a2 * temp_kev**data.a3) * temp_kev ** (2 / 3)
-        + data.a4 * temp_kev
-    )
+        Notes
+        -----
+        Valid over 0.0 to 40.0 keV
+        """
+        return (
+            self.a1 / (1 + self.a2 * temp_kev**self.a3) * temp_kev ** (2 / 3)
+            + self.a4 * temp_kev
+        )
 
 
 @dataclass
@@ -66,13 +72,13 @@ class BallabioEnergySpectrum:
         r"""
         Calculate the energy shift \Delta E_{th} at a given ion temperature.
         """  # noqa: DOC201
-        return ballabio_fit(temp_kev, self.energy_shift_coeffs)
+        return self.energy_shift_coeffs.fit(temp_kev)
 
     def width_correction(self, temp_kev: float | npt.NDArray) -> float | npt.NDArray:
         r"""
         Calculate the width correction \delta_{\omega} at a given ion temperature.
         """  # noqa: DOC201
-        return ballabio_fit(temp_kev, self.width_correction_coeffs)
+        return self.width_correction_coeffs.fit(temp_kev)
 
     def mean_energy(self, temp_kev: float | npt.NDArray) -> float | npt.NDArray:
         """
