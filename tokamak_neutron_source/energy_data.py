@@ -21,9 +21,9 @@ from tokamak_neutron_source.tools import get_tns_path
 TWO_SQRT_2LN2 = 2.3548200450309493
 
 
-class NeutronEnergySpectrum:
+class NeutronEnergyDataSpectrum:
     """
-    Fusion neutron energy spectrum.
+    Fusion neutron energy data spectrum.
 
     Parameters
     ----------
@@ -39,22 +39,27 @@ class NeutronEnergySpectrum:
 
         file = path.as_posix()
         data = np.genfromtxt(file, comments="#")
-        energy = data[:, 0]  # [MeV]
+        energy = raw_uc(data[:, 0], "MeV", "keV")
         temperature = np.linspace(1.0, 20.0, 40)  # [keV]
-        spectra = data[:, 1:]  # [1/MeV]
+        spectra = raw_uc(data[:, 1:], "1/MeV", "1/keV")
         self._interpolator = RegularGridInterpolator(
-            (raw_uc(energy, "MeV", "keV"), temperature),
-            raw_uc(spectra, "1/MeV", "1/keV"),
+            (energy, temperature),
+            spectra,
             method="linear",
             bounds_error=True,
             fill_value=np.nan,
         )
 
-    def __call__(
-        self, energy_kev: float, temp_kev: float
-    ) -> tuple[npt.NDArray, npt.NDArray]:
-        """Get spectrum at a give temperature"""  # noqa: DOC201
-        return self._interpolator(energy_kev, temp_kev)
+    def __call__(self, temp_kev: float) -> tuple[npt.NDArray, npt.NDArray]:
+        """Get spectrum at a given temperature"""  # noqa: DOC201
+        # The energy bins are hard-coded here. I am not sure what
+        # happens below 1 MeV
+        energy = np.linspace(1.0e3, 10.0e3, 1000)  # [keV]
+
+        return energy, self._interpolator(energy, temp_kev)
+
+
+TT_N_SPECTRUM = NeutronEnergyDataSpectrum("T_T_spectra.txt")
 
 
 @dataclass

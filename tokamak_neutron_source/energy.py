@@ -12,7 +12,7 @@ from enum import Enum, auto
 import numpy as np
 import numpy.typing as npt
 
-from tokamak_neutron_source.energy_data import BallabioEnergySpectrum
+from tokamak_neutron_source.energy_data import TT_N_SPECTRUM, BallabioEnergySpectrum
 from tokamak_neutron_source.reactions import Reactions
 from tokamak_neutron_source.tools import trapezoid
 
@@ -61,17 +61,31 @@ def energy_spectrum(
 
             logger.warning(
                 f"There is no Ballabio parameterisation for reaction {reaction.name}, "
-                "returning energy spectrum calculated by data."
+                "returning energy spectrum calculated by data.",
+                stacklevel=5,
             )
-            raise NotImplementedError
+            return _data_spectrum(reaction, temp_kev)
 
         case EnergySpectrumMethod.DATA:
-            raise NotImplementedError
+            return _data_spectrum(reaction, temp_kev)
+
+
+def _data_spectrum(
+    reaction: Reactions, temp_kev: float
+) -> tuple[npt.NDArray, npt.NDArray]:
+    match reaction:
+        case Reactions.T_T:
+            energy, pdf = TT_N_SPECTRUM(temp_kev)
+            return _prepare_energy_pdf(energy, pdf)
+        case _:
+            raise NotImplementedError(
+                f"Reaction {reaction} does not have neutron energy spectral data."
+            )
 
 
 def _ballabio_spectrum(
     spectrum: BallabioEnergySpectrum, temp_kev: float, method=EnergySpectrumMethod
-):
+) -> tuple[npt.NDArray, npt.NDArray]:
     mean_energy = spectrum.mean_energy(temp_kev)
     std_deviation = spectrum.std_deviation(temp_kev)
 
@@ -106,12 +120,7 @@ def _gaussian_energy_spectrum(
     pdf = (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(
         -((energy - mu) ** 2) / (2 * sigma**2)
     )
-
-    mask = pdf > 0
-    pdf = pdf[mask]
-    energy = energy[mask]
-    probability = pdf / trapezoid(pdf, energy)
-    return energy, probability
+    return _prepare_energy_pdf(energy, pdf)
 
 
 def _modified_gaussian_energy_spectrum(
@@ -146,8 +155,31 @@ def _modified_gaussian_energy_spectrum(
     sigma_sq = 4.0 / 3.0 * mu**2 * (sqrt_factor - factor)
 
     pdf = np.exp(-2.0 * e_bar * (np.sqrt(energy) - np.sqrt(e_bar)) ** 2 / sigma_sq)
-    mask = pdf > 0
+    return _prepare_energy_pdf(energy, pdf)
+
+
+def _prepare_energy_pdf(
+    energy: npt.NDArray, pdf: npt.NDArray
+) -> tuple[npt.NDArray, npt.NDArray]:
+    """
+    Prepare an energy distribution (histogram), removing leading and trailing zeros,
+    and normalising the integral of the probability density function.
+    """
+    mask = _trim_zero_mask(pdf)
     pdf = pdf[mask]
     energy = energy[mask]
     probability = pdf / trapezoid(pdf, energy)
     return energy, probability
+
+
+def _trim_zero_mask(arr):
+    """
+    Remove leading and trailing 0's off a vector
+    """
+    arr = np.asarray(arr)
+    nz = np.nonzero(arr)[0]
+    if nz.size == 0:
+        raise EnergySpectrumMethod("Cannot trim the zeros off a full-0 vector!")
+    mask = np.zeros_like(arr, dtype=bool)
+    mask[nz[0] : nz[-1] + 1] = True
+    return mask
