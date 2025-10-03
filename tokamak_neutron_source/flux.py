@@ -26,6 +26,7 @@ __all__ = [
     "FluxMap",
     "FluxPoint",
     "FluxSurfaceParameterisation",
+    "SauterFluxSurface",
 ]
 
 
@@ -158,6 +159,9 @@ class LCFSInformation:
 
     """Plasma radial Shafranov shift (maximum) [m]"""
     shafranov_shift: float
+
+    """Plasma squareness"""
+    squareness: float = 0.0
 
     # Derived attribute, set in __post_init__
     minor_radius: float = field(init=False)
@@ -312,18 +316,6 @@ class FluxSurfaceParameterisation(ABC):
     def __init__(self, lcfs_info: LCFSInformation):
         self.lcfs_info = lcfs_info
 
-    @abstractmethod
-    def flux_surface(
-        self,
-        psi_norm: float | Iterable,
-        n_points: int = 100,
-    ) -> ClosedFluxSurface | list[ClosedFluxSurface]:
-        """Return a ClosedFluxSurface for given psi_norm."""
-
-
-class FausserFluxSurface(FluxSurfaceParameterisation):
-    """Fausser et al. flux surface parameterisation."""
-
     def flux_surface(
         self,
         psi_norm: float | Iterable,
@@ -348,6 +340,18 @@ class FausserFluxSurface(FluxSurfaceParameterisation):
             return [self._single_flux_surface(p, n_points) for p in psi_norm]
         return self._single_flux_surface(psi_norm, n_points)
 
+    @abstractmethod
+    def _single_flux_surface(
+        self,
+        psi_norm: float | Iterable,
+        n_points: int = 100,
+    ) -> ClosedFluxSurface | list[ClosedFluxSurface]:
+        """Return a ClosedFluxSurface for given psi_norm."""
+
+
+class FausserFluxSurface(FluxSurfaceParameterisation):
+    """Fausser et al. flux surface parameterisation."""
+
     def _single_flux_surface(
         self,
         psi_norm: float,
@@ -361,6 +365,23 @@ class FausserFluxSurface(FluxSurfaceParameterisation):
             + abs(self.lcfs_info.shafranov_shift) * (1 - psi_norm**2)
         )
         z = self.lcfs_info.z_0 + a * self.lcfs_info.kappa * np.sin(alpha)
+        return ClosedFluxSurface(r, z)
+
+
+class SauterFluxSurface(FluxSurfaceParameterisation):
+    """Sauter et al. flux surface parameterisation."""
+
+    def _single_flux_surface(self, psi_norm, n_points=100):
+        a = psi_norm * self.lcfs_info.minor_radius
+        alpha = np.linspace(0, 2 * np.pi, n_points)
+        r = (
+            self.lcfs_info.r_0
+            + a * np.cos(alpha + self.lcfs_info.delta * np.sin(alpha))
+            - self.lcfs_info.squareness * np.sin(2 * alpha)
+        )
+        z = self.lcfs_info.z_0 + self.lcfs_info.kappa * a * np.sin(
+            alpha + self.lcfs_info.squareness * np.sin(2 * alpha)
+        )
         return ClosedFluxSurface(r, z)
 
 
@@ -586,6 +607,10 @@ class ParameterisationInterpolator(FluxInterpolator):
     ):
         self._parameterisation = parameterisation
         self._n_points = n_points
+
+        # Treat the core differently
+        rho_profile = rho_profile[rho_profile > 0.0]
+
         flux_surfaces = self._parameterisation.flux_surface(rho_profile, self._n_points)
 
         x = np.concatenate([f.x for f in flux_surfaces])
@@ -594,11 +619,18 @@ class ParameterisationInterpolator(FluxInterpolator):
         # TODO @CorondelBuendia: Maybe need to have psi_norm profile
         # 1
         psi = np.concatenate([[1 - rho] * n_points for rho in rho_profile])
+
+        # Add the core
+        x = np.concatenate([x, [o_point.x]])
+        z = np.concatenate([z, [o_point.z]])
+        psi = np.concatenate([psi, [o_point.psi]])
+
         psi_norm = normalise_psi(psi, o_point.psi, 0.0, flux_convention)
         super().__init__(x, z, psi_norm, o_point)
         self._psi_norm_func = CloughTocher2DInterpolator(
             np.column_stack((x, z)),
             psi_norm,
+            fill_value=1.0,
         )
 
     def psi_norm(self, x: float, z: float) -> float:

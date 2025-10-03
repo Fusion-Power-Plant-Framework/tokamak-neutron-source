@@ -6,7 +6,13 @@ import pytest
 from eqdsk import EQDSKInterface
 
 from tokamak_neutron_source.error import ReactivityError
-from tokamak_neutron_source.flux import FausserFluxSurface, FluxMap, LCFSInformation
+from tokamak_neutron_source.flux import (
+    FausserFluxSurface,
+    FluxConvention,
+    FluxMap,
+    LCFSInformation,
+    SauterFluxSurface,
+)
 from tokamak_neutron_source.main import TokamakNeutronSource, _parse_source_type
 from tokamak_neutron_source.profile import ParabolicPedestalProfile
 from tokamak_neutron_source.reactivity import (
@@ -104,3 +110,54 @@ class TestParseSourceType:
     def test_fail(self, reactions):
         with pytest.raises(ReactivityError):
             _parse_source_type(reactions)
+
+
+class TestPROCESSFusionBenchmark:
+    """
+    Benchmark to PROCESS version v3.2.0-52-gd3768e97f large tokamak solution values.
+    """
+
+    temperature_profile = ParabolicPedestalProfile(
+        25.718, 5.5, 0.1, 1.45, 2.0, 0.94
+    )  # [keV]
+    temperature_profile.set_scale(1.0)
+    density_profile = ParabolicPedestalProfile(
+        1.042e20, 6.214e19, 3.655e19, 1.0, 2.0, 0.94
+    )
+    density_profile.set_scale(6.358 / 7.922)
+    rho_profile = np.linspace(0, 1, 500)  # Default PROCESS discretisation
+
+    def make_source(self, reaction):
+        return TokamakNeutronSource(
+            transport=TransportInformation.from_parameterisations(
+                ion_temperature_profile=self.temperature_profile,
+                fuel_density_profile=self.density_profile,
+                rho_profile=self.rho_profile,
+                fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
+            ),
+            flux_map=FluxMap.from_parameterisation(
+                SauterFluxSurface(
+                    LCFSInformation(
+                        8.0, 0.0, 3.0, 1.85, 0.5, shafranov_shift=0.0, squareness=0.0
+                    ),
+                ),
+                n_points=100,
+                rho_profile=self.rho_profile,
+                flux_convention=FluxConvention.LINEAR,
+            ),
+            source_type=reaction,
+            cell_side_length=0.1,
+            reactivity_method=ReactivityMethod.BOSCH_HALE,
+        )
+
+    @pytest.mark.parametrize(
+        ("reaction", "expected_mw"),
+        [
+            (Reactions.D_T, 1637.79),
+            (Reactions.D_D, 1.97),
+        ],
+    )
+    def test_fusion_power(self, reaction, expected_mw):
+        source = self.make_source(reaction)
+        total_fusion_power_mw = source.calculate_total_fusion_power() / 1e6
+        assert np.isclose(total_fusion_power_mw, expected_mw, rtol=1.5e-2, atol=0.0)
