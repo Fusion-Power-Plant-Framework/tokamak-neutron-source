@@ -26,7 +26,7 @@ class ReactionCrossSection:
     """
 
     def __init__(self, file_name: str):
-        path = get_tns_path("data")
+        path = get_tns_path("data/cross_sections")
         path = Path(path, file_name)
         if not path.is_file():
             raise ReactivityError(f"Cross-section data file {path} is not a file!")

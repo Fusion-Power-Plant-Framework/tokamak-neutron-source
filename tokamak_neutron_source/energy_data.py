@@ -15,6 +15,23 @@ import numpy.typing as npt
 TWO_SQRT_2LN2 = 2.3548200450309493
 
 
+class NeutronEnergySpectrum:
+    """
+    Fusion neutron energy spectrum.
+
+    Parameters
+    ----------
+    file_name:
+        Data file (ENDF format)
+    """
+    def __init__(self, file_name: str):
+
+        self._spectrum = None
+
+    def __call__(self, temp_kev: float | npt.NDArray) -> tuple[npt.NDArray, npt.NDArray]:
+        """Get spectrum at a give temperature"""  # noqa: DOC201
+        return self._spectrum(temp_kev)
+    
 @dataclass
 class BallabioCoefficients:
     """
