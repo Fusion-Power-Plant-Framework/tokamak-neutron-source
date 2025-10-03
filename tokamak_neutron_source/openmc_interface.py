@@ -50,20 +50,7 @@ def get_neutron_energy_spectrum(
     """
     energy, probability = energy_spectrum(reaction, temp_kev, method)
     energy_ev = raw_uc(energy, "keV", "eV")
-    match reaction:
-        case Reactions.D_T | Reactions.D_D:
-            return Tabular(energy_ev, probability, interpolation="linear-linear")
-
-        case Reactions.T_T:
-            # TODO @CoronelBuendia: Add T-T spectral data
-            # 8
-            # T + T → 4He + 2n
-            # Neutrons have a broad spectrum, here approximated as two 2-9 MeV neutrons
-            # (very simplified discrete placeholder)
-            return Discrete(raw_uc(reaction.neutron_energies, "J", "eV"), [0.5, 0.5])
-
-        case _:
-            raise ValueError(f"Unsupported reaction: {reaction}")
+    return Tabular(energy_ev, probability, interpolation="linear-linear")
 
 
 def make_openmc_ring_source(
