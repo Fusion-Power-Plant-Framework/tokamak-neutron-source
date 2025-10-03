@@ -8,11 +8,11 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 from openmc import IndependentSource
-from openmc.data import combine_distributions
 from openmc.stats import (
     CylindricalIndependent,
     Discrete,
     Isotropic,
+    Mixture,
     Tabular,
     Uniform,
 )
@@ -25,7 +25,7 @@ from tokamak_neutron_source.reactivity import AllReactions
 
 def get_neutron_energy_spectrum(
     reaction: Reactions, temp_kev: float, method: EnergySpectrumMethod
-) -> Discrete:
+) -> Tabular | Discrete:
     """
     Get a native OpenMC neutron energy spectrum.
 
@@ -152,10 +152,7 @@ def make_openmc_full_combined_source(
         total_strength = sum(weights)
         # TODO @CoronelBuendia: Replace with Mixture
         # 9
-        distribution = combine_distributions(
-            distributions,
-            np.array(weights) / total_strength,
-        )
+        distribution = Mixture(np.array(weights) / total_strength, distributions)
 
         source = make_openmc_ring_source(ri, zi, distribution, total_strength)
         if source is not None:
