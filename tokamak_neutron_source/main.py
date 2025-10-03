@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+from tokamak_neutron_source.energy import EnergySpectrumMethod
 from tokamak_neutron_source.error import ReactivityError, TNSError
 from tokamak_neutron_source.reactions import (
     AneutronicReactions,
@@ -172,9 +173,22 @@ class TokamakNeutronSource:
         for reaction in self.source_type:
             self.strength[reaction] *= scaling_factor
 
-    def to_openmc_source(self) -> list[IndependentSource]:
+    def to_openmc_source(
+        self,
+        energy_spectrum_method: EnergySpectrumMethod = EnergySpectrumMethod.BALLABIO_M_GAUSSIAN,
+    ) -> list[IndependentSource]:
         """
         Create an OpenMC tokamak neutron source.
+
+        Parameters
+        ----------
+        energy_spectrum_method:
+            Which method to use when calculating neutron spectra
+
+        Returns
+        -------
+        :
+            List of native OpenMC source objects
         """  # noqa: DOC201
         from tokamak_neutron_source.openmc_interface import (  # noqa: PLC0415
             make_openmc_full_combined_source,
@@ -185,6 +199,7 @@ class TokamakNeutronSource:
             self.z,
             self.temperature,
             self.strength,
+            energy_spectrum_method,
         )
 
     def to_sdef_card(self):

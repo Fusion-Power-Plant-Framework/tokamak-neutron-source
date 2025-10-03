@@ -85,6 +85,23 @@ def _ballabio_spectrum(
 def _gaussian_energy_spectrum(
     mu: float, sigma: float
 ) -> tuple[npt.NDArray, npt.NDArray]:
+    """
+    Normal Gaussian spectrum
+
+    Parameters
+    ----------
+    mu:
+        Mean energy
+    sigma:
+        Standard deviation
+
+    Returns
+    -------
+    energy:
+        The energy bins of the probability distribution function
+    probability:
+        The probabilities
+    """
     energy = np.linspace(mu - 6 * sigma, mu + 6 * sigma, 1000)  # [keV]
     pdf = (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(
         -((energy - mu) ** 2) / (2 * sigma**2)
@@ -99,16 +116,23 @@ def _gaussian_energy_spectrum(
 
 def _modified_gaussian_energy_spectrum(
     mu: float, sigma: float
-) -> tuple[float | npt.NDArray, ...]:
+) -> tuple[npt.NDArray, npt.NDArray]:
     """
     Modified Gaussian spectrum (from e.g. Ballabio et al., 1998)
+
+    Parameters
+    ----------
+    mu:
+        Mean energy
+    sigma:
+        Standard deviation
 
     Returns
     -------
     energy:
-        MATTI TODO
-    probablity:
-        MATTI TODO
+        The energy bins of the probability distribution function
+    probability:
+        The probabilities
 
     Notes
     -----

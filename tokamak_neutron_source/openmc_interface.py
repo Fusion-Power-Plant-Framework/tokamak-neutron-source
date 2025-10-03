@@ -18,34 +18,41 @@ from openmc.stats import (
 )
 
 from tokamak_neutron_source.constants import raw_uc
-from tokamak_neutron_source.energy import energy_spectrum
+from tokamak_neutron_source.energy import EnergySpectrumMethod, energy_spectrum
 from tokamak_neutron_source.reactions import Reactions
 from tokamak_neutron_source.reactivity import AllReactions
 
 
-def get_neutron_energy(reaction: Reactions, temp_kev: float) -> Discrete:
+def get_neutron_energy_spectrum(
+    reaction: Reactions, temp_kev: float, method: EnergySpectrumMethod
+) -> Discrete:
     """
+    Get a native OpenMC neutron energy spectrum.
+
+    Parameters
+    ----------
+    reaction:
+        The neutronic reaction for which to retrieve the neutron spectrum
+    temp_kev: float
+        The ion temperature of the reactants
+    method:
+        Which method to use when calculating the energy spectrum
+
     Returns
     -------
     :
-        Discrete neutron energy distribution for the given reaction.
+        OpenMC tabular neutron energy distribution for the given reaction.
 
     Raises
     ------
     ValueError
         Unsupported Reaction
-
-    Notes
-    -----
-    Energies in MeV.
-    Probabilities normalized.
-    Temperature parameter left in for possible spectrum broadening.
     """
-    energy, probability = energy_spectrum(reaction, temp_kev)
+    energy, probability = energy_spectrum(reaction, temp_kev, method)
     energy_ev = raw_uc(energy, "keV", "eV")
     match reaction:
         case Reactions.D_T | Reactions.D_D:
-            return Tabular(energy_ev, probability)
+            return Tabular(energy_ev, probability, interpolation="linear-linear")
 
         case Reactions.T_T:
             # TODO @CoronelBuendia: Add T-T spectral data
@@ -104,6 +111,7 @@ def make_openmc_full_combined_source(
     z: npt.NDArray,
     temperature: npt.NDArray,
     strength: dict[AllReactions, npt.NDArray],
+    energy_spectrum_method: EnergySpectrumMethod,
 ) -> IndependentSource:
     """
     Make an OpenMC source combining multiple reactions across the whole plasma.
@@ -118,6 +126,8 @@ def make_openmc_full_combined_source(
         Ion temperatures at the rings [keV]
     strength:
         Dictionary of strengths for each reaction at the rings [arbitrary units]
+    energy_spectrum_method:
+        Which method to use when calculating neutron spectra
 
     Returns
     -------
@@ -134,7 +144,9 @@ def make_openmc_full_combined_source(
 
         for reaction, s in n_strength.items():
             if s[i] > 0.0:
-                distributions.append(get_neutron_energy(reaction, ti))
+                distributions.append(
+                    get_neutron_energy_spectrum(reaction, ti, energy_spectrum_method)
+                )
                 weights.append(s[i])
 
         total_strength = sum(weights)
