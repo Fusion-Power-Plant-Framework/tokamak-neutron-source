@@ -48,8 +48,8 @@ def energy_spectrum(
     -------
     energies:
         The energy bins of the probability distribution function
-    probabilities:
-        The probabilities
+    pdf:
+        The PDF values
     """
     match method:
         case (
@@ -73,6 +73,23 @@ def energy_spectrum(
 def _data_spectrum(
     reaction: Reactions, temp_kev: float
 ) -> tuple[npt.NDArray, npt.NDArray]:
+    """
+    Calculate the data spectrum for a reaction at a given ion temperature.
+
+    Parameters
+    ----------
+    reaction:
+        The reaction to calculate the spectrum for
+    temp_kev:
+        The ion temperature at which to calculate
+
+    Returns
+    -------
+    energy:
+        Energy bins of the spectrum
+    pdf:
+        PDF values of the spectrum
+    """
     match reaction:
         case Reactions.T_T:
             energy, pdf = TT_N_SPECTRUM(temp_kev)
@@ -86,6 +103,26 @@ def _data_spectrum(
 def _ballabio_spectrum(
     spectrum: BallabioEnergySpectrum, temp_kev: float, method=EnergySpectrumMethod
 ) -> tuple[npt.NDArray, npt.NDArray]:
+    """
+    Calculate the Ballabio spectrum for a given ion temperature and specified
+    method.
+
+    Parameters
+    ----------
+    spectrum:
+        The spectrum to calculate
+    temp_kev:
+        The ion temperature at which to calculate
+    method:
+        The spectrum method to use
+
+    Returns
+    -------
+    energy:
+        Energy bins of the spectrum
+    pdf:
+        PDF values of the spectrum
+    """
     mean_energy = spectrum.mean_energy(temp_kev)
     std_deviation = spectrum.std_deviation(temp_kev)
 
@@ -113,8 +150,8 @@ def _gaussian_energy_spectrum(
     -------
     energy:
         The energy bins of the probability distribution function
-    probability:
-        The probabilities
+    pdf:
+        The PDF values
     """
     energy = np.linspace(mu - 6 * sigma, mu + 6 * sigma, 1000)  # [keV]
     pdf = (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(
@@ -140,8 +177,8 @@ def _modified_gaussian_energy_spectrum(
     -------
     energy:
         The energy bins of the probability distribution function
-    probability:
-        The probabilities
+    pdf:
+        The PDF values
 
     Notes
     -----
@@ -164,6 +201,20 @@ def _prepare_energy_pdf(
     """
     Prepare an energy distribution (histogram), removing leading and trailing zeros,
     and normalising the integral of the probability density function.
+
+    Parameters
+    ----------
+    energy:
+        Energy bins of the PDF
+    pdf:
+        PDF values
+
+    Returns
+    -------
+    energy:
+        Energy bins of the PDF
+    pdf:
+        PDF values
     """
     mask = _trim_zero_mask(pdf)
     pdf = pdf[mask]
@@ -172,14 +223,24 @@ def _prepare_energy_pdf(
     return energy, probability
 
 
-def _trim_zero_mask(arr):
+def _trim_zero_mask(vec):
     """
-    Remove leading and trailing 0's off a vector
+    Get a mask removing leading and trailing 0's off a vector.
+
+    Parameters
+    ----------
+    vec:
+        Vector to mask leading and trailing 0's for
+
+    Returns
+    -------
+    mask:
+        Mask for vector
     """
-    arr = np.asarray(arr)
-    nz = np.nonzero(arr)[0]
+    vec = np.asarray(vec)
+    nz = np.nonzero(vec)[0]
     if nz.size == 0:
         raise EnergySpectrumMethod("Cannot trim the zeros off a full-0 vector!")
-    mask = np.zeros_like(arr, dtype=bool)
+    mask = np.zeros_like(vec, dtype=bool)
     mask[nz[0] : nz[-1] + 1] = True
     return mask

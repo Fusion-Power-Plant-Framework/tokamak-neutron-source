@@ -8,8 +8,13 @@ import pytest
 from tokamak_neutron_source.energy import (
     _gaussian_energy_spectrum,
     _modified_gaussian_energy_spectrum,
+    energy_spectrum,
 )
-from tokamak_neutron_source.energy_data import BALLABIO_DD_NEUTRON, BALLABIO_DT_NEUTRON
+from tokamak_neutron_source.energy_data import (
+    BALLABIO_DD_NEUTRON,
+    BALLABIO_DT_NEUTRON,
+    TT_N_SPECTRUM,
+)
 from tokamak_neutron_source.reactions import Reactions
 
 
@@ -86,4 +91,22 @@ def test_dt_shift_plot():
     ax.set_xlabel("Ti [keV]")
 
     ax.set_ylabel(r"$\Delta E_{th}$ [keV]")
+    plt.show()
+
+
+def test_tt_spectra_plot():
+    """
+    Attempt to match Fig 1 of Appelbe and Chittenden, 2016
+    """
+    d = TT_N_SPECTRUM
+    t = [1.0, 5.0, 10.0, 20.0]
+
+    f, ax = plt.subplots()
+    for temp in t:
+        energy, intensity = d(temp)
+        ax.plot(energy, intensity, label=f"Ti = {temp} keV")
+    ax.legend()
+    ax.set_title("T-T neutron energy spectrum")
+    ax.set_xlabel(r"$E_n$ [MeV]")
+    ax.set_ylabel("Intensity (arb. units)")
     plt.show()

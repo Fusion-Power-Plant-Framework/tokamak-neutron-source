@@ -7,6 +7,7 @@ Neutron energy spectrum data.
 """
 
 from dataclasses import dataclass
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -17,18 +18,20 @@ from tokamak_neutron_source.constants import raw_uc
 from tokamak_neutron_source.error import EnergySpectrumError
 from tokamak_neutron_source.tools import get_tns_path
 
+logger = logging.getLogger(__name__)
+
 # 2.0 * np.sqrt(2.0 * np.log(2))
 TWO_SQRT_2LN2 = 2.3548200450309493
 
 
-class NeutronEnergyDataSpectrum:
+class TTNeutronEnergyDataSpectrum:
     """
     Fusion neutron energy data spectrum.
 
     Parameters
     ----------
     file_name:
-        Data file (ENDF format)
+        Data file
     """
 
     def __init__(self, file_name: str):
@@ -39,11 +42,15 @@ class NeutronEnergyDataSpectrum:
 
         file = path.as_posix()
         data = np.genfromtxt(file, comments="#")
-        energy = raw_uc(data[:, 0], "MeV", "keV")
+
+        # The energy bins for this spectrum are hard-coded here
+        # (no sense in interpolating).
+        self._energy = raw_uc(data[:, 0], "MeV", "keV")
+
         temperature = np.linspace(1.0, 20.0, 40)  # [keV]
         spectra = raw_uc(data[:, 1:], "1/MeV", "1/keV")
         self._interpolator = RegularGridInterpolator(
-            (energy, temperature),
+            (self._energy, temperature),
             spectra,
             method="linear",
             bounds_error=True,
@@ -52,14 +59,17 @@ class NeutronEnergyDataSpectrum:
 
     def __call__(self, temp_kev: float) -> tuple[npt.NDArray, npt.NDArray]:
         """Get spectrum at a given temperature"""  # noqa: DOC201
-        # The energy bins are hard-coded here. I am not sure what
-        # happens below 1 MeV
-        energy = np.linspace(1.0e3, 10.0e3, 1000)  # [keV]
+        if not 1.0 < temp_kev < 20.0:
+            logger.warning(
+                "T-T spectral data only available for 1.0 < T < 20.0 keV, clipping to bounds",
+                stacklevel=2,
+            )
+            temp_kev = np.clip(temp_kev, 1.0, 20.0)
 
-        return energy, self._interpolator(energy, temp_kev)
+        return self._energy, self._interpolator((self._energy, temp_kev))
 
 
-TT_N_SPECTRUM = NeutronEnergyDataSpectrum("T_T_spectra.txt")
+TT_N_SPECTRUM = TTNeutronEnergyDataSpectrum("T_T_spectra.txt")
 
 
 @dataclass
