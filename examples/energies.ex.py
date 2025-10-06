@@ -95,6 +95,7 @@ for reaction in [Reactions.D_D, Reactions.D_T]:
         temperature, reaction, method=EnergySpectrumMethod.BALLABIO_M_GAUSSIAN
     )
     _f, ax = plt.subplots()
+    ax.set_title(f"{reaction.name} neutron energy spectrum at 20 keV")
     ax.semilogy(energy1, g_pdf, label=f"{reaction.name} Gaussian")
     ax.semilogy(energy2, mg_pdf, label=f"{reaction.name} modified Gaussian")
     ax.set_xlabel(r"$E_{n}$ [keV]")

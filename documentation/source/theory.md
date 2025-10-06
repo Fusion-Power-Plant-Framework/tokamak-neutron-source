@@ -14,10 +14,6 @@ $$
 \end{aligned}
 $$
 
-The product energies are calculated by simple mass ratio (ignoring relativistic effects), with the exception of the T-T reaction, which is a three body problem.
-
-With the exception of the T-T reaction, the neutron energy spectra are modelled as mono-energetic.
-
 # Fusion reactivities
 
 The reactivities $\langle \sigma\nu\rangle_{XY}$ are velocity-averaged assuming a Maxwellian distribution. Both Bosch-Hale and direct cross-section integral methods are available to calculate the reactivies.
@@ -46,6 +42,13 @@ N_{total} = \sum_R \sum_c \int \dfrac{1}{1+\delta_{XY}}n_X(\psi_n)n_Y(\psi_n)\la
 $$
 
 In practice, the aneutronic D-D channel is ignored, but is accounted for when renormalising a to a user-prescribed fusion power.
+
+# Neutron energies
+
+The neutron energies are provided in terms of probability density functions (PDFs). For the D-D and D-T reactions, these are calculated following [Ballabio et al., 1998](https://iopscience.iop.org/article/10.1088/0029-5515/38/11/310). For the T-T reaction (a three-body reaction with two neutrons), a single neutron spectrum is provided, interpolated from data kindly supplied from [Appelbe and Chittenden, 2016](https://www.sciencedirect.com/science/article/abs/pii/S1574181816300295).
+
+![](neutron_spectra.svg)
+
 
 # Plasma profiles
 
