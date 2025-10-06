@@ -55,8 +55,8 @@ def get_neutron_energy_spectrum(
 
 
 def make_openmc_ring_source(
-    r: float,
-    z: float,
+    r_lim: float,
+    z_lim: float,
     energy_distribution: Any,
     strength: float,
 ) -> IndependentSource:
@@ -80,12 +80,15 @@ def make_openmc_ring_source(
         An OpenMC IndependentSource object, or None if strength is zero.
     """
     if strength > 0:
+        r_lim_cm = raw_uc(r_lim, "m", "cm")
+        z_lim_cm = raw_uc(z_lim, "m", "cm")
+        r_lim_prob = np.array(r_lim_cm)/sum(r_lim_cm)
         return IndependentSource(
             energy=energy_distribution,
             space=CylindricalIndependent(
-                r=Uniform(raw_uc(r, "m", "cm")),
+                r=Tabular(r_lim_cm, r_lim_prob),
                 phi=Uniform(0, 2 * np.pi),
-                z=Uniform(raw_uc(z, "m", "cm")),
+                z=Uniform(*z_lim_cm),
                 origin=(0.0, 0.0, 0.0),
             ),
             angle=Isotropic(),
