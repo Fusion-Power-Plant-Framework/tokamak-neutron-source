@@ -43,10 +43,9 @@ def get_neutron_energy_spectrum(
     :
         OpenMC tabular neutron energy distribution for the given reaction.
 
-    Raises
-    ------
-    ValueError
-        Unsupported Reaction
+    Notes
+    -----
+    Log-linear interpolation is used within OpenMC.
     """
     energy, probability = energy_spectrum(reaction, temp_kev, method)
     energy_ev = raw_uc(energy, "keV", "eV")
