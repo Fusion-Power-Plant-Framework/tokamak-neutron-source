@@ -61,8 +61,8 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: "latest"
-          activate-environment: "tns_conda"
-          environment-file: conda/environment.yml
+          auto-activate-base: true
+          activate-environment: ""
           use-only-tar-bz2: false
           conda-remove-defaults: true
           python-version: ${{ env.PYTHON_VERSION }}
@@ -76,13 +76,11 @@ jobs:
         run: hatch run tns_conda:tests
 
       - name: Freeze conda env
-        if: inputs.with-artifact == 'true'
         shell: bash -l {0}
         run: |
           conda env export -n tns_conda > tns_${{ env.PYTHON_VERSION }}_${{ runner.os }}.yml
 
       - uses: actions/upload-artifact@v4
-        if: inputs.with-artifact == 'true'
         with:
           name: tns_${{ env.PYTHON_VERSION }}_${{ runner.os }}.yml
           path: tns_${{ env.PYTHON_VERSION }}_${{ runner.os }}.yml
@@ -90,7 +88,7 @@ jobs:
 
       - name: Save conda build cache
         uses: actions/cache/save@v4
-        if: always() && steps.cache-conda.outputs.cache-hit != 'true' && inputs.with-artifact == 'true'
+        if: always() && steps.cache-conda.outputs.cache-hit != 'true'
         with:
           path: ~/conda_pkgs_dir
           key: ${{ steps.cache-conda.outputs.cache-primary-key }}
