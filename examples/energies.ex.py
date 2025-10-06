@@ -22,16 +22,17 @@
 # %%
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from tokamak_neutron_source import Reactions
 from tokamak_neutron_source.energy import EnergySpectrumMethod, energy_spectrum
 
 # %% [markdown]
 # # Neutron energy spectra
-# Here we look in detail at the neutron energy spectra for the D-T, D-D, and T-T 
+# Here we look in detail at the neutron energy spectra for the D-T, D-D, and T-T
 # fusion reactions.
-# 
-# The D-T and D-D spectra are calculated following 
+#
+# The D-T and D-D spectra are calculated following
 # [Ballabio et al.'s](https://iopscience.iop.org/article/10.1088/0029-5515/38/11/310)
 # parameterisations.
 #
@@ -57,6 +58,23 @@ for reaction, color in zip(
 ax.set_xlabel(r"$E_{n}$ [keV]")
 ax.set_ylabel("[a. u.]")
 ax.legend()
+plt.show()
+
+# %% [markdown]
+# Here we attempt to recreate Fig. 5 of Ballabio et al
+
+# %%
+
+temperature = 20.0
+energy, prob = energy_spectrum(temperature, Reactions.D_T)
+
+_f, ax = plt.subplots()
+ax.semilogy(energy, prob)
+ax.set_xlim([12e3, 17e3])
+ax.set_ylim([10e-11, 10e-3])
+ax.set_title("D-T neutron spectrum at 20 keV")
+ax.set_xlabel("En [keV]")
+ax.set_ylabel("[a. u.]")
 plt.show()
 
 
@@ -93,9 +111,11 @@ temperatures = [1.0, 5.0, 10.0, 20.0]
 f, ax = plt.subplots()
 for temp in temperatures:
     energy, intensity = energy_spectrum(temp, Reactions.T_T, EnergySpectrumMethod.DATA)
-    ax.plot(energy, intensity, label=f"Ti = {temp} keV")
+    ax.plot(energy, intensity / max(intensity), label=f"Ti = {temp} keV")
 ax.legend()
 ax.set_title("T-T neutron energy spectrum")
-ax.set_xlabel(r"$E_n$ [MeV]")
-ax.set_ylabel("Intensity (arb. units)")
+ax.set_xlim([1e3, 1e4])
+ax.set_ylim([0, 1])
+ax.set_xlabel(r"$E_n$ [keV]")
+ax.set_ylabel("[a. u.]")
 plt.show()
