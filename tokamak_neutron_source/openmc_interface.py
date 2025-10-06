@@ -49,7 +49,7 @@ def get_neutron_energy_spectrum(
     """
     energy, probability = energy_spectrum(temp_kev, reaction, method)
     energy_ev = raw_uc(energy, "keV", "eV")
-    # TODO: Log-linear interpolation is not supported in OpenMC at present
+    # Log-linear interpolation is not supported in OpenMC at present
     # see: https://github.com/openmc-dev/openmc/issues/2409
     return Tabular(energy_ev, probability, interpolation="linear-linear")
 
