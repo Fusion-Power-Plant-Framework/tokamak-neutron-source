@@ -28,6 +28,15 @@ from tokamak_neutron_source.energy import EnergySpectrumMethod, energy_spectrum
 
 # %% [markdown]
 # # Neutron energy spectra
+# Here we look in detail at the neutron energy spectra for the D-T, D-D, and T-T 
+# fusion reactions.
+# 
+# The D-T and D-D spectra are calculated following 
+# [Ballabio et al.'s](https://iopscience.iop.org/article/10.1088/0029-5515/38/11/310)
+# parameterisations.
+#
+# The T-T spectra are interpolated from data produced by
+# [Appelbe and Chittenden](https://www.sciencedirect.com/science/article/abs/pii/S1574181816300295).
 
 # %%
 
@@ -53,7 +62,8 @@ plt.show()
 
 # %% [markdown]
 # # Comparison between normal and modified Gaussian distributions from Ballabio et al.
-#
+# The differences are subtle, default is to use the modified Gaussian as specified
+# in the paper.
 
 # %%
 
@@ -73,3 +83,19 @@ for reaction in [Reactions.D_D, Reactions.D_T]:
     ax.set_ylabel("[a. u.]")
     ax.legend()
     plt.show()
+
+
+# %% [markdown]
+# Here we recreate Fig 1. of Appelbe and Chittenden
+
+temperatures = [1.0, 5.0, 10.0, 20.0]
+
+f, ax = plt.subplots()
+for temp in temperatures:
+    energy, intensity = energy_spectrum(temp, Reactions.T_T, EnergySpectrumMethod.DATA)
+    ax.plot(energy, intensity, label=f"Ti = {temp} keV")
+ax.legend()
+ax.set_title("T-T neutron energy spectrum")
+ax.set_xlabel(r"$E_n$ [MeV]")
+ax.set_ylabel("Intensity (arb. units)")
+plt.show()

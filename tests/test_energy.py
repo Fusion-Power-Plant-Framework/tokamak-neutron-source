@@ -35,24 +35,6 @@ class TestEnergyShift:
         assert np.isclose(e_shift, expected, rtol=1e-2, atol=0.0)
 
 
-def test_ballabio_dt_spectra_methods():
-    """
-    Comparison of normal vs modified Gaussian with Ballabio
-    """
-    T = 20
-    mu = Reactions.D_T.ballabio_spectrum.mean_energy(T)
-    sigma = Reactions.D_T.ballabio_spectrum.std_deviation(T)
-
-    energy1, g_pdf = _gaussian_energy_spectrum(mu, sigma)
-    energy2, mg_pdf = _modified_gaussian_energy_spectrum(mu, sigma)
-    _f, ax = plt.subplots()
-    ax.plot(energy1, g_pdf, label="Gaussian")
-    ax.plot(energy2, mg_pdf, label="Modified Gaussian")
-    ax.legend()
-    ax.set_xlim([12.0e3, 16.0e3])
-    plt.show()
-
-
 def test_dt_sprectum_plot():
     """
     Attempt to match Fig 5 of Ballabio et al., 1998. Frustratingly don't know what
