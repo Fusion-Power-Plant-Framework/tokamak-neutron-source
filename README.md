@@ -4,13 +4,13 @@
 
 # Installation
 
-We don't try to manage the installation of your neutronics codes. We recommend you install your neutronics code first. If you are using `tokamak-neutron-source` to create an OpenMC source a simple install of OpenMC using `conda` can be done with:
+We don't try to manage the installation of your neutronics codes. We recommend you install your neutronics code first. If you are using `tokamak-neutron-source` to create an OpenMC source you can create a simple install of OpenMC using `conda` with:
 
 ```bash
 conda install -c conda-forge 'openmc>=0.15.0'
 ```
 
-To install the lastest release of `tokamak-neutron-source`
+To install the latest release of `tokamak-neutron-source`
 
 ```bash
 pip install tokamak-neutron-source

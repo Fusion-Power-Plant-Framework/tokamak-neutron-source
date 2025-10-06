@@ -12,7 +12,7 @@ We don't try to manage the installation of your neutronics codes. We recommend y
 conda install -c conda-forge 'openmc>=0.15.0'
 ```
 
-To install the lastest release of `tokamak-neutron-source`
+To install the latest release of `tokamak-neutron-source`
 
 ```bash
 pip install tokamak-neutron-source

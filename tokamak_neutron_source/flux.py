@@ -616,8 +616,6 @@ class ParameterisationInterpolator(FluxInterpolator):
         x = np.concatenate([f.x for f in flux_surfaces])
         z = np.concatenate([f.z for f in flux_surfaces])
 
-        # TODO @CorondelBuendia: Maybe need to have psi_norm profile
-        # 1
         psi = np.concatenate([[1 - rho] * n_points for rho in rho_profile])
 
         # Add the core
