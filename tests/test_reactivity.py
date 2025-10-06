@@ -63,7 +63,7 @@ class TestReactivity:
 
 
 class TestCrossSections:
-    data_dir = get_tns_path("data")
+    data_dir = get_tns_path("data/cross_sections")
 
     @pytest.mark.parametrize(
         "file_name", [p.name for p in data_dir.rglob("*.txt") if p.is_file()]
