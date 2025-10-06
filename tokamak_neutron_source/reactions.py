@@ -174,4 +174,4 @@ def _parse_reaction(reaction: str | AllReactions) -> AllReactions:
     if isinstance(reaction, AllReactions):
         return reaction
 
-    raise ReactivityError(f"Unrecognised reaction type: {type(reaction)}")
+    raise ReactivityError(f"Unrecognised reaction type: {type(reaction).__name__}")
