@@ -8,51 +8,48 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 from openmc import IndependentSource
-from openmc.data import combine_distributions
-from openmc.stats import CylindricalIndependent, Discrete, Isotropic, Uniform
+from openmc.stats import (
+    CylindricalIndependent,
+    Discrete,
+    Isotropic,
+    Mixture,
+    Tabular,
+    Uniform,
+)
 
 from tokamak_neutron_source.constants import raw_uc
-from tokamak_neutron_source.reactivity import AllReactions, Reactions
+from tokamak_neutron_source.energy import EnergySpectrumMethod, energy_spectrum
+from tokamak_neutron_source.reactions import Reactions
+from tokamak_neutron_source.reactivity import AllReactions
 
 
-def get_neutron_energy(reaction: Reactions, _temperature: float) -> Discrete:
+def get_neutron_energy_spectrum(
+    reaction: Reactions, temp_kev: float, method: EnergySpectrumMethod
+) -> Tabular | Discrete:
     """
+    Get a native OpenMC neutron energy spectrum.
+
+    Parameters
+    ----------
+    reaction:
+        The neutronic reaction for which to retrieve the neutron spectrum
+    temp_kev: float
+        The ion temperature of the reactants
+    method:
+        Which method to use when calculating the energy spectrum
+
     Returns
     -------
     :
-        Discrete neutron energy distribution for the given reaction.
-
-    Raises
-    ------
-    ValueError
-        Unsupported Reaction
+        OpenMC tabular neutron energy distribution for the given reaction.
 
     Notes
     -----
-    Energies in MeV.
-    Probabilities normalized.
-    Temperature parameter left in for possible spectrum broadening.
+    Log-linear interpolation is used within OpenMC.
     """
-    # TODO @CoronelBuendia: Include Maxwellian distribution of energy based on temp
-    # 1
-
-    match reaction:
-        case Reactions.D_T:
-            # Nearly monoenergetic 14.1 MeV neutrons
-            return Discrete(raw_uc(reaction.neutron_energies, "J", "eV"), [1.0])
-
-        case Reactions.D_D:
-            # Neutronic branch only
-            return Discrete(raw_uc(reaction.neutron_energies, "J", "eV"), [1.0])
-
-        case Reactions.T_T:
-            # T + T → 4He + 2n
-            # Neutrons have a broad spectrum, here approximated as two 2-9 MeV neutrons
-            # (very simplified discrete placeholder)
-            return Discrete(raw_uc(reaction.neutron_energies, "J", "eV"), [0.5, 0.5])
-
-        case _:
-            raise ValueError(f"Unsupported reaction: {reaction}")
+    energy, probability = energy_spectrum(reaction, temp_kev, method)
+    energy_ev = raw_uc(energy, "keV", "eV")
+    return Tabular(energy_ev, probability, interpolation="log-linear")
 
 
 def make_openmc_ring_source(
@@ -100,6 +97,7 @@ def make_openmc_full_combined_source(
     z: npt.NDArray,
     temperature: npt.NDArray,
     strength: dict[AllReactions, npt.NDArray],
+    energy_spectrum_method: EnergySpectrumMethod,
 ) -> IndependentSource:
     """
     Make an OpenMC source combining multiple reactions across the whole plasma.
@@ -114,6 +112,8 @@ def make_openmc_full_combined_source(
         Ion temperatures at the rings [keV]
     strength:
         Dictionary of strengths for each reaction at the rings [arbitrary units]
+    energy_spectrum_method:
+        Which method to use when calculating neutron spectra
 
     Returns
     -------
@@ -130,14 +130,14 @@ def make_openmc_full_combined_source(
 
         for reaction, s in n_strength.items():
             if s[i] > 0.0:
-                distributions.append(get_neutron_energy(reaction, ti))
+                distributions.append(
+                    get_neutron_energy_spectrum(reaction, ti, energy_spectrum_method)
+                )
                 weights.append(s[i])
 
         total_strength = sum(weights)
-        distribution = combine_distributions(
-            distributions,
-            np.array(weights) / total_strength,
-        )
+
+        distribution = Mixture(np.array(weights) / total_strength, distributions)
 
         source = make_openmc_ring_source(ri, zi, distribution, total_strength)
         if source is not None:

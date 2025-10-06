@@ -18,6 +18,9 @@ def _get_relpath(folder: str | Path, subfolder: str) -> Path:
     raise ValueError(f"{path} Not a valid folder.")
 
 
+trapezoid = np.trapezoid if hasattr(np, "trapezoid") else np.trapz  # noqa: NPY201
+
+
 def get_tns_root() -> str:
     """
     Get the tokamak_neutron_source root install folder.

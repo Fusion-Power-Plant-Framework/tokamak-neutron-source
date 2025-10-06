@@ -138,11 +138,13 @@ class ParabolicPedestalProfile(PlasmaProfile):
         rho = np.asarray(rho, dtype=float)
         rho = np.clip(rho, 0.0, 1.0)
 
+        rho_rho_ped_beta = (rho / self.rho_ped) ** self.beta
+        # Clip to avoid small zeros (-EPS)
+        term = np.clip(1.0 - rho_rho_ped_beta, 0.0, 1.0)
+
         # Core region: rho < rho_ped
         core_part = (
-            self.ped_value
-            + (self.core_value - self.ped_value)
-            * (1.0 - (rho / self.rho_ped) ** self.beta) ** self.alpha
+            self.ped_value + (self.core_value - self.ped_value) * term**self.alpha
         )
 
         # Pedestal region: rho >= rho_ped

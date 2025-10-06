@@ -8,13 +8,12 @@ import numpy as np
 import pytest
 
 from tokamak_neutron_source.error import ReactivityError
+from tokamak_neutron_source.reactions import AneutronicReactions, Reactions
 from tokamak_neutron_source.reactivity import (
-    AneutronicReactions,
-    ReactionCrossSection,
-    Reactions,
     ReactivityMethod,
     reactivity,
 )
+from tokamak_neutron_source.reactivity_data import ReactionCrossSection
 from tokamak_neutron_source.tools import get_tns_path
 
 
@@ -64,7 +63,7 @@ class TestReactivity:
 
 
 class TestCrossSections:
-    data_dir = get_tns_path("data")
+    data_dir = get_tns_path("data/cross_sections")
 
     @pytest.mark.parametrize(
         "file_name", [p.name for p in data_dir.rglob("*.txt") if p.is_file()]

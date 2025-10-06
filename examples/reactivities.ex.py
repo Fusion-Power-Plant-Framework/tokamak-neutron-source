@@ -24,9 +24,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from tokamak_neutron_source.reactions import AneutronicReactions, Reactions
 from tokamak_neutron_source.reactivity import (
-    AneutronicReactions,
-    Reactions,
     ReactivityMethod,
     reactivity,
 )
