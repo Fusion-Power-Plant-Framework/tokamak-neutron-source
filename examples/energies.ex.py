@@ -22,7 +22,6 @@
 # %%
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 from tokamak_neutron_source import Reactions
 from tokamak_neutron_source.energy import EnergySpectrumMethod, energy_spectrum
@@ -44,9 +43,9 @@ from tokamak_neutron_source.energy import EnergySpectrumMethod, energy_spectrum
 _f, ax = plt.subplots()
 
 for reaction, color in zip(
-    [Reactions.D_D, Reactions.D_T, Reactions.T_T], ["r", "g", "b"]
+    [Reactions.D_D, Reactions.D_T, Reactions.T_T], ["r", "g", "b"], strict=False
 ):
-    for temperature, ls in zip([10.0, 20.0], ["-.", "-"]):
+    for temperature, ls in zip([10.0, 20.0], ["-.", "-"], strict=False):
         e, pdf = energy_spectrum(temperature, reaction)
         ax.plot(
             e,
