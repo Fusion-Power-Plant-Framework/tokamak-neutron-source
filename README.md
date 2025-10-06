@@ -2,6 +2,20 @@
 
 `tokamak-neutron-source` is a package that provides a flexible and high-fidelity fusion neutron source for tokamaks in OpenMC and other Monte Carlo radiation transport codes.
 
+# Installation
+
+We don't try to manage the installation of your neutronics codes. We recommend you install your neutronics code first. If you are using `tokamak-neutron-source` to create an OpenMC source a simple install of OpenMC using `conda` can be done with:
+
+```bash
+conda install -c conda-forge 'openmc>=0.15.0'
+```
+
+To install the lastest release of `tokamak-neutron-source`
+
+```bash
+pip install tokamak-neutron-source
+```
+
 # Inputs
 
 A tokamak neutron source can be created by specifing the plasma ion density and temperature profiles, and a description of the plasma magneto-hydrodynamic equilibrium.

@@ -40,3 +40,59 @@ jobs:
 
       - name: Run pytest
         run: hatch run test.py${{ matrix.python-version }}:tests-cov
+
+  integration:
+    runs-on: ubuntu-latest
+    env: PYTHON_VERSION="3.11"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache conda
+        id: cache-conda
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ env.PYTHON_VERSION }}-${{
+            hashFiles('conda/environment.yml') }}
+
+      - name: Install Environment
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: "latest"
+          use-only-tar-bz2: false
+          conda-remove-defaults: true
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setup python and hatch
+        uses: Fusion-Power-Plant-Framework/fppf-actions/setup-hatch@main
+        shell: bash -l {0}
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install hatch conda
+        shell: bash -l {0}
+        run: pip install hatch-conda
+
+      - name: Run pytest
+        run: hatch run tns_conda:tests-cov
+
+      - name: Freeze conda env
+        if: inputs.with-artifact == 'true'
+        shell: bash -l {0}
+        run: |
+          conda env export -n tns_conda > tns_${{ env.PYTHON_VERSION }}_${{ runner.os }}.yml
+
+      - uses: actions/upload-artifact@v4
+        if: inputs.with-artifact == 'true'
+        with:
+          name: tns_${{ env.PYTHON_VERSION }}_${{ runner.os }}.yml
+          path: tns_${{ env.PYTHON_VERSION }}_${{ runner.os }}.yml
+          overwrite: true
+
+      - name: Save conda build cache
+        uses: actions/cache/save@v4
+        if: always() && steps.cache-conda.outputs.cache-hit != 'true' && inputs.with-artifact == 'true'
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ steps.cache-conda.outputs.cache-primary-key }}
