@@ -71,6 +71,7 @@ jobs:
         run: pip install hatch-conda hatch click!=8.3.0
 
       - name: Run pytest
+        shell: bash -l {0}
         run: hatch run tns_conda:tests-cov
 
       - name: Freeze conda env
