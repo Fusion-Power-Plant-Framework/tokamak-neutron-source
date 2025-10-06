@@ -78,6 +78,7 @@ fmt    = ["pre-commit run --all-files --hook-stage manual"]
 type = "conda"
 environment-file = "conda/environment.yml"
 conda-forge = true
+features = ["test"]
 
 [tool.hatch.envs.tns_conda.scripts]
 tests      = "pytest --integration {args:tests}"
