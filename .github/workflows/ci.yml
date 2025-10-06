@@ -61,7 +61,6 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: "latest"
-          activate-environment: "tns_conda"
           use-only-tar-bz2: false
           conda-remove-defaults: true
           python-version: ${{ env.PYTHON_VERSION }}
