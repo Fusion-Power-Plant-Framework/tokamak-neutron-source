@@ -40,3 +40,54 @@ jobs:
 
       - name: Run pytest
         run: hatch run test.py${{ matrix.python-version }}:tests-cov
+
+  integration:
+    runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: "3.11"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache conda
+        id: cache-conda
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ env.PYTHON_VERSION }}-${{
+            hashFiles('conda/environment.yml') }}
+
+      - name: Install Environment
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: "latest"
+          auto-activate-base: true
+          activate-environment: ""
+          use-only-tar-bz2: false
+          conda-remove-defaults: true
+
+      - name: Install hatch conda
+        shell: bash -l {0}
+        run: pip install hatch-conda hatch click!=8.3.0
+
+      - name: Run pytest
+        shell: bash -l {0}
+        run: hatch run tns_conda:tests
+
+      - name: Freeze conda env
+        shell: bash -l {0}
+        run: |
+          conda env export -n tns_conda > tns_${{ env.PYTHON_VERSION }}_${{ runner.os }}.yml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tns_${{ env.PYTHON_VERSION }}_${{ runner.os }}.yml
+          path: tns_${{ env.PYTHON_VERSION }}_${{ runner.os }}.yml
+          overwrite: true
+
+      - name: Save conda build cache
+        uses: actions/cache/save@v4
+        if: always() && steps.cache-conda.outputs.cache-hit != 'true'
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ steps.cache-conda.outputs.cache-primary-key }}

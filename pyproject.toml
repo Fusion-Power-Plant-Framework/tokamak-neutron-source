@@ -70,9 +70,19 @@ tests-cov  = "pytest --cov tokamak_neutron_source --cov-report html:htmlcov --co
 [tool.hatch.envs.lint]
 detached     = true                           # Don't inherit from default (does not download project dependencies)
 dependencies = ["pre-commit", "ruff","ty"]
+
 [tool.hatch.envs.lint.scripts]
 fmt    = ["pre-commit run --all-files --hook-stage manual"]
 
+[tool.hatch.envs.tns_conda]
+type = "conda"
+environment-file = "conda/environment.yml"
+conda-forge = true
+features = ["test"]
+python = "3.11"
+
+[tool.hatch.envs.tns_conda.scripts]
+tests      = "pytest --integration {args:tests}"
 
 [tool.ty.terminal]
 output-format = "concise"
@@ -180,3 +190,4 @@ max-args = 6
 
 [tool.pytest.ini_options]
 addopts = "--html=report.html --self-contained-html --strict-markers -r fEX"
+markers = ["integration: Run integration tests with neutronics codes"]
