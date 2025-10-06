@@ -61,19 +61,14 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: "latest"
+          activate_environment: "tns_conda"
           use-only-tar-bz2: false
           conda-remove-defaults: true
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Setup python and hatch
-        uses: Fusion-Power-Plant-Framework/fppf-actions/setup-hatch@main
-        shell: bash -l {0}
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
       - name: Install hatch conda
         shell: bash -l {0}
-        run: pip install hatch-conda
+        run: pip install hatch-conda hatch click!=8.3.0
 
       - name: Run pytest
         run: hatch run tns_conda:tests-cov
