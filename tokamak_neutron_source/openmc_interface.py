@@ -50,7 +50,7 @@ def get_neutron_energy_spectrum(
     """
     energy, probability = energy_spectrum(reaction, temp_kev, method)
     energy_ev = raw_uc(energy, "keV", "eV")
-    return Tabular(energy_ev, probability, interpolation="linear-linear")
+    return Tabular(energy_ev, probability, interpolation="log-linear")
 
 
 def make_openmc_ring_source(
