@@ -65,7 +65,6 @@ jobs:
           activate-environment: ""
           use-only-tar-bz2: false
           conda-remove-defaults: true
-          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install hatch conda
         shell: bash -l {0}

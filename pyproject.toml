@@ -79,6 +79,7 @@ type = "conda"
 environment-file = "conda/environment.yml"
 conda-forge = true
 features = ["test"]
+python = "3.11"
 
 [tool.hatch.envs.tns_conda.scripts]
 tests      = "pytest --integration {args:tests}"
