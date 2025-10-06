@@ -1,5 +1,5 @@
 # T-T neutron energy spectral data from Appelbe and Chittenden,
-# The effects of ion temperature on the energy spectra of T + T → 2n + α 
+# The effects of ion temperature on the energy spectra of T + T → 2n + α
 # reaction products,
 # High Energy Density Physics,
 # Volume 19,
