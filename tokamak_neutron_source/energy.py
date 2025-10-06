@@ -132,6 +132,10 @@ def _ballabio_spectrum(
             return _gaussian_energy_spectrum(mean_energy, std_deviation)
         case EnergySpectrumMethod.BALLABIO_M_GAUSSIAN:
             return _modified_gaussian_energy_spectrum(mean_energy, std_deviation)
+        case _:
+            raise NotImplementedError(
+                f"spectrum type not implemented: {type(spectrum).__name__}"
+            )
 
 
 def _gaussian_energy_spectrum(
