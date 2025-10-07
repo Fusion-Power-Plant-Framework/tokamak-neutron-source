@@ -189,5 +189,5 @@ class TestFluxMapFromEQDSK:
 
 
 class TestFluxMapJETTOEQDSK:
-    path = Path(TEST_DATA, "jetto_600_100000.eqdsk").as_posix(),
+    path = (Path(TEST_DATA, "jetto_600_100000.eqdsk").as_posix(),)
     flux_map = FluxMap.from_eqdsk(path, flux_convention=FluxConvention.SQRT)

@@ -421,6 +421,7 @@ def normalise_psi(
         Normalised flux
     """
     psi_norm = (axis_psi - psi) / (axis_psi - boundary_psi)
+    psi_norm = np.clip(psi_norm, 0.0, 1.0)
     if convention == FluxConvention.SQRT:
         psi_norm = np.sqrt(psi_norm)
     return psi_norm
