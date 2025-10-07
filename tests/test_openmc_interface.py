@@ -61,7 +61,8 @@ def make_universe_box(
     )
 
 @pytest.mark.integration
-def test_openmc():
+class OpenMCSimulation:
+    """A simple openmc simulation to create the particle track data. """
     temperature_profile = ParabolicPedestalProfile(25.0, 5.0, 0.1, 1.45, 2.0, 0.95)  # [keV]
     density_profile = ParabolicPedestalProfile(0.8e20, 0.5e19, 0.5e17, 1.0, 2.0, 0.95)
     rho_profile = np.linspace(0, 1, 30)
@@ -90,7 +91,7 @@ def test_openmc():
     # run an empty simulation
     settings = openmc.Settings(batches=1, run_mode="fixed source")
     settings.source = source.to_openmc_source()
-    settings.particles = settings.max_tracks = 10000
+    settings.particles = settings.max_tracks = len(settings.source)*10
     materials = openmc.Materials()
     materials.cross_sections = "tests/test_data/cross_section.xml"
     # exporting to xml
@@ -101,9 +102,27 @@ def test_openmc():
     openmc.run(tracks=True)
     print("Openmc simulation completed.")
     tracks = openmc.Tracks("tracks.h5")
-    Path("tracks.h5").unlink()
-    Path("summary.h5").unlink()
-    Path(f"statepoint.{settings.batches}.h5").unlink()
-    Path("geometry.xml").unlink()
-    Path("settings.xml").unlink()
-    Path("materials.xml").unlink()
+    Path("tracks.h5").unlink(missing_ok=True)
+    Path("summary.h5").unlink(missing_ok=True)
+    Path(f"statepoint.{settings.batches}.h5").unlink(missing_ok=True)
+    Path("geometry.xml").unlink(missing_ok=True)
+    Path("settings.xml").unlink(missing_ok=True)
+    Path("materials.xml").unlink(missing_ok=True)
+
+    def test_power_equal(self):
+        self.tracks
+        power = sum([])
+        assert np.isclose(power, 2.2e9, rtol=0.01, atol=0.0)
+        
+
+    def test_num_neutrons_equal(self):
+        expected_number_of_neutrons
+        assert np.isclose(
+            len(self.tracks),
+            expected_number_of_neutrons,
+            rtol=0,
+            atol=len(settings.source)/2,
+        )
+
+    def test_spectrum_at_known_temp(self):
+        assert False
