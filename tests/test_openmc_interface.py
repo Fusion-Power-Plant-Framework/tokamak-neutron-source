@@ -1,3 +1,6 @@
+from pathlib import Path
+
+import pytest
 import numpy as np
 from numpy import typing as npt
 import openmc
@@ -57,34 +60,50 @@ def make_universe_box(
         name="source cell"
     )
 
-# %% [markdown]
-# # Creation from an EQDSK file.
+@pytest.mark.integration
+def test_openmc():
+    temperature_profile = ParabolicPedestalProfile(25.0, 5.0, 0.1, 1.45, 2.0, 0.95)  # [keV]
+    density_profile = ParabolicPedestalProfile(0.8e20, 0.5e19, 0.5e17, 1.0, 2.0, 0.95)
+    rho_profile = np.linspace(0, 1, 30)
 
-# %%
-temperature_profile = ParabolicPedestalProfile(25.0, 5.0, 0.1, 1.45, 2.0, 0.95)  # [keV]
-density_profile = ParabolicPedestalProfile(0.8e20, 0.5e19, 0.5e17, 1.0, 2.0, 0.95)
-rho_profile = np.linspace(0, 1, 30)
+    source = TokamakNeutronSource(
+        transport=TransportInformation.from_parameterisations(
+            ion_temperature_profile=temperature_profile,
+            fuel_density_profile=density_profile,
+            rho_profile=rho_profile,
+            fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
+        ),
+        flux_map=FluxMap.from_eqdsk("tests/test_data/eqref_OOB.json"),
+        cell_side_length=0.05,
+    )
+    # f, ax = source.plot()
+    print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
+    source.normalise_fusion_power(2.2e9)
+    print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
 
-source = TokamakNeutronSource(
-    transport=TransportInformation.from_parameterisations(
-        ion_temperature_profile=temperature_profile,
-        fuel_density_profile=density_profile,
-        rho_profile=rho_profile,
-        fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
-    ),
-    flux_map=FluxMap.from_eqdsk("tests/test_data/eqref_OOB.json"),
-    cell_side_length=0.05,
-)
-# f, ax = source.plot()
-print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
-source.normalise_fusion_power(2.2e9)
-print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
+    universe = openmc.Universe()
+    dx, dz = extract_spacing(source.xz[:, 0]), extract_spacing(source.xz[:, 1])
+    source_cell = make_universe_box(min(source.xz[:, 1])-dz, max(source.xz[:, 1])+dz, max(source.xz[:, 0])+dx)
+    universe.add_cell(source_cell)
+    geometry = openmc.Geometry(universe)
 
-universe = openmc.Universe()
-dx, dz = extract_spacing(source.xz[:, 0]), extract_spacing(source.xz[:, 1])
-source_cell = make_universe_box(max(source.xz[:, 1])-dz, min(source.xz[:, 1])+dz, max(source.xz[:, 0])+dx)
-universe.add_cell(source_cell)
-
-# run an empty simulation
-# settings = openmc.Settings(batches=3, particles=10000, source=source.to_openmc_source())
-# openmc.run()
+    # run an empty simulation
+    settings = openmc.Settings(batches=1, run_mode="fixed source")
+    settings.source = source.to_openmc_source()
+    settings.particles = settings.max_tracks = 10000
+    materials = openmc.Materials()
+    materials.cross_sections = "tests/test_data/cross_section.xml"
+    # exporting to xml
+    print("Openmc simulation exporting and started")
+    geometry.export_to_xml()
+    settings.export_to_xml()
+    materials.export_to_xml()
+    openmc.run(tracks=True)
+    print("Openmc simulation completed.")
+    tracks = openmc.Tracks("tracks.h5")
+    Path("tracks.h5").unlink()
+    Path("summary.h5").unlink()
+    Path(f"statepoint.{settings.batches}.h5").unlink()
+    Path("geometry.xml").unlink()
+    Path("settings.xml").unlink()
+    Path("materials.xml").unlink()
