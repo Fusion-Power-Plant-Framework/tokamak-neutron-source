@@ -99,7 +99,7 @@ def reactivity(
 
     Parameters
     ----------
-    temp_keV:
+    temp_kev:
         Temperature [keV]
     reaction:
         The fusion reaction
