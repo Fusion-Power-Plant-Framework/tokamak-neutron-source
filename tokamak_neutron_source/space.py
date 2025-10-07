@@ -31,10 +31,8 @@ def sample_space_2d(
 
     Returns
     -------
-    x:
-        Radial coordinates of sampled points [m]
-    z:
-        Vertical coordinates of sampled points [m]
+    xz:
+        Radial and vertical coordinates of sampled points [m]
     d_volume:
         Volumes of cells centred at points [m^3]
 
