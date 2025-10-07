@@ -69,7 +69,8 @@ def density_weighted_reactivity(
     Returns
     -------
     :
-        Density-weighted reactivity of the reaction at the specified temperature(s) [1/m^3/s]
+        Density-weighted reactivity of the reaction at the specified temperature(s)
+        [1/m^3/s]
     """
     reaction = _parse_reaction(reaction)
 
