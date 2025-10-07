@@ -53,7 +53,7 @@ def density_weighted_reactivity(
 
     Parameters
     ----------
-    temp_keV:
+    temp_kev:
         Temperature [keV]
     density_d:
         Deuterium density [m^-3]

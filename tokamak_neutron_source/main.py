@@ -182,7 +182,7 @@ class TokamakNeutronSource:
 
         Parameters
         ----------
-        energy_spectrum_method:
+        energy_method:
             Which method to use when calculating neutron spectra
 
         Returns

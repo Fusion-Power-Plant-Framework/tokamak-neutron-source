@@ -18,6 +18,10 @@ To install the latest release of `tokamak-neutron-source`
 pip install tokamak-neutron-source
 ```
 
+# Units
+
+All length quantities are units of `[m]`, and all temperature / energy quantities are in `[keV]`. For time, we use `[s]`.
+
 ## Contents
 - [Theory](theory.md)
 - [Plasma Profiles](profiles.md)

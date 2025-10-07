@@ -1,6 +1,6 @@
 # Theory
 
-# Fusion reactions
+## Fusion reactions
 
 The following reactions are presently supported:
 
@@ -14,13 +14,13 @@ $$
 \end{aligned}
 $$
 
-# Fusion reactivities
+## Fusion reactivities
 
 The reactivities $\langle \sigma\nu\rangle_{XY}$ are velocity-averaged assuming a Maxwellian distribution. Both Bosch-Hale and direct cross-section integral methods are available to calculate the reactivies.
 
 ![](reactivities.svg)
 
-# Neutron source strength
+## Neutron source strength
 
 The local tokamak neutron source strength (the number of reactions) is calculated assuming reactions between two reactants X and Y with Maxwellian velocity distributions.
 
@@ -43,14 +43,14 @@ $$
 
 In practice, the aneutronic D-D channel is ignored, but is accounted for when renormalising a to a user-prescribed fusion power.
 
-# Neutron energies
+## Neutron energies
 
 The neutron energies are provided in terms of probability density functions (PDFs). For the D-D and D-T reactions, these are calculated following [Ballabio et al., 1998](https://iopscience.iop.org/article/10.1088/0029-5515/38/11/310). For the T-T reaction (a three-body reaction with two neutrons), a single neutron spectrum is provided, interpolated from data kindly supplied from [Appelbe and Chittenden, 2016](https://www.sciencedirect.com/science/article/abs/pii/S1574181816300295).
 
 ![](neutron_spectra.svg)
 
 
-# Plasma profiles
+## Plasma profiles
 
 The plasma fuel ion density and temperature profiles are required in order to calculate the neutron source strength.
 
@@ -63,7 +63,7 @@ To interact coherently with the plasma equilibrium description $\rho$ is convert
 
 These relate essentially to the preservation of area and volume across flux surfaces, respectively. Equilibrium solvers often use the former, transport solvers often use the latter. It is important that the plasma profiles are clearly specified with the appropriate convention for your use case.
 
-# Plasma equilibrium
+## Plasma equilibrium
 
 The plasma equilibrium description is used to position the neutron source. All that is required is a spatial description of $\psi_n$, and the coordinates of the LCFS. From this, one can calculate $\psi_n$ at an arbitrary location in cylindrical coordinates $(x, z)$ where, by axisymmetry, $\phi$ can be ignored.
 
