@@ -79,7 +79,10 @@ def density_weighted_reactivity(
         case Reactions.D_T:
             n1_n2 = density_d * density_t
         case Reactions.T_T:
-            n1_n2 = density_t * density_t / 2
+            # Here the Kronecker term (1/1+1) because they are the same
+            # species, but we have a single energy spectrum for both T-T
+            # neutrons, so we multiply again by 2
+            n1_n2 = density_t * density_t
         case AneutronicReactions.D_He3:
             n1_n2 = density_d * density_he3
         case _:
