@@ -81,10 +81,10 @@ source.normalise_fusion_power(2.2e9)
 print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
 
 universe = openmc.Universe()
-dx, dz = extract_spacing(source.x), extract_spacing(source.z)
-source_cell = make_universe_box(max(source.z)-dz, min(source.z)+dz, max(source.x)+dx)
+dx, dz = extract_spacing(source.xz[:, 0]), extract_spacing(source.xz[:, 1])
+source_cell = make_universe_box(max(source.xz[:, 1])-dz, min(source.xz[:, 1])+dz, max(source.xz[:, 0])+dx)
 universe.add_cell(source_cell)
 
 # run an empty simulation
-settings = openmc.Settings(batches=3, particles=10000, source=source.to_openmc_source())
-openmc.run()
+# settings = openmc.Settings(batches=3, particles=10000, source=source.to_openmc_source())
+# openmc.run()
