@@ -131,7 +131,6 @@ def make_openmc_full_combined_source(
         if isinstance(k, Reactions)
     }
 
-
     for i, (ri, zi, ti) in enumerate(zip(r, z, temperature, strict=False)):
         distributions = []
         weights = []
