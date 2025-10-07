@@ -142,7 +142,6 @@ TEST_DATA = Path(__file__).parent / "test_data"
     ],
 )
 def flux_map(request):
-
     if request.param.startswith("jetto"):
         convention = FluxConvention.SQRT
     else:
