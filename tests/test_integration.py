@@ -4,6 +4,7 @@
 
 from pathlib import Path
 from dataclasses import dataclass
+from typing import Optional
 
 import pytest
 import numpy as np
@@ -69,7 +70,7 @@ def make_universe_box(
 class OpenMCTrack:
     position: float
     direction: float
-    Energy: float  # eV
+    energy: float  # eV
     time: float
     wgt: float
     cell_id: int
@@ -81,10 +82,10 @@ class OpenMCTrack:
         return xyz_to_rphiz(*self.position)
 
     @property
-    def direction_cylindrical(self):
+    def direction_spherical(self):
         r, phi, z = xyz_to_rphiz(*self.direction)
-        r, z = np.array([r, z])/np.linalg.norm([r,z]) # renormalize, since the direction vector should always have length = 1 unless the neutron energy = 0, which is not possible here.
-        return r, phi, z
+        theta = np.atan2(r, z)
+        return theta, phi
 
 
 def xyz_to_rphiz(x, y, z):
@@ -146,11 +147,37 @@ class OpenMCSimulation:
     # (len(source)==17374).
     # Expected Leakage fraction = 1.0 since all neutrons should leave the source
     # cell (made of vacuum) without interacting with anything.
-    locations, energy, direction = [], [], []
+    locations, directions, energy = [], [], []
     print("Processing the track info into a useful format.")
     for ptrac in tracks:
-        ptrac.
+        # particle_tracks should have len==1 since there shouldn't be any splitting
+        # (lacking any obstacles in the simulation)
+        start_state = OpenMCTrack(*ptrac.particle_tracks[0].states[0])
+        # end_state = OpenMCTrack(*ptrac.particle_tracks[0].states[1])
+        locations.append(start_state.position_cylindrical)
+        directions.append(start_state.direction_spherical)
+        energy.append(start_state.energy)
+    locations, directions, energy = np.array(locations), np.array(directions), np.array(energy)
 
+    @staticmethod
+    def assert_is_uniform(array: npt.NDArray, lower_lim, known_range=Optional[tuple[float, float]]):
+        if known_range:
+            assert known_range[0]<=array.min()
+            assert array.max()<=known_range[1]
+        counts, bins = np.histogram(array, range=known_range)
+        avg = counts.mean()
+        # poisson distribution
+        assert np.isclose(counts, avg, rtol=0, atol=3.5*np.sqrt(avg)).all()
+        # 3.5 sigma should be enough.
+
+    def test_location(self):
+        r, phi, z = self.locations.T
+        self.assert_is_uniform(phi, (-np.pi, np.pi))
+        dir_theta, dir_phi = self.directions.T
+        self.assert_is_uniform(theta, (-np.pi, np.pi))
+        self.assert_is_uniform(phi, (-np.pi, np.pi))
+        plt.scatter(r, z)
+        plt.show()
 
     def test_power_equal(self):
         self.tracks
