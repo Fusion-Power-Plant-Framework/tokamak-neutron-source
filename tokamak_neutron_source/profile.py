@@ -52,7 +52,7 @@ class ParabolicProfile(PlasmaProfile):
     """
     Parabolic plasma profile parameterisation defined e.g. in
     :doi:`Lao 1985 <10.1088/0029-5515/25/11/007>`.
-    
+
     Parameters
     ----------
     core_value:
