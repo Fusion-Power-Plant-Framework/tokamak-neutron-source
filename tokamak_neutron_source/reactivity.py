@@ -109,7 +109,7 @@ def reactivity(
     Returns
     -------
     :
-        Reactivity of the reaction at the specified temperature(s) [cm^3/s]
+        Reactivity of the reaction at the specified temperature(s) [m^3/s]
     """
     reaction = _parse_reaction(reaction)
 
