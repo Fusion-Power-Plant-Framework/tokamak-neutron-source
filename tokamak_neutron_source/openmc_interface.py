@@ -124,7 +124,13 @@ def make_openmc_full_combined_source(
     """
     sources = []
     # Neutronic reaction channels only
-    n_strength = {k: v for k, v in strength.items() if isinstance(k, Reactions)}
+    # We multiply the T-T channel by 2 because it is 2n
+    n_strength = {
+        k: (v * 2 if k == Reactions.T_T else v)
+        for k, v in strength.items()
+        if isinstance(k, Reactions)
+    }
+
 
     for i, (ri, zi, ti) in enumerate(zip(r, z, temperature, strict=False)):
         distributions = []
