@@ -53,7 +53,7 @@ def density_weighted_reactivity(
 
     Parameters
     ----------
-    temp_keV:
+    temp_kev:
         Temperature [keV]
     density_d:
         Deuterium density [m^-3]
@@ -70,6 +70,7 @@ def density_weighted_reactivity(
     -------
     :
         Density-weighted reactivity of the reaction at the specified temperature(s)
+        [1/m^3/s]
     """
     reaction = _parse_reaction(reaction)
 
@@ -99,7 +100,7 @@ def reactivity(
 
     Parameters
     ----------
-    temp_keV:
+    temp_kev:
         Temperature [keV]
     reaction:
         The fusion reaction
@@ -109,7 +110,7 @@ def reactivity(
     Returns
     -------
     :
-        Reactivity of the reaction at the specified temperature(s) [cm^3/s]
+        Reactivity of the reaction at the specified temperature(s) [m^3/s]
     """
     reaction = _parse_reaction(reaction)
 

@@ -69,7 +69,7 @@ def load_eqdsk(file: str | EQDSKInterface) -> EQDSKInterface:
 
     Parameters
     ----------
-    file_name:
+    file:
         The path to the EQDSK file.
 
     Returns
