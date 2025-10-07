@@ -49,7 +49,19 @@ class DataProfile(PlasmaProfile):
 
 
 class ParabolicProfile(PlasmaProfile):
-    """Parabolic plasma profile parameterisation."""
+    """
+    Parabolic plasma profile parameterisation defined e.g. in
+    :doi:`Lao 1985 <10.1088/0029-5515/25/11/007>`.
+    
+    Parameters
+    ----------
+    core_value:
+        Value of the profile at rho = 0
+    alpha:
+        Alpha exponent
+    beta:
+        Beta exponent
+    """
 
     def __init__(self, core_value: float, alpha: float, beta: float):
         super().__init__()
@@ -59,24 +71,18 @@ class ParabolicProfile(PlasmaProfile):
 
     def value(self, rho):
         """
-        Double power shape function defined e.g. in
-        :doi:`Lao 1985 <10.1088/0029-5515/25/11/007>`
+        Parabolic with pedestal profile function
 
         Parameters
         ----------
         rho:
-            Normalised radius
-        alpha:
-            Alpha exponent
-        beta:
-            Beta exponent
-        value_core:
-            Value of the profile at rho = 0
+            Values of the normalised radius at which to calculate the profile
+            value
 
         Returns
         -------
         values:
-            The value(s) of the function at rho.
+            The value(s) of the profile at rho.
 
         Notes
         -----
@@ -92,7 +98,7 @@ class ParabolicProfile(PlasmaProfile):
 class ParabolicPedestalProfile(PlasmaProfile):
     """
     Parabolic pedestal plasma profile parameterisation.
-    
+
     Parameters
     ----------
     rho_ped:
