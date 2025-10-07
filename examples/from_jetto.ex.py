@@ -35,6 +35,7 @@ from tokamak_neutron_source.reactions import Reactions
 # %% [markdown]
 # # JETTO Source
 # %%
+eqdsk_file = "tests/test_data/jetto_600_100000.eqdsk"
 rho_profile = np.linspace(0, 1, 30)
 
 # fmt:off
@@ -57,7 +58,7 @@ source = TokamakNeutronSource(
         rho_profile=rho_profile,
         fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
     ),
-    flux_map=FluxMap.from_eqdsk("tests/test_data/eqref_OOB.json"),
+    flux_map=FluxMap.from_eqdsk(eqdsk_file),
     source_type=[Reactions.D_T, Reactions.D_D],
     cell_side_length=0.1,
 )
@@ -76,7 +77,7 @@ source = TokamakNeutronSource(
         fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
     ),
     flux_map=FluxMap.from_eqdsk(
-        "tests/test_data/eqref_OOB.json", flux_convention=FluxConvention.SQRT
+        eqdsk_file, flux_convention=FluxConvention.SQRT
     ),
     source_type=[Reactions.D_T, Reactions.D_D],
     cell_side_length=0.1,

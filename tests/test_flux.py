@@ -11,6 +11,7 @@ from tokamak_neutron_source.error import FluxSurfaceError
 from tokamak_neutron_source.flux import (
     ClosedFluxSurface,
     FausserFluxSurface,
+    FluxConvention,
     FluxMap,
     LCFSInformation,
 )
@@ -185,3 +186,8 @@ class TestFluxMapFromEQDSK:
         fs_interp = flux_map.get_flux_surface(0.6, 123)
 
         assert np.isclose(fs.area, fs_interp.area, rtol=1e-3)
+
+
+class TestFluxMapJETTOEQDSK:
+    path = Path(TEST_DATA, "jetto_600_100000.eqdsk").as_posix(),
+    flux_map = FluxMap.from_eqdsk(path, flux_convention=FluxConvention.SQRT)
