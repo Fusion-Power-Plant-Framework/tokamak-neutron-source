@@ -233,7 +233,7 @@ class TransportInformation:
         snapshot_time = time_stamps[t]
 
         # psi values, acting as the abscissa/x-axis for the interpolations below.
-        magnetic_flux = jsp["XRHO"][t, :]  # magnetic flux psi(Ψ) [Wb/(2*pi)]
+        magnetic_flux = jsp["XPSQ"][t, :]  # Sqrt(poloidal magnetic flux)
         # force magnetic flux to be nonnegative
         #magnetic_flux = np.sign(magnetic_flux.mean()) * magnetic_flux
         ## clamp every data point on the wrong side of the number line back to 0.
