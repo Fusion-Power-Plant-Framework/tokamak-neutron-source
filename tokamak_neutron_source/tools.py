@@ -118,9 +118,6 @@ class SimpleJETTOOutput:
     """Helium-3 density profile [1/m^3]"""
     he3_density: npt.NDArray
 
-    """D-T fusion power [W]"""
-    dt_fusion_power: float
-
     """D-T neutron rate [1/s]"""
     dt_neutron_rate: float
 
@@ -156,6 +153,9 @@ def load_jsp(file: str | Path, frame_number: int = -1) -> SimpleJETTOOutput:
 
     JETTO presently does not provide Helium-3 densities. These are taken to
     be 0.0.
+
+    JETTO presently does not provide D-D fusion power or reaction rates, or
+    some files may potentially do some but only for one of the channels.
     """
     from jetto_tools.binary import read_binary_file
 
@@ -183,15 +183,14 @@ def load_jsp(file: str | Path, frame_number: int = -1) -> SimpleJETTOOutput:
     ion_temperature = raw_uc(ion_temperature, "eV", "keV")
 
     # Cumulative vectors for fusion power and neutron rate
-    dt_fusion_power = jsp["R00"][t_index, -1]
-    dt_neutron_rate = jsp["NT"][t_index, -1]
+    dt_neutron_rate = jsp["R00"][t_index, -1]
+
     return SimpleJETTOOutput(
         rho=rho,
         ion_temperature=ion_temperature,
         d_density=d_density,
         t_density=t_density,
         he3_density=he3_density,
-        dt_fusion_power=dt_fusion_power,
         dt_neutron_rate=dt_neutron_rate,
     )
 

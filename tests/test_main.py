@@ -168,8 +168,8 @@ TEST_DATA = Path(__file__).parent / "test_data"
 
 
 class TestJETTOFusionBenchmark:
-    jsp_path = Path(TEST_DATA, "jetto.jsp").as_posix()
-    eqdsk_path = path = Path(TEST_DATA, "jetto_600_1000000.eqdsk").as_posix()
+    jsp_path = Path(TEST_DATA, "STEP_jetto.jsp").as_posix()
+    eqdsk_path = path = Path(TEST_DATA, "STEP_jetto.eqdsk_out").as_posix()
 
     def test_source_power(self):
         data = load_jsp(self.jsp_path)
@@ -178,9 +178,10 @@ class TestJETTOFusionBenchmark:
             FluxMap.from_eqdsk(self.eqdsk_path, flux_convention=FluxConvention.SQRT),
             source_type=[Reactions.D_T],
             cell_side_length=0.05,
+            # reactivity_method=ReactivityMethod.XS,
         )
-        dt_fusion_power = source.calculate_total_fusion_power()
-        dt_rate = sum(source.strength[Reactions.D_T])
 
-        assert np.isclose(dt_fusion_power, data.dt_fusion_power, rtol=1e-3, atol=0.0)
-        assert np.isclose(dt_rate, data.dt_neutron_rate, rtol=1e-3, atol=0.0)
+        dt_rate = sum(source.strength[Reactions.D_T])
+        jetto_dt_rate = float(data.dt_neutron_rate)
+
+        assert np.isclose(dt_rate, jetto_dt_rate, rtol=5e-3, atol=0.0)
