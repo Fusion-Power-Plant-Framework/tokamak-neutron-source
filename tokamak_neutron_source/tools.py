@@ -157,13 +157,16 @@ def load_jsp(file: str | Path, frame_number: int = -1) -> SimpleJETTOOutput:
     jsp = read_binary_file(file)
 
     time_stamps = jsp["TIME"][:, 0, 0]  # times when the snapshots are made
-    frame_number = len(time_stamps) - 1 if frame_number == -1 else frame_number
-    t = frame_number
 
-    rho = jsp["XPSQ"][t, :]  # Sqrt(poloidal magnetic flux)
-    ion_temperature = jsp["TI"][t, :]
-    d_density = jsp["NID"][t, :]
-    t_density = jsp["TID"][t, :]
+    if frame_number < -1 or frame_number > len(time_stamps) - 1:
+        raise ValueError(f"This JETTO file does not have a frame number: {frame_number}")
+    t_index = len(time_stamps) - 1 if frame_number == -1 else frame_number
+
+
+    rho = jsp["XPSQ"][t_index, :]  # Sqrt(poloidal magnetic flux)
+    ion_temperature = jsp["TI"][t_index, :]
+    d_density = jsp["NID"][t_index, :]
+    t_density = jsp["TID"][t_index, :]
     he3_density = np.zeros_likes(rho)  # JETTO does not provide 3-He density
 
     # Here we treat the core, as JETTO at present does not provide data at rho = 0.0
@@ -176,8 +179,8 @@ def load_jsp(file: str | Path, frame_number: int = -1) -> SimpleJETTOOutput:
     ion_temperature = raw_uc(ion_temperature, "eV", "keV")
 
     # Cumulative vectors for fusion power and neutron rate
-    dt_fusion_power = jsp["R00"][t, -1]
-    dt_neutron_rate = jsp["NT"][t, -1]
+    dt_fusion_power = jsp["R00"][t_index, -1]
+    dt_neutron_rate = jsp["NT"][t_index, -1]
     return SimpleJETTOOutput(
         rho=rho,
         ion_temperature=ion_temperature,
