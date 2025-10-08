@@ -36,6 +36,7 @@ dependencies= [
 
 [project.optional-dependencies]
 openmc = ["openmc"]
+jetto = ["jetto_tools == 1.8.13"]
 dev = ["pre-commit", "ruff", "ty"]
 test = [
   "pytest",
