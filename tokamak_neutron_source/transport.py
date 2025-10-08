@@ -8,12 +8,14 @@ from __future__ import annotations
 import logging
 from copy import deepcopy
 from dataclasses import astuple, dataclass
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 
 from tokamak_neutron_source.profile import DataProfile, PlasmaProfile
+from tokamak_neutron_source.tools import load_jsp
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +64,6 @@ class TransportInformation:
     helium3_density_profile: PlasmaProfile  # [1/m^3]
     temperature_profile: PlasmaProfile  # [keV]
     rho_profile: npt.NDArray  # [0..1]
-    cumulative_neutron_rate: npt.NDArray | None = None  # [1/s]
 
     @classmethod
     def from_profiles(
@@ -160,116 +161,24 @@ class TransportInformation:
             The specific time-slice of the JETTO run that we want to investigate.
             This ensures that all of the extracted quantities are describing the same
             point in time.
-
-        Effects
-        -------
-        self.time_stamps
-            times when the snapshots are made [s]
-
-        self.magnetic_flux
-            magnetic flux value (Wb/2pi), used as the x-values when interpolating.
-
-        self.ion_temperature
-            ion temperature (D&T) profiles [keV]
-
-        self.d_density
-            D-density profiles [number of ions cm^-3]
-
-        self.t_density
-            T-density profiles [number of ions cm^-3]
-
-        self.specific_fusion_rate
-            (i.e. number of this fusion reaction per volume at the given psi.)
-            dataclass that includes the following:
-            1. specific D+T->4He+n fusion rate [cm^-3 s^-1]
-            2. specific D+D->3He+n fusion rate [cm^-3 s^-1]
-            3. specific D+D->T+p fusion rate [cm^-3 s^-1]
-            4. specific T+T->4He+n+n fusion rate [cm^-3 s^-1]
-            For reaction 3, it is Copied from reaction 2, since they are theoretically
-            the same; and JETTO does not provide this data.
-
-        self.specific_fusion_rate_contributions
-            Reactions 1,2,4 listed in self.specific_fusion_rate, broken down into three
-            components: thermal, beam-plasma, and RF-enhanced. The sum of these three
-            components should give the total fusion rate of that fusion reaction.
-
-        self.cumulative_fusion_rate
-            C.D.F. of fusion rate rate w.r.t to closed-flux surfaces (indexed by Psi),
-            summed over the entire plasma. This means that the cumulative_fusion_rate
-            at Psi=x gives the total fusion rate [s^-1] of all of the volume of plasma
-            where Psi>=x. In other words it gives the total fusion rate [s^-1] of the
-            plasma enclosed by the closed flux surface Psi=x.
-
-            This is cumulated from the plasma center towards the LCFS.
-
-        self.cumulative_neutron_rate
-            C.D.F. of neutron production rate w.r.t to closed-flux surfaces (indexed by
-            Psi),summed over the entire plasma. This means that the
-            cumulative_neutron_rate at Psi=x gives the
-            total neutron production rate [s^-1] of all of the volume of plasma
-            where Psi>=x. In other words it gives the
-            total neutron production rate [s^-1] of the
-            plasma enclosed by the closed flux surface Psi=x.
-
-            This is cumulated from the plasma center towards the LCFS.
-
-
-        Notes
-        -----
-        JETTO is also missing the He-3 density/ any data that can be used to calculate/
-        indicate the D + 3He -> 4He + p reaction rate. This is a fundamental shortcoming
-        of JETTO that we cannot solve at this stage.
         """
-        from jetto_tools import binary
-
-        jsp = binary.read_binary_file(jsp_file)
-
-        # time records
-        time_stamps = jsp["TIME"][:, 0, 0]  # times when the snapshots are made
-        frame_number = len(time_stamps) - 1 if frame_number == -1 else frame_number
-        t = frame_number
-        snapshot_time = time_stamps[t]
-
-        rho = jsp["XPSQ"][t, :]  # Sqrt(poloidal magnetic flux)
-        # We prepend 0.0, here as JETTO at present does not provide data at rho = 0.0
-        rho = np.insert(rho, 0, 0.0)
-
-        # Ordinate/y-values to be interpolated w.r.t. different values of psi.
-        # ion temperature (D&T) profiles [keV]
-        ion_temperature = np.insert(
-            jsp["TI"][t, :] * 1e-3, 0, jsp["TI"][t, 0] * 1e-3
-        )  # [eV] -> [keV]
-        # D-density profiles [number of ions m^-3]
-        d_density = np.insert(jsp["NID"][t, :], 0, jsp["NID"][t, 0])
-        # T-density profiles [number of ions m^-3]
-        t_density = np.insert(jsp["NIT"][t, :], 0, jsp["NIT"][t, 0])
-        # ion-density (of all thermalized ions) profiles [number of ions m^-3]
-        ion_density = np.insert(jsp["NI"][t, :], 0, jsp["NIT"][t, 0])
-
-        # fusion rates, looks like it only includes DT-thermal[s^-1] (C.D.F. w.r.t. psi)
-        cumulative_fusion_rate = jsp["R00"][t, :]
-        cumulative_fusion_rate = np.insert(cumulative_fusion_rate, 0, 0)
-        # neutron production rate. [s^-1]  (C.D.F. w.r.t. psi)
-        cumulative_neutron_rate = jsp["NT"][t, :]
-        cumulative_neutron_rate = np.insert(cumulative_neutron_rate, 0, 0)
-        # [t, :] is a C.D.F series, so [t, -1] gives the total
+        data = load_jsp(jsp_file, frame_number)
 
         return cls(
             DataProfile(
-                d_density,
-                rho,
+                data.d_density,
+                data.rho,
             ),
             DataProfile(
-                t_density,
-                rho,
+                data.t_density,
+                data.rho,
             ),
             DataProfile(
-                ion_density * 0.0,  # JETTO does not provide He-3 density
-                rho,
+                data.he3_density,
+                data.rho,
             ),
-            DataProfile(ion_temperature, rho),
-            np.asarray(rho),
-            np.asarray(cumulative_neutron_rate),
+            DataProfile(data.ion_temperature, data.rho),
+            data.rho,
         )
 
     def plot(self) -> tuple[plt.Figure, plt.Axes]:

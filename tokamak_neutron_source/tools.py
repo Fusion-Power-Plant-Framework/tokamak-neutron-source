@@ -140,6 +140,14 @@ def load_jsp(file: str | Path, frame_number: int = -1) -> SimpleJETTOOutput:
     -------
     :
         Simplified JETTO output
+
+    Notes
+    -----
+    The core values (rho = 0.0) are not provided by JETTO. Here we extrapolate
+    them.
+
+    JETTO presently does not provide Helium-3 densities. These are taken to
+    be 0.0.
     """
     from jetto_tools.binary import read_binary_file
 
@@ -153,7 +161,7 @@ def load_jsp(file: str | Path, frame_number: int = -1) -> SimpleJETTOOutput:
     ion_temperature = jsp["TI"][t, :]
     d_density = jsp["NID"][t, :]
     t_density = jsp["TID"][t, :]
-    he3_density = np.zeros_likes(d_density)  # JETTO does not provide 3-He density
+    he3_density = np.zeros_likes(rho)  # JETTO does not provide 3-He density
 
     # Here we treat the core, as JETTO at present does not provide data at rho = 0.0
     rho = np.insert(rho, 0, 0.0)
