@@ -11,6 +11,7 @@ from tokamak_neutron_source.error import FluxSurfaceError
 from tokamak_neutron_source.flux import (
     ClosedFluxSurface,
     FausserFluxSurface,
+    FluxConvention,
     FluxMap,
     LCFSInformation,
 )
@@ -137,10 +138,15 @@ TEST_DATA = Path(__file__).parent / "test_data"
     params=[
         Path(TEST_DATA, "DN-DEMO_eqref.json").as_posix(),
         Path(TEST_DATA, "eqref_OOB.json").as_posix(),
+        Path(TEST_DATA, "jetto_600_100000.eqdsk").as_posix(),
     ],
 )
 def flux_map(request):
-    return FluxMap.from_eqdsk(request.param)
+    if request.param.startswith("jetto"):
+        convention = FluxConvention.SQRT
+    else:
+        convention = FluxConvention.LINEAR
+    return FluxMap.from_eqdsk(request.param, flux_convention=convention)
 
 
 @pytest.mark.usefixtures("flux_map")
