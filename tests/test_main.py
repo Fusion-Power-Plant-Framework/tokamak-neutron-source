@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2024-present Tokamak Neutron Source Maintainers
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
+from pathlib import Path
 import numpy as np
 import pytest
 from eqdsk import EQDSKInterface
@@ -160,3 +161,9 @@ class TestPROCESSFusionBenchmark:
         source = self.make_source(reaction)
         total_fusion_power_mw = source.calculate_total_fusion_power() / 1e6
         assert np.isclose(total_fusion_power_mw, expected_mw, rtol=1.5e-2, atol=0.0)
+
+TEST_DATA = Path(__file__).parent / "test_data"
+
+class TestJETTOFusionBenchmark:
+    jsp_path = Path(TEST_DATA, "jetto.jsp").as_posix()
+    eqdsk_path = path = Path(TEST_DATA, "jetto.jsp").as_posix()
