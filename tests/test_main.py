@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 from pathlib import Path
+
 import numpy as np
 import pytest
 from eqdsk import EQDSKInterface
@@ -166,7 +167,8 @@ class TestPROCESSFusionBenchmark:
 
 TEST_DATA = Path(__file__).parent / "test_data"
 
-# TODO: @je-cook remove once JETTO data public
+
+# TODO @je-cook: remove once JETTO data public
 @pytest.mark.xfail(raises=Exception)
 class TestJETTOFusionBenchmark:
     jsp_path = Path(TEST_DATA, "STEP_jetto.jsp").as_posix()

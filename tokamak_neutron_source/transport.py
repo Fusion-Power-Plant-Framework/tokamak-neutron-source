@@ -8,7 +8,6 @@ from __future__ import annotations
 import logging
 from copy import deepcopy
 from dataclasses import astuple, dataclass
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -145,10 +144,10 @@ class TransportInformation:
 
     @classmethod
     def from_jetto(
-        cls, jsp_file: str | Path, frame_number: int = -1
+        cls, jsp_file: str, frame_number: int = -1
     ) -> TransportInformation:
         """
-        Instantiate TransportInformation from jetto file.
+        Instantiate TransportInformation from JETTO file.
 
         Parameters
         ----------
@@ -158,7 +157,7 @@ class TransportInformation:
             The specific time-slice of the JETTO run that we want to investigate.
             This ensures that all of the extracted quantities are describing the same
             point in time.
-        """
+        """   # noqa: DOC201
         data = load_jsp(jsp_file, frame_number)
 
         return cls(

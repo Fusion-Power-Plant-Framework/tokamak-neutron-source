@@ -3,14 +3,15 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 """Tools."""
 
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
 from pathlib import Path
 
 import numba as nb
 import numpy as np
 import numpy.typing as npt
 from eqdsk import EQDSKInterface
+
 from tokamak_neutron_source.constants import raw_uc
 
 
@@ -157,7 +158,7 @@ def load_jsp(file: str | Path, frame_number: int = -1) -> SimpleJETTOOutput:
     JETTO presently does not provide D-D fusion power or reaction rates, or
     some files may potentially do some but only for one of the channels.
     """
-    from jetto_tools.binary import read_binary_file
+    from jetto_tools.binary import read_binary_file  # noqa: PLC0415
 
     jsp = read_binary_file(file)
 
