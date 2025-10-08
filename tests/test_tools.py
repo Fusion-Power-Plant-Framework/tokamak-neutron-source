@@ -44,7 +44,9 @@ class TestLoadEQDSK:
         eq = load_eqdsk(neq)
         assert eq.psimag > eq.psibdry
 
+
 TEST_DATA = Path(__file__).parent / "test_data"
+
 
 class TestLoadJSP:
     path = Path(TEST_DATA, "jetto.jsp").as_posix()
@@ -57,6 +59,10 @@ class TestLoadJSP:
     def test_array_lengths(self):
         data = load_jsp(self.path)
         sizes = [
-            data.rho.size, data.d_density.size, data.t_density.size, data.he3_density.size, data.ion_temperature.size
+            data.rho.size,
+            data.d_density.size,
+            data.t_density.size,
+            data.he3_density.size,
+            data.ion_temperature.size,
         ]
         assert all(x == sizes[0] for x in sizes[1:])

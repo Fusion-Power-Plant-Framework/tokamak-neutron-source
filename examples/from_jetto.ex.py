@@ -52,4 +52,3 @@ total_n_per_sec = source.transport.cumulative_neutron_rate[-1]
 print("JETTO Reference total neutron rate: ", total_n_per_sec)
 
 source.plot()
-

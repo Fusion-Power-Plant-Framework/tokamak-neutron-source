@@ -20,6 +20,7 @@ from tokamak_neutron_source.reactions import AneutronicReactions, Reactions
 from tokamak_neutron_source.reactivity import (
     ReactivityMethod,
 )
+from tokamak_neutron_source.tools import load_jsp
 from tokamak_neutron_source.transport import (
     FractionalFuelComposition,
     TransportInformation,
@@ -162,8 +163,24 @@ class TestPROCESSFusionBenchmark:
         total_fusion_power_mw = source.calculate_total_fusion_power() / 1e6
         assert np.isclose(total_fusion_power_mw, expected_mw, rtol=1.5e-2, atol=0.0)
 
+
 TEST_DATA = Path(__file__).parent / "test_data"
+
 
 class TestJETTOFusionBenchmark:
     jsp_path = Path(TEST_DATA, "jetto.jsp").as_posix()
-    eqdsk_path = path = Path(TEST_DATA, "jetto.jsp").as_posix()
+    eqdsk_path = path = Path(TEST_DATA, "jetto_600_1000000.eqdsk").as_posix()
+
+    def test_source_power(self):
+        data = load_jsp(self.jsp_path)
+        source = TokamakNeutronSource(
+            TransportInformation.from_jetto(self.jsp_path),
+            FluxMap.from_eqdsk(self.eqdsk_path, flux_convention=FluxConvention.SQRT),
+            source_type=[Reactions.D_T],
+            cell_side_length=0.05,
+        )
+        dt_fusion_power = source.calculate_total_fusion_power()
+        dt_rate = sum(source.strength[Reactions.D_T])
+
+        assert np.isclose(dt_fusion_power, data.dt_fusion_power, rtol=1e-3, atol=0.0)
+        assert np.isclose(dt_rate, data.dt_neutron_rate, rtol=1e-3, atol=0.0)
