@@ -150,9 +150,6 @@ class TransportInformation:
         """
         Instantiate TransportInformation from jetto file.
 
-        For details, refer to
-        https://users.euro-fusion.org/pages/data-cmg/wiki/JETTO_ppfjsp.html
-
         Parameters
         ----------
         jsp_file:

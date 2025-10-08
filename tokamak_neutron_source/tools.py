@@ -143,6 +143,9 @@ def load_jsp(file: str | Path, frame_number: int = -1) -> SimpleJETTOOutput:
 
     Notes
     -----
+    For details, refer to
+    https://users.euro-fusion.org/pages/data-cmg/wiki/JETTO_ppfjsp.html
+
     The core values (rho = 0.0) are not provided by JETTO. Here we extrapolate
     them.
 
