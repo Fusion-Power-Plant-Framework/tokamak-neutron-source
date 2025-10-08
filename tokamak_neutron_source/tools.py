@@ -127,7 +127,7 @@ class SimpleJETTOOutput:
 
 def load_jsp(file: str | Path, frame_number: int = -1) -> SimpleJETTOOutput:
     """
-    Load a JETTO JSP binary file
+    Load a JETTO JSP binary file.
 
     Parameters
     ----------
@@ -140,6 +140,11 @@ def load_jsp(file: str | Path, frame_number: int = -1) -> SimpleJETTOOutput:
     -------
     :
         Simplified JETTO output
+
+    Raises
+    ------
+    ValueError
+        If the specified frame number is invalid.
 
     Notes
     -----
@@ -162,12 +167,11 @@ def load_jsp(file: str | Path, frame_number: int = -1) -> SimpleJETTOOutput:
         raise ValueError(f"This JETTO file does not have a frame number: {frame_number}")
     t_index = len(time_stamps) - 1 if frame_number == -1 else frame_number
 
-
     rho = jsp["XPSQ"][t_index, :]  # Sqrt(poloidal magnetic flux)
     ion_temperature = jsp["TI"][t_index, :]
     d_density = jsp["NID"][t_index, :]
-    t_density = jsp["TID"][t_index, :]
-    he3_density = np.zeros_likes(rho)  # JETTO does not provide 3-He density
+    t_density = jsp["NIT"][t_index, :]
+    he3_density = np.zeros_like(rho)  # JETTO does not provide 3-He density
 
     # Here we treat the core, as JETTO at present does not provide data at rho = 0.0
     rho = np.insert(rho, 0, 0.0)
