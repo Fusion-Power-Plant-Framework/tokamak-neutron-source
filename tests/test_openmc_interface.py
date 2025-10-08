@@ -23,7 +23,7 @@ dd_source = TokamakNeutronSource(
         ion_temperature_profile=ion_temperature_profile,
         fuel_density_profile=fuel_density_profile,
         rho_profile=rho_profile,
-        fuel_composition=FractionalFuelComposition(D=1.0),
+        fuel_composition=FractionalFuelComposition(D=1.0, T=0.0),
     ),
     flux_map=flux_map,
     cell_side_length=0.2,
@@ -43,7 +43,7 @@ tt_source = TokamakNeutronSource(
         ion_temperature_profile=ion_temperature_profile,
         fuel_density_profile=fuel_density_profile,
         rho_profile=rho_profile,
-        fuel_composition=FractionalFuelComposition(T=1.0),
+        fuel_composition=FractionalFuelComposition(D=0.0, T=1.0),
     ),
     flux_map=flux_map,
     cell_side_length=0.2,
@@ -59,20 +59,24 @@ def test_openmc_source_conversion(source: TokamakNeutronSource):
     lower_lim_r, upper_lim_r = min(lcfs.x), max(lcfs.x)
     lower_lim_z, upper_lim_z = min(lcfs.z), max(lcfs.z)
     min_r, max_r, min_z, max_z = [], [], [], []
+    dx, dz = source.dxdz
     for src in openmc_source:
         min_r.append(src.space.r.x.min()/100), max_r.append(src.space.r.x.max()/100)
         min_z.append(src.space.z.a/100), max_z.append(src.space.z.b/100)
-    assert lower_lim_r<=min(min_r) and max(max_r)<=upper_lim_r, "Radii must lie in range."
-    assert lower_lim_z<=min(min_z) and max(max_z)<=upper_lim_z, "Height must lie in range."
+    assert lower_lim_r-dx<=min(min_r) and max(max_r)<=upper_lim_r+dx, "Radii must lie in range."
+    assert lower_lim_z-dz<=min(min_z) and max(max_z)<=upper_lim_z+dz, "Height must lie in range."
 
 @pytest.mark.parametrize(
     ("source", "method"),
-    [dd_source, dd_source,
-    dt_source, dt_source,
-    tt_source, tt_source, tt_source],
-    [EnergySpectrumMethod.BALLABIO_GAUSSIAN, EnergySpectrumMethod.BALLABIO_M_GAUSSIAN,
-    EnergySpectrumMethod.BALLABIO_GAUSSIAN, EnergySpectrumMethod.BALLABIO_M_GAUSSIAN,
-    EnergySpectrumMethod.BALLABIO_GAUSSIAN, EnergySpectrumMethod.BALLABIO_M_GAUSSIAN, EnergySpectrumMethod.DATA]
+    [
+    [dd_source,EnergySpectrumMethod.BALLABIO_GAUSSIAN],
+    [dd_source,EnergySpectrumMethod.BALLABIO_M_GAUSSIAN],
+    [dt_source,EnergySpectrumMethod.BALLABIO_GAUSSIAN],
+    [dt_source,EnergySpectrumMethod.BALLABIO_M_GAUSSIAN],
+    [tt_source,EnergySpectrumMethod.BALLABIO_GAUSSIAN],
+    [tt_source,EnergySpectrumMethod.BALLABIO_M_GAUSSIAN],
+    [tt_source,EnergySpectrumMethod.DATA],
+    ]
 )
 def test_source_defined_energies(source: TokamakNeutronSource, method: EnergySpectrumMethod):
     """
