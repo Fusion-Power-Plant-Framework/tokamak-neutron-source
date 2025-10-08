@@ -144,9 +144,7 @@ class TransportInformation:
 
     @classmethod
     def from_jetto(
-        cls, 
-        jsp_file: str | Path,
-        frame_number: int = -1
+        cls, jsp_file: str | Path, frame_number: int = -1
     ) -> TransportInformation:
         """
         Instantiate TransportInformation from jetto file.
@@ -156,7 +154,7 @@ class TransportInformation:
 
         Parameters
         ----------
-        jsp_file: 
+        jsp_file:
             Path to the JETTO .jsp file
         frame_number:
             The specific time-slice of the JETTO run that we want to investigate.
@@ -222,45 +220,31 @@ class TransportInformation:
         indicate the D + 3He -> 4He + p reaction rate. This is a fundamental shortcoming
         of JETTO that we cannot solve at this stage.
         """
-        from jetto_tools import binary 
+        from jetto_tools import binary
 
         jsp = binary.read_binary_file(jsp_file)
 
-         # time records
+        # time records
         time_stamps = jsp["TIME"][:, 0, 0]  # times when the snapshots are made
         frame_number = len(time_stamps) - 1 if frame_number == -1 else frame_number
         t = frame_number
         snapshot_time = time_stamps[t]
 
-        # psi values, acting as the abscissa/x-axis for the interpolations below.
-        magnetic_flux = jsp["XPSQ"][t, :]  # Sqrt(poloidal magnetic flux)
-        # force magnetic flux to be nonnegative
-        #magnetic_flux = np.sign(magnetic_flux.mean()) * magnetic_flux
-        ## clamp every data point on the wrong side of the number line back to 0.
-        #out_of_range_datapoints = np.sign(magnetic_flux) != +1
-        #if out_of_range_datapoints.sum() > 1:
-        #    warnings.warn(
-        #        "More than one out of range datapoints, will result in degenerate "
-        #        "data points after clamping back into range!",
-        #        OutOfRangeWarning,
-        #        stacklevel=2,
-        #    )
-#
-        #
-        #magnetic_flux[out_of_range_datapoints] = 0.0
-        magnetic_flux = np.insert(magnetic_flux, 0, 0.0) 
-
+        rho = jsp["XPSQ"][t, :]  # Sqrt(poloidal magnetic flux)
+        # We prepend 0.0, here as JETTO at present does not provide data at rho = 0.0
+        rho = np.insert(rho, 0, 0.0)
 
         # Ordinate/y-values to be interpolated w.r.t. different values of psi.
         # ion temperature (D&T) profiles [keV]
-        ion_temperature = np.insert(jsp["TI"][t, :] * 1e-3, 0, jsp["TI"][t, 0]*1e-3)  # [eV] -> [keV]
+        ion_temperature = np.insert(
+            jsp["TI"][t, :] * 1e-3, 0, jsp["TI"][t, 0] * 1e-3
+        )  # [eV] -> [keV]
         # D-density profiles [number of ions m^-3]
         d_density = np.insert(jsp["NID"][t, :], 0, jsp["NID"][t, 0])
         # T-density profiles [number of ions m^-3]
         t_density = np.insert(jsp["NIT"][t, :], 0, jsp["NIT"][t, 0])
         # ion-density (of all thermalized ions) profiles [number of ions m^-3]
         ion_density = np.insert(jsp["NI"][t, :], 0, jsp["NIT"][t, 0])
-
 
         # fusion rates, looks like it only includes DT-thermal[s^-1] (C.D.F. w.r.t. psi)
         cumulative_fusion_rate = jsp["R00"][t, :]
@@ -273,21 +257,18 @@ class TransportInformation:
         return cls(
             DataProfile(
                 d_density,
-                magnetic_flux,
+                rho,
             ),
             DataProfile(
                 t_density,
-                magnetic_flux,
+                rho,
             ),
             DataProfile(
-                ion_density*0.0, # JETTO does not provide He-3 density
-                magnetic_flux,
+                ion_density * 0.0,  # JETTO does not provide He-3 density
+                rho,
             ),
-            DataProfile(
-                ion_temperature, 
-                magnetic_flux
-            ),
-            np.asarray(magnetic_flux),
+            DataProfile(ion_temperature, rho),
+            np.asarray(rho),
             np.asarray(cumulative_neutron_rate),
         )
 

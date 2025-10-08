@@ -3,12 +3,15 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 """Tools."""
 
+from dataclasses import dataclass
 import os
 from pathlib import Path
 
 import numba as nb
 import numpy as np
+import numpy.typing as npt
 from eqdsk import EQDSKInterface
+from tokamak_neutron_source.constants import raw_uc
 
 
 def _get_relpath(folder: str | Path, subfolder: str) -> Path:
@@ -94,6 +97,85 @@ def load_eqdsk(file: str | EQDSKInterface) -> EQDSKInterface:
         eq.psibdry = offset - eq.psibdry
         eq.psimag = 0.0
     return eq
+
+
+@dataclass
+class SimpleJETTOOutput:
+    """Dataclass for a simplified subset of JETTO output at a single timestamp."""
+
+    """Normalised rho coordinate profile: sqrt(poloidal flux)"""
+    rho: npt.NDArray
+
+    """Ion temperature profile [keV]"""
+    ion_temperature: npt.NDArray
+
+    """Deuterium density profile [1/m^3]"""
+    d_density: npt.NDArray
+
+    """Tritium density profile [1/m^3]"""
+    t_density: npt.NDArray
+
+    """Helium-3 density profile [1/m^3]"""
+    he3_density: npt.NDArray
+
+    """D-T fusion power [W]"""
+    dt_fusion_power: float
+
+    """D-T neutron rate [1/s]"""
+    dt_neutron_rate: float
+
+
+def load_jsp(file: str | Path, frame_number: int = -1) -> SimpleJETTOOutput:
+    """
+    Load a JETTO JSP binary file
+
+    Parameters
+    ----------
+    file:
+        File to read
+    frame_number:
+        Frame number to read
+
+    Returns
+    -------
+    :
+        Simplified JETTO output
+    """
+    from jetto_tools.binary import read_binary_file
+
+    jsp = read_binary_file(file)
+
+    time_stamps = jsp["TIME"][:, 0, 0]  # times when the snapshots are made
+    frame_number = len(time_stamps) - 1 if frame_number == -1 else frame_number
+    t = frame_number
+
+    rho = jsp["XPSQ"][t, :]  # Sqrt(poloidal magnetic flux)
+    ion_temperature = jsp["TI"][t, :]
+    d_density = jsp["NID"][t, :]
+    t_density = jsp["TID"][t, :]
+    he3_density = np.zeros_likes(d_density)  # JETTO does not provide 3-He density
+
+    # Here we treat the core, as JETTO at present does not provide data at rho = 0.0
+    rho = np.insert(rho, 0, 0.0)
+    ion_temperature = np.insert(ion_temperature, 0, ion_temperature[0])
+    d_density = np.insert(d_density, 0, d_density[0])
+    t_density = np.insert(t_density, 0, t_density[0])
+    he3_density = np.insert(he3_density, 0, he3_density[0])
+
+    ion_temperature = raw_uc(ion_temperature, "eV", "keV")
+
+    # Cumulative vectors for fusion power and neutron rate
+    dt_fusion_power = jsp["R00"][t, -1]
+    dt_neutron_rate = jsp["NT"][t, -1]
+    return SimpleJETTOOutput(
+        rho=rho,
+        ion_temperature=ion_temperature,
+        d_density=d_density,
+        t_density=t_density,
+        he3_density=he3_density,
+        dt_fusion_power=dt_fusion_power,
+        dt_neutron_rate=dt_neutron_rate,
+    )
 
 
 @nb.jit(cache=True, nopython=True)
