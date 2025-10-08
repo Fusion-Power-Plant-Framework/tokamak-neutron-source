@@ -126,7 +126,7 @@ class OpenMCSimulation:
     settings = openmc.Settings(batches=1, run_mode="fixed source")
     openmc_source = source.to_openmc_source()
     settings.source = openmc_source
-    settings.particles = settings.max_tracks = len(settings.source)*10
+    settings.particles = settings.max_tracks = 10000
     materials = openmc.Materials()
     materials.cross_sections = "tests/test_data/cross_section.xml"
     # exporting to xml
@@ -147,7 +147,7 @@ class OpenMCSimulation:
     # (len(source)==17374).
     # Expected Leakage fraction = 1.0 since all neutrons should leave the source
     # cell (made of vacuum) without interacting with anything.
-    locations, directions, energy = [], [], []
+    locations, directions, energies = [], [], []
     print("Processing the track info into a useful format.")
     for ptrac in tracks:
         # particle_tracks should have len==1 since there shouldn't be any splitting
@@ -156,43 +156,67 @@ class OpenMCSimulation:
         # end_state = OpenMCTrack(*ptrac.particle_tracks[0].states[1])
         locations.append(start_state.position_cylindrical)
         directions.append(start_state.direction_spherical)
-        energy.append(start_state.energy)
-    locations, directions, energy = np.array(locations), np.array(directions), np.array(energy)
+        energies.append(start_state.energy)
+    locations, directions, energies = np.array(locations), np.array(directions), np.array(energies)
 
     @staticmethod
-    def assert_is_uniform(array: npt.NDArray, lower_lim, known_range=Optional[tuple[float, float]]):
+    def assert_is_uniform(array: npt.NDArray, known_range:Optional[tuple[float, float]]=None):
         if known_range:
             assert known_range[0]<=array.min()
             assert array.max()<=known_range[1]
         counts, bins = np.histogram(array, range=known_range)
         avg = counts.mean()
         # poisson distribution
-        assert np.isclose(counts, avg, rtol=0, atol=3.5*np.sqrt(avg)).all()
+        assert np.isclose(counts, avg, rtol=0, atol=3.5*np.sqrt(avg)).all(), "This test (3.5 sigmas) has a false positive failure rate of 0.046% per comparison."
         # 3.5 sigma should be enough.
 
+    @staticmethod
+    def assert_is_cosine(array: npt.NDArray):
+        """
+        Confirm the theta part of the spherical coordinate of an isotropic direction
+        distribution follows a cosine curve.
+        """
+        counts, bins = np.histogram(array, bins=100, range=(-np.pi/2, np.pi/2))
+        class_mark = bins[:-1] + np.diff(bins)/2
+        cosine_dist = np.cos(class_mark)
+        integral_area = 2
+        scale_factor = counts.sum()/cosine_dist.sum()
+        assert np.isclose(counts, cosine_dist*scale_factor, rtol=0, atol=3.5*np.sqrt(counts)).all()
+
     def test_location(self):
+        """Confirm the sources are distributed uniformly in phi and according to the
+        required distribution poloidally."""
         r, phi, z = self.locations.T
         self.assert_is_uniform(phi, (-np.pi, np.pi))
-        dir_theta, dir_phi = self.directions.T
-        self.assert_is_uniform(theta, (-np.pi, np.pi))
-        self.assert_is_uniform(phi, (-np.pi, np.pi))
-        plt.scatter(r, z)
+        plt.scatter(r/100, z/100, alpha=0.1, marker="o", s=0.5)
+        plt.xlabel("r (m)"), plt.ylabel("z (m)")
+        plt.title("Neutron generation positions\n(poloidal view)\nEach dot is a neutron emitted")
+        o_point, lcfs = source.flux_map.o_point, source.flux_map.lcfs
+        plt.scatter(o_point.x, o_point.z, label="o-point", facecolors='none', edgecolor="C1")
+        plt.plot(lcfs.x, lcfs.z, label="LCFS")
+        plt.legend()
+        plt.gca().set_aspect('equal')
         plt.show()
 
-    def test_power_equal(self):
-        self.tracks
-        power = sum([])
-        assert np.isclose(power, 2.2e9, rtol=0.01, atol=0.0)
-        
+    def test_isotropic(self):
+        """Confirm the sources are emitting neutrons isotropically."""
+        dir_theta, dir_phi = self.directions.T
+        self.assert_is_cosine(dir_theta, (-np.pi, np.pi))
+        self.assert_is_uniform(dir_phi, (-np.pi, np.pi))
 
-    def test_num_neutrons_equal(self):
-        expected_number_of_neutrons
-        assert np.isclose(
-            len(self.tracks),
-            expected_number_of_neutrons,
-            rtol=0,
-            atol=len(settings.source)/2,
-        )
+    def test_power_equal(self):
+        """Confirm total power is close enough to the desired value."""
+        mean_eV = self.energies.mean()
+        assert np.isclose(power_in_MW, 14E6, rtol=0, atol=0.1E6)
 
     def test_spectrum_at_known_temp(self):
-        assert False
+        """Confirm neutron spectrum is as expected."""
+        counts, bins = np.histogram(self.energies, bins=5000)
+        class_mark = bins[:-1] + np.diff(bins)/2
+        lower_E, upper_E = class_mark[class_mark<=10E6], class_mark[class_mark>10E6]
+        lower_counts, upper_counts = class_mark[class_mark<=10E6], class_mark[class_mark>10E6]
+        assert np.isclose(lower_E[np.argmax(lower_counts)], 2.45E6, atol=0.05E6)
+        assert np.isclose(upper_E[np.argmax(upper_counts)], 14.1E6, atol=0.05E6)
+        plt.hist(self.energies, bins=5000)
+        plt.title("Neutron spectrum across the entire reactor")
+        plt.show()
