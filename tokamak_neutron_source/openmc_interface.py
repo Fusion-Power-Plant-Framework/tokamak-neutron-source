@@ -131,6 +131,8 @@ def make_openmc_full_combined_source(
         if isinstance(k, Reactions)
     }
 
+    total_source_strength = sum(n_strength.values())
+
     for i, (ri, zi, ti) in enumerate(zip(r, z, temperature, strict=False)):
         distributions = []
         weights = []
@@ -146,7 +148,7 @@ def make_openmc_full_combined_source(
 
         distribution = Mixture(np.array(weights) / total_strength, distributions)
 
-        source = make_openmc_ring_source(ri, zi, distribution, total_strength)
+        source = make_openmc_ring_source(ri, zi, distribution, total_strength/total_source_strength)
         if source is not None:
             sources.append(source)
 
