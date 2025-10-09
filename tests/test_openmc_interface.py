@@ -42,6 +42,7 @@ def make_source(composition_dict):
     )
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("composition_dict", [dt_comp])
 def test_openmc_source_conversion(composition_dict: dict):
     """
@@ -63,6 +64,7 @@ def test_openmc_source_conversion(composition_dict: dict):
     assert max(max_z) <= upper_lim_z + dz, "Sensible maximum height"
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     ("composition_dict", "method"),
     [
@@ -89,6 +91,7 @@ def test_source_defined_energies(composition_dict: dict, method: EnergySpectrumM
     assert max(max_E) <= 17e6, "Sensible maximum energy."
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("composition_dict", [dt_comp])
 def test_source_defined_intensities(composition_dict: dict):
     """
