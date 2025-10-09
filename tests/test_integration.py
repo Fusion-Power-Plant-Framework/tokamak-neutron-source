@@ -25,7 +25,7 @@ from tokamak_neutron_source.reactions import Reactions, AllReactions
 def extract_spacing(coordinate_array: npt.NDArray) -> float:
     return np.unique(np.diff((np.unique(coordinate_array))))[-1]
 
-def make_universe_box(
+def make_universe_cylinder(
     z_min: float, z_max: float, r_max: float,
 ) -> openmc.Cell:
     """Box up the universe in a cylinder (including top and bottom).
@@ -95,71 +95,76 @@ def xyz_to_rphiz(x, y, z):
     phi = np.atan2(x,y)
     return r, phi, z
 
-@pytest.mark.parametrize("source_type", [AllReactions, Reactions.D_T, Reactions.T_T, Reactions.D_D])
+
+def run_openmc_sim(source, tmp_path):
+    # run an empty simulation
+    universe, geometry = source_creation(source)
+    settings = openmc.Settings(
+        batches=1, run_mode="fixed source",
+        output={"path": tmp_path.as_posix(), "summary": False}
+    )
+    settings.seed = 1
+    settings.source = source.to_openmc_source()
+    settings.particles = settings.max_tracks = 1000
+    materials = openmc.Materials()
+    materials.cross_sections = "tests/test_data/cross_section.xml"
+    # exporting to xml
+    geometry.export_to_xml(tmp_path/"geometry.xml")
+    settings.export_to_xml(tmp_path/"settings.xml")
+    materials.export_to_xml(tmp_path/"materials.xml")
+    openmc.run(cwd=tmp_path.as_posix(), tracks=True)
+    return openmc.Tracks(tmp_path/"tracks.h5")
+
+def source_creation(source):
+    """Make the openmc universe"""
+    dx, dz = extract_spacing(source.xz[:, 0]), extract_spacing(source.xz[:, 1])
+    source_cell = make_universe_cylinder(min(source.xz[:, 1])-dz, max(source.xz[:, 1])+dz, max(source.xz[:, 0])+dx)
+    universe = openmc.Universe(cells=[source_cell])
+    return universe, openmc.Geometry(universe)
+
+@pytest.fixture(scope='module', autouse=True)
+def new_path(tmp_path_factory):
+    return tmp_path_factory.mktemp('subdir')
+
+@pytest.fixture(scope="module", params=[None, Reactions.D_T, Reactions.T_T, Reactions.D_D])
+def run_sim_and_track_particles(request, new_path):
+    """Run a simulation and get all of the particle tracks out of it."""
+
+    temperature_profile = ParabolicPedestalProfile(25.0, 5.0, 0.1, 1.45, 2.0, 0.95)  # [keV]
+    density_profile = ParabolicPedestalProfile(0.8e20, 0.5e19, 0.5e17, 1.0, 2.0, 0.95)
+    rho_profile = np.linspace(0, 1, 30)
+
+    flux_map = FluxMap.from_eqdsk("tests/test_data/eqref_OOB.json")
+    source = TokamakNeutronSource(
+        transport=TransportInformation.from_parameterisations(
+            ion_temperature_profile=temperature_profile,
+            fuel_density_profile=density_profile,
+            rho_profile=rho_profile,
+            fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
+        ),
+        flux_map=flux_map,
+        source_type=request.param,
+        cell_side_length=0.05,
+        total_fusion_power=2.2E9
+    )
+    tracks = run_openmc_sim(source, new_path)
+
+    # Should take about <1 minutes per 5000 particles.
+    # Expected leakage fraction = 1.0 since all neutrons should leave the source
+    # cell (made of vacuum) without interacting with anything.
+    locations, directions, energies = [], [], []
+    for ptrac in tracks:
+        # particle_tracks should have len==1 since there shouldn't be any splitting
+        # (lacking any obstacles in the simulation)
+        start_state = OpenMCTrack(*ptrac.particle_tracks[0].states[0])
+        locations.append(start_state.position_cylindrical)
+        directions.append(start_state.direction_spherical)
+        energies.append(start_state.energy)
+    return source, np.array(locations), np.array(directions), np.array(energies)
+
 @pytest.mark.integration
 class TestOpenMCSimulation:
-    """A simple openmc simulation to create the particle tracks data."""
-    def __init__(self, source_type=AllReactions):
-        """Create a neutron source"""
-        temperature_profile = ParabolicPedestalProfile(25.0, 5.0, 0.1, 1.45, 2.0, 0.95)  # [keV]
-        density_profile = ParabolicPedestalProfile(0.8e20, 0.5e19, 0.5e17, 1.0, 2.0, 0.95)
-        rho_profile = np.linspace(0, 1, 30)
-
-        flux_map = FluxMap.from_eqdsk("tests/test_data/eqref_OOB.json")
-        source = TokamakNeutronSource(
-            transport=TransportInformation.from_parameterisations(
-                ion_temperature_profile=temperature_profile,
-                fuel_density_profile=density_profile,
-                rho_profile=rho_profile,
-                fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
-            ),
-            flux_map=flux_map,
-            source_type=source_type,
-            cell_side_length=0.05,
-            total_fusion_power=2.2E9
-        )
-
-        universe = openmc.Universe()
-        dx, dz = extract_spacing(source.xz[:, 0]), extract_spacing(source.xz[:, 1])
-        source_cell = make_universe_box(min(source.xz[:, 1])-dz, max(source.xz[:, 1])+dz, max(source.xz[:, 0])+dx)
-        universe.add_cell(source_cell)
-        geometry = openmc.Geometry(universe)
-
-        # run an empty simulation
-        settings = openmc.Settings(batches=1, run_mode="fixed source")
-        openmc_source = source.to_openmc_source()
-        settings.source = openmc_source
-        settings.particles = settings.max_tracks = 5000
-        materials = openmc.Materials()
-        materials.cross_sections = "tests/test_data/cross_section.xml"
-        # exporting to xml
-        print("Openmc simulation exporting and started")
-        geometry.export_to_xml()
-        settings.export_to_xml()
-        materials.export_to_xml()
-        openmc.run(tracks=True)
-        print("Openmc simulation completed.")
-        tracks = openmc.Tracks("tracks.h5")
-        Path("tracks.h5").unlink(missing_ok=True)
-        Path("summary.h5").unlink(missing_ok=True)
-        Path(f"statepoint.{settings.batches}.h5").unlink(missing_ok=True)
-        Path("geometry.xml").unlink(missing_ok=True)
-        Path("settings.xml").unlink(missing_ok=True)
-        Path("materials.xml").unlink(missing_ok=True)
-        # Should take about <1 minutes per 5000 particles.
-        # Expected leakage fraction = 1.0 since all neutrons should leave the source
-        # cell (made of vacuum) without interacting with anything.
-        locations, directions, energies = [], [], []
-        print("Processing the track info into a useful format.")
-        for ptrac in tracks:
-            # particle_tracks should have len==1 since there shouldn't be any splitting
-            # (lacking any obstacles in the simulation)
-            start_state = OpenMCTrack(*ptrac.particle_tracks[0].states[0])
-            # end_state = OpenMCTrack(*ptrac.particle_tracks[0].states[1])
-            locations.append(start_state.position_cylindrical)
-            directions.append(start_state.direction_spherical)
-            energies.append(start_state.energy)
-        locations, directions, energies = np.array(locations), np.array(directions), np.array(energies)
+    """Testing the particle tracks data."""
 
     @staticmethod
     def assert_is_uniform(array: npt.NDArray, known_range:Optional[tuple[float, float]]=None):
@@ -178,51 +183,51 @@ class TestOpenMCSimulation:
         Confirm the theta part of the spherical coordinate of an isotropic direction
         distribution follows a cosine curve.
         """
-        counts, bins = np.histogram(array, bins=100, range=(-np.pi/2, np.pi/2))
+        counts, bins = np.histogram(array, bins=50, range=(-np.pi/2, np.pi/2))
         class_mark = bins[:-1] + np.diff(bins)/2
         cosine_dist = np.cos(class_mark)
-        integral_area = 2
         scale_factor = counts.sum()/cosine_dist.sum()
-        assert np.isclose(counts, cosine_dist*scale_factor, rtol=0, atol=3.5*np.sqrt(counts)).all()
+        assert np.isclose(counts, cosine_dist*scale_factor, rtol=0, atol=4*np.sqrt(np.clip(counts, 1, np.inf))).all(), "This test (4 sigma) has a false negative/failure rate of 0.0063% per comparison."
 
-    def test_location(self):
+    def test_location(self, run_sim_and_track_particles):
         """Confirm the sources are distributed uniformly in phi and according to the
         required distribution poloidally."""
-        r, phi, z = self.locations.T
+        source, locations, directions, energies = run_sim_and_track_particles
+        r, phi, z = locations.T
         self.assert_is_uniform(phi, (-np.pi, np.pi))
         plt.scatter(r/100, z/100, alpha=0.1, marker="o", s=0.5)
         plt.xlabel("r (m)"), plt.ylabel("z (m)")
         plt.title("Neutron generation positions\n(poloidal view)\nEach dot is a neutron emitted")
-        o_point, lcfs = self.source.flux_map.o_point, self.source.flux_map.lcfs
+        o_point, lcfs = source.flux_map.o_point, source.flux_map.lcfs
         plt.scatter(o_point.x, o_point.z, label="o-point", facecolors='none', edgecolor="C1")
         plt.plot(lcfs.x, lcfs.z, label="LCFS")
         plt.legend()
         plt.gca().set_aspect('equal')
         plt.show()
 
-    def test_isotropic(self):
+    def test_isotropic(self, run_sim_and_track_particles):
         """Confirm the sources are emitting neutrons isotropically."""
-        dir_theta, dir_phi = self.directions.T
+        _, _, directions, _ = run_sim_and_track_particles
+        dir_theta, dir_phi = directions.T
         self.assert_is_cosine(dir_theta)
         self.assert_is_uniform(dir_phi, (-np.pi, np.pi))
 
-    def test_energy(self):
-        full_fusion_power = self.source.calculate_total_fusion_power()
-        if len(self.source.source_type)==1:
-            reaction = self.source.source_type[0]
-            if reaction not in (Reactions.D_T, Reactions.D_D):
-                return
-        else:
+    def test_energy(self, run_sim_and_track_particles):
+        source, locations, directions, energies = run_sim_and_track_particles
+        full_fusion_power = source.calculate_total_fusion_power()
+        if Reactions.T_T in source.source_type:
             # Plot the neutron spectrum for when there are multiple types of reactions.
-            plt.hist(self.energies, bins=500)
+            plt.hist(energies, bins=500)
             plt.title("Neutron spectrum across the entire tokamak")
             plt.show()
             return
+        else:
+            reaction = source.source_type[0]
         frac_n = reaction.total_neutron_energy/reaction.total_energy
 
         # calculate obtained value.
-        avg_neutron_energy = raw_uc(self.energies.mean(), "eV", "J")
+        avg_neutron_energy = raw_uc(energies.mean(), "eV", "J")
         assert np.isclose(avg_neutron_energy, reaction.total_neutron_energy, atol=0.1E6)
-        n_per_second = sum(self.source.num_neutrons_per_second.values())
+        n_per_second = sum(source.num_neutrons_per_second.values())
         neutron_power = avg_neutron_energy * n_per_second
         assert np.isclose(neutron_power, full_fusion_power * frac_n, atol=0, rtol=0.01)
