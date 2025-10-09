@@ -131,7 +131,7 @@ def make_openmc_full_combined_source(
         if isinstance(k, Reactions)
     }
 
-    total_source_strength = sum(n_strength.values())
+    total_source_strength = sum(sum(n_strength.values()))
 
     for i, (ri, zi, ti) in enumerate(zip(r, z, temperature, strict=False)):
         distributions = []
