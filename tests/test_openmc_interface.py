@@ -27,6 +27,8 @@ dt_comp = {"D": 0.5, "T": 0.5}
 tt_comp = {"D": 0.0, "T": 1.0}
 
 CELL_SIDE_LENGTH = 0.2
+
+
 def make_source(composition_dict):
     return TokamakNeutronSource(
         transport=TransportInformation.from_parameterisations(
@@ -38,6 +40,7 @@ def make_source(composition_dict):
         flux_map=flux_map,
         cell_side_length=CELL_SIDE_LENGTH,
     )
+
 
 @pytest.mark.parametrize("composition_dict", [dt_comp])
 def test_openmc_source_conversion(composition_dict: dict):
