@@ -16,12 +16,12 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from tokamak_neutron_source.energy import EnergySpectrumMethod
 from tokamak_neutron_source.error import ReactivityError, TNSError
 from tokamak_neutron_source.reactions import (
+    AllReactions,
     AneutronicReactions,
     Reactions,
     _parse_reaction,
 )
 from tokamak_neutron_source.reactivity import (
-    AllReactions,
     ReactivityMethod,
     density_weighted_reactivity,
 )
