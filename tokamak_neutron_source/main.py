@@ -130,8 +130,8 @@ class TokamakNeutronSource:
         self.flux_map = flux_map
         self.transport = transport
 
-        self.num_reaction_per_second = None
-        self.num_neutrons_per_second = None
+        self.num_reaction_per_second = {}
+        self.num_neutrons_per_second = {}
         if total_fusion_power is not None:
             self.normalise_fusion_power(total_fusion_power)
 
