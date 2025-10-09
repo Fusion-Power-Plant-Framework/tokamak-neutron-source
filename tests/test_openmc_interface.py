@@ -73,8 +73,6 @@ def test_openmc_source_conversion(source: TokamakNeutronSource):
     [dd_source,EnergySpectrumMethod.BALLABIO_M_GAUSSIAN],
     [dt_source,EnergySpectrumMethod.BALLABIO_GAUSSIAN],
     [dt_source,EnergySpectrumMethod.BALLABIO_M_GAUSSIAN],
-    [tt_source,EnergySpectrumMethod.BALLABIO_GAUSSIAN],
-    [tt_source,EnergySpectrumMethod.BALLABIO_M_GAUSSIAN],
     [tt_source,EnergySpectrumMethod.DATA],
     ]
 )

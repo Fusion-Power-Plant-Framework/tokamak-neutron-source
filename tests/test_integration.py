@@ -110,6 +110,7 @@ class TestOpenMCSimulation:
             fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
         ),
         flux_map=flux_map,
+        source_type=Reactions.D_T,
         cell_side_length=0.05,
         total_fusion_power=2.2E9
     )
@@ -210,7 +211,7 @@ class TestOpenMCSimulation:
         overall_fusion_power = self.source.calculate_total_fusion_power()
         avg_neutron_energy = raw_uc(self.energies.mean(), "eV", "J")
         neutron_power = avg_neutron_energy * sum(self.source.num_neutrons_per_second.values())
-        assert np.isclose(neutron_power, overall_fusion_power * 4/5, atol=0, rtol=0.05)
+        assert np.isclose(neutron_power, overall_fusion_power * 4/5, atol=0, rtol=0.01)
 
     def test_spectrum_at_known_temp(self):
         """Confirm neutron spectrum is as expected."""
