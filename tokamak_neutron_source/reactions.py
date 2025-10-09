@@ -48,6 +48,7 @@ class ReactionData:
     bosch_hale_coefficients: BoschHaleCoefficients | None
     ballabio_spectrum: BallabioEnergySpectrum | None
 
+
 class ReactionEnumMixin:
     """Provides convenient accessors to the underlying ReactionData."""
 
@@ -72,7 +73,7 @@ class ReactionEnumMixin:
         return sum(self.value.neutron_energies)
 
     @property
-    def num_neutrons(self) -> int:
+    def num_neutrons(self) -> int:  # noqa: D102
         return len(self.value.neutron_energies)
 
     @property

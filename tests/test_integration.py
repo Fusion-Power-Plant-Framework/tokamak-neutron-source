@@ -2,15 +2,13 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-from pathlib import Path
 from dataclasses import dataclass
-from typing import Optional
 
-import pytest
-import numpy as np
-from numpy import typing as npt
-import openmc
 import matplotlib.pyplot as plt
+import numpy as np
+import openmc
+import pytest
+from numpy import typing as npt
 
 from tokamak_neutron_source import (
     FluxMap,
@@ -20,13 +18,17 @@ from tokamak_neutron_source import (
 )
 from tokamak_neutron_source.constants import raw_uc
 from tokamak_neutron_source.profile import ParabolicPedestalProfile
-from tokamak_neutron_source.reactions import Reactions, AllReactions
+from tokamak_neutron_source.reactions import Reactions
+
 
 def extract_spacing(coordinate_array: npt.NDArray) -> float:
-    return np.unique(np.diff((np.unique(coordinate_array))))[-1]
+    return np.unique(np.diff(np.unique(coordinate_array)))[-1]
+
 
 def make_universe_cylinder(
-    z_min: float, z_max: float, r_max: float,
+    z_min: float,
+    z_max: float,
+    r_max: float,
 ) -> openmc.Cell:
     """Box up the universe in a cylinder (including top and bottom).
 
@@ -38,7 +40,7 @@ def make_universe_cylinder(
         maximum z coordinate of the source
     r_max:
         maximum r coordinate of the source
-    
+
     Returns
     -------
     universe_cell
@@ -63,10 +65,9 @@ def make_universe_cylinder(
         name="Max radius of Universe",
     )
     return openmc.Cell(
-        region=-top & +bottom & -universe_cylinder,
-        fill=None,
-        name="source cell"
+        region=-top & +bottom & -universe_cylinder, fill=None, name="source cell"
     )
+
 
 @dataclass
 class OpenMCTrack:
@@ -92,16 +93,17 @@ class OpenMCTrack:
 
 def xyz_to_rphiz(x, y, z):
     r = np.sqrt(x**2 + y**2)
-    phi = np.atan2(x,y)
+    phi = np.atan2(x, y)
     return r, phi, z
 
 
 def run_openmc_sim(source, tmp_path):
     # run an empty simulation
-    universe, geometry = source_creation(source)
+    geometry = source_creation(source)
     settings = openmc.Settings(
-        batches=1, run_mode="fixed source",
-        output={"path": tmp_path.as_posix(), "summary": False}
+        batches=1,
+        run_mode="fixed source",
+        output={"path": tmp_path.as_posix(), "summary": False},
     )
     settings.seed = 1
     settings.source = source.to_openmc_source()
@@ -109,28 +111,58 @@ def run_openmc_sim(source, tmp_path):
     materials = openmc.Materials()
     materials.cross_sections = "tests/test_data/cross_section.xml"
     # exporting to xml
-    geometry.export_to_xml(tmp_path/"geometry.xml")
-    settings.export_to_xml(tmp_path/"settings.xml")
-    materials.export_to_xml(tmp_path/"materials.xml")
+    geometry.export_to_xml(tmp_path / "geometry.xml")
+    settings.export_to_xml(tmp_path / "settings.xml")
+    materials.export_to_xml(tmp_path / "materials.xml")
     openmc.run(cwd=tmp_path.as_posix(), tracks=True)
-    return openmc.Tracks(tmp_path/"tracks.h5")
+    return openmc.Tracks(tmp_path / "tracks.h5")
+
 
 def source_creation(source):
-    """Make the openmc universe"""
+    """Make the openmc universe
+
+    Returns
+    -------
+    geometry:
+        an openmc.Geometry that contains only one cell (the source cell, which spans
+        the entire universe).
+    """
     dx, dz = extract_spacing(source.x), extract_spacing(source.z)
-    source_cell = make_universe_cylinder(min(source.z)-dz, max(source.z)+dz, max(source.x)+dx)
+    source_cell = make_universe_cylinder(
+        min(source.z) - dz, max(source.z) + dz, max(source.x) + dx
+    )
     universe = openmc.Universe(cells=[source_cell])
-    return universe, openmc.Geometry(universe)
+    return openmc.Geometry(universe)
 
-@pytest.fixture(scope='module', autouse=True)
+
+@pytest.fixture(scope="module", autouse=True)
 def new_path(tmp_path_factory):
-    return tmp_path_factory.mktemp('subdir')
+    return tmp_path_factory.mktemp("subdir")
 
-@pytest.fixture(scope="module", params=[None, Reactions.D_T, Reactions.T_T, Reactions.D_D])
+
+@pytest.fixture(
+    scope="module", params=[None, Reactions.D_T, Reactions.T_T, Reactions.D_D]
+)
 def run_sim_and_track_particles(request, new_path):
-    """Run a simulation and get all of the particle tracks out of it."""
+    """Run a simulation and get all of the particle tracks out of it.
 
-    temperature_profile = ParabolicPedestalProfile(25.0, 5.0, 0.1, 1.45, 2.0, 0.95)  # [keV]
+    Returns
+    -------
+    source:
+        TokamakNeutronSource
+    locations:
+        The location of every particle, stored as an array of shape (N, 3), where
+        the final axis stores the location in cylindrical coordinates. [cm]
+    directions:
+        The direction of every particle, stored as an array of shape (N, 2), where
+        the final axis stores the location in spherical coordinates. [cm]
+    energies:
+        The energy of every particle, stored as an array of shape (N,), where the
+        final axis stores the energy in [eV].
+    """
+    temperature_profile = ParabolicPedestalProfile(
+        25.0, 5.0, 0.1, 1.45, 2.0, 0.95
+    )  # [keV]
     density_profile = ParabolicPedestalProfile(0.8e20, 0.5e19, 0.5e17, 1.0, 2.0, 0.95)
     rho_profile = np.linspace(0, 1, 30)
 
@@ -145,7 +177,7 @@ def run_sim_and_track_particles(request, new_path):
         flux_map=flux_map,
         source_type=request.param,
         cell_side_length=0.05,
-        total_fusion_power=2.2E9
+        total_fusion_power=2.2e9,
     )
     tracks = run_openmc_sim(source, new_path)
 
@@ -162,19 +194,25 @@ def run_sim_and_track_particles(request, new_path):
         energies.append(start_state.energy)
     return source, np.array(locations), np.array(directions), np.array(energies)
 
+
 @pytest.mark.integration
 class TestOpenMCSimulation:
     """Testing the particle tracks data."""
 
     @staticmethod
-    def assert_is_uniform(array: npt.NDArray, known_range:Optional[tuple[float, float]]=None):
+    def assert_is_uniform(
+        array: npt.NDArray, known_range: tuple[float, float] | None = None
+    ):
         if known_range:
-            assert known_range[0]<=array.min()
-            assert array.max()<=known_range[1]
-        counts, bins = np.histogram(array, range=known_range)
+            assert known_range[0] <= array.min()
+            assert array.max() <= known_range[1]
+        counts, _ = np.histogram(array, range=known_range)
         avg = counts.mean()
         # Close enough to a Poisson distribution, so sigma = sqrt(count)
-        assert np.isclose(counts, avg, rtol=0, atol=3.5*np.sqrt(avg)).all(), "This test (3.5 sigmas) has a false negative/failure rate of 0.046% per comparison."
+        assert np.isclose(counts, avg, rtol=0, atol=3.5 * np.sqrt(avg)).all(), (
+            "This test (3.5 sigmas) has a false negative/failure rate "
+            "of 0.046% per comparison."
+        )
         # 3.5 sigma should be enough.
 
     @staticmethod
@@ -183,26 +221,42 @@ class TestOpenMCSimulation:
         Confirm the theta part of the spherical coordinate of an isotropic direction
         distribution follows a cosine curve.
         """
-        counts, bins = np.histogram(array, bins=50, range=(-np.pi/2, np.pi/2))
-        class_mark = bins[:-1] + np.diff(bins)/2
-        cosine_dist = np.cos(class_mark)
-        scale_factor = counts.sum()/cosine_dist.sum()
-        assert np.isclose(counts, cosine_dist*scale_factor, rtol=0, atol=4*np.sqrt(np.clip(counts, 1, np.inf))).all(), "This test (4 sigma) has a false negative/failure rate of 0.0063% per comparison."
+        counts, bins = np.histogram(array, bins=50, range=(-np.pi / 2, np.pi / 2))
+        lower_bound, upper_bound = bins[:-1], bins[1:]
+        expected_pdf = np.sin(upper_bound) - np.sin(lower_bound)  # CDF of cos is sin.
+        scale_factor = (
+            counts.sum() / expected_pdf.sum()
+        )  # expected_pdf should sum to 2.0
+        assert np.isclose(
+            counts,
+            expected_pdf * scale_factor,
+            rtol=0,
+            atol=3.5 * np.sqrt(np.clip(counts, 1, np.inf)),
+        ).all(), (
+            "This test (4 sigma) has a false negative/failure rate "
+            "of 0.0063% per comparison."
+        )
 
     def test_location(self, run_sim_and_track_particles):
         """Confirm the sources are distributed uniformly in phi and according to the
-        required distribution poloidally."""
-        source, locations, directions, energies = run_sim_and_track_particles
+        required distribution poloidally.
+        """
+        source, locations, _, _ = run_sim_and_track_particles
         r, phi, z = locations.T
         self.assert_is_uniform(phi, (-np.pi, np.pi))
-        plt.scatter(r/100, z/100, alpha=0.1, marker="o", s=0.5)
+        plt.scatter(r / 100, z / 100, alpha=0.1, marker="o", s=0.5)
         plt.xlabel("r (m)"), plt.ylabel("z (m)")
-        plt.title("Neutron generation positions\n(poloidal view)\nEach dot is a neutron emitted")
+        plt.title(
+            "Neutron generation positions\n(poloidal view)"
+            "\nEach dot is a neutron emitted"
+        )
         o_point, lcfs = source.flux_map.o_point, source.flux_map.lcfs
-        plt.scatter(o_point.x, o_point.z, label="o-point", facecolors='none', edgecolor="C1")
+        plt.scatter(
+            o_point.x, o_point.z, label="o-point", facecolors="none", edgecolor="C1"
+        )
         plt.plot(lcfs.x, lcfs.z, label="LCFS")
         plt.legend()
-        plt.gca().set_aspect('equal')
+        plt.gca().set_aspect("equal")
         plt.show()
 
     def test_isotropic(self, run_sim_and_track_particles):
@@ -213,22 +267,30 @@ class TestOpenMCSimulation:
         self.assert_is_uniform(dir_phi, (-np.pi, np.pi))
 
     def test_energy(self, run_sim_and_track_particles):
-        source, locations, directions, energies = run_sim_and_track_particles
-        reaction_neutron_counter = sum(reaction.num_neutrons for reaction in source_type)
-        if reaction_neutron_counter>1:
+        source, _, _, energies = run_sim_and_track_particles
+        reaction_neutron_counter = sum(
+            reaction.num_neutrons for reaction in source.source_type
+        )
+        if reaction_neutron_counter > 1:
             # Plot the neutron spectrum for when there are multiple types of reactions.
             plt.hist(energies, bins=500)
             plt.title("Neutron spectrum across the entire tokamak")
             plt.show()
             return
-        else:
-            reaction = source.source_type[0]
+        reaction = source.source_type[0]
 
         # calculate obtained value.
         avg_neutron_energy = raw_uc(energies.mean(), "eV", "J")
-        assert np.isclose(avg_neutron_energy, reaction.total_neutron_energy, rtol=raw_uc(0.1, "MeV", "J"))
+        assert np.isclose(
+            avg_neutron_energy,
+            reaction.total_neutron_energy,
+            rtol=raw_uc(0.1, "MeV", "J"),
+        )
 
-        desired_neutron_power = sum(rx.total_neutron_energy * source.num_reactions_per_second.get(rx, 0.0) for rx in source.source_type)
+        desired_neutron_power = sum(
+            rx.total_neutron_energy * source.num_reactions_per_second.get(rx, 0.0)
+            for rx in source.source_type
+        )
         n_per_second = sum(source.num_neutrons_per_second.values())
         neutron_power = avg_neutron_energy * n_per_second
         assert np.isclose(neutron_power, desired_neutron_power, atol=0, rtol=0.01)

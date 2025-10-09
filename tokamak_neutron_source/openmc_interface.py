@@ -14,6 +14,7 @@ from openmc.stats import (
     Isotropic,
     Mixture,
     Tabular,
+    Uniform,
 )
 
 from tokamak_neutron_source.constants import raw_uc

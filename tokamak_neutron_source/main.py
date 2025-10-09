@@ -176,7 +176,9 @@ class TokamakNeutronSource:
         for reaction in self.source_type:
             self.strength[reaction] *= scaling_factor
             self.num_reactions_per_second[reaction] = sum(self.strength[reaction])
-            self.num_neutrons_per_second[reaction] = sum(self.strength[reaction]) * reaction.num_neutrons
+            self.num_neutrons_per_second[reaction] = (
+                sum(self.strength[reaction]) * reaction.num_neutrons
+            )
 
     def to_openmc_source(
         self,
@@ -199,9 +201,8 @@ class TokamakNeutronSource:
             make_openmc_full_combined_source,
         )
 
-        
         return make_openmc_full_combined_source(
-            self.x
+            self.x,
             self.z,
             self.temperature,
             self.strength,
@@ -273,7 +274,7 @@ class TokamakNeutronSource:
             self.flux_map.plot(f=f, ax=axis)
             axis.set_title(f"{reaction.label} reaction")
             cm = axis.scatter(
-                self.x
+                self.x,
                 self.z,
                 c=self.strength[reaction],
                 cmap="inferno",
