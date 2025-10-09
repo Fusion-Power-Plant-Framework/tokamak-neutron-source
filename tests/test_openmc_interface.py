@@ -18,42 +18,29 @@ ion_temperature_profile = ParabolicPedestalProfile(25.0, 5.0, 0.1, 1.45, 2.0, 0.
 fuel_density_profile = ParabolicPedestalProfile(0.8e20, 0.5e19, 0.5e17, 1.0, 2.0, 0.95)
 rho_profile = np.linspace(0, 1, 30)
 flux_map = FluxMap.from_eqdsk("tests/test_data/eqref_OOB.json")
-dd_source = TokamakNeutronSource(
-    transport=TransportInformation.from_parameterisations(
-        ion_temperature_profile=ion_temperature_profile,
-        fuel_density_profile=fuel_density_profile,
-        rho_profile=rho_profile,
-        fuel_composition=FractionalFuelComposition(D=1.0, T=0.0),
-    ),
-    flux_map=flux_map,
-    cell_side_length=0.2,
-)
-dt_source = TokamakNeutronSource(
-    transport=TransportInformation.from_parameterisations(
-        ion_temperature_profile=ion_temperature_profile,
-        fuel_density_profile=fuel_density_profile,
-        rho_profile=rho_profile,
-        fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
-    ),
-    flux_map=flux_map,
-    cell_side_length=0.2,
-)
-tt_source = TokamakNeutronSource(
-    transport=TransportInformation.from_parameterisations(
-        ion_temperature_profile=ion_temperature_profile,
-        fuel_density_profile=fuel_density_profile,
-        rho_profile=rho_profile,
-        fuel_composition=FractionalFuelComposition(D=0.0, T=1.0),
-    ),
-    flux_map=flux_map,
-    cell_side_length=0.2,
-)
 
-@pytest.mark.parametrize("source", [dt_source])
-def test_openmc_source_conversion(source: TokamakNeutronSource):
+dd_comp = {"D":1.0, "T":0.0}
+dt_comp = {"D":0.5, "T":0.5}
+tt_comp = {"D":0.0, "T":1.0}
+
+def make_source(composition_dict):
+    return TokamakNeutronSource(
+        transport=TransportInformation.from_parameterisations(
+            ion_temperature_profile=ion_temperature_profile,
+            fuel_density_profile=fuel_density_profile,
+            rho_profile=rho_profile,
+            fuel_composition=FractionalFuelComposition(**composition_dict),
+        ),
+        flux_map=flux_map,
+        cell_side_length=0.2,
+    )
+
+@pytest.mark.parametrize("composition_dict", [dt_comp])
+def test_openmc_source_conversion(composition_dict: dict):
     """
     Check that neutrons are produced in the correct locations.
     """
+    source = make_source(composition_dict)
     openmc_source = source.to_openmc_source()
     lcfs = source.flux_map.lcfs
     lower_lim_r, upper_lim_r = min(lcfs.x), max(lcfs.x)
@@ -67,20 +54,21 @@ def test_openmc_source_conversion(source: TokamakNeutronSource):
     assert lower_lim_z-dz<=min(min_z) and max(max_z)<=upper_lim_z+dz, "Height must lie in range."
 
 @pytest.mark.parametrize(
-    ("source", "method"),
+    ("composition_dict", "method"),
     [
-    [dd_source,EnergySpectrumMethod.BALLABIO_GAUSSIAN],
-    [dd_source,EnergySpectrumMethod.BALLABIO_M_GAUSSIAN],
-    [dt_source,EnergySpectrumMethod.BALLABIO_GAUSSIAN],
-    [dt_source,EnergySpectrumMethod.BALLABIO_M_GAUSSIAN],
-    [tt_source,EnergySpectrumMethod.DATA],
+    [dd_comp,EnergySpectrumMethod.BALLABIO_GAUSSIAN],
+    [dd_comp,EnergySpectrumMethod.BALLABIO_M_GAUSSIAN],
+    [dt_comp,EnergySpectrumMethod.BALLABIO_GAUSSIAN],
+    [dt_comp,EnergySpectrumMethod.BALLABIO_M_GAUSSIAN],
+    [tt_comp,EnergySpectrumMethod.DATA],
     ]
 )
-def test_source_defined_energies(source: TokamakNeutronSource, method: EnergySpectrumMethod):
+def test_source_defined_energies(composition_dict: dict, method: EnergySpectrumMethod):
     """
     Check, for each of the energy spectrum methods, that the energy of the produced
     neutrons are approximately sensible.
     """
+    source = make_source(composition_dict)
     openmc_source = source.to_openmc_source(method)
     min_E, max_E = [], []
     for src in openmc_source:
@@ -91,11 +79,12 @@ def test_source_defined_energies(source: TokamakNeutronSource, method: EnergySpe
     assert 0.0<=min(min_E) and max(max_E)<=17E6
 
 
-@pytest.mark.parametrize("source", [dt_source])
-def test_source_defined_intensities(source: TokamakNeutronSource):
+@pytest.mark.parametrize("composition_dict", [dt_comp])
+def test_source_defined_intensities(composition_dict: dict):
     """
     Check that the intensities are defined correctly for the openmc sources.
     """
+    source = make_source(composition_dict)
     source.normalise_fusion_power(2.2e9)
     openmc_source = source.to_openmc_source()
     desired_intensities = np.sum([source.strength[rx] * rx.num_neutrons for rx in Reactions], axis=0)
