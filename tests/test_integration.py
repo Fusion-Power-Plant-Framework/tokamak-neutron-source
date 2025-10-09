@@ -223,11 +223,13 @@ class TestOpenMCSimulation:
             return
         else:
             reaction = source.source_type[0]
-        frac_n = reaction.total_neutron_energy/reaction.total_energy
 
         # calculate obtained value.
         avg_neutron_energy = raw_uc(energies.mean(), "eV", "J")
-        assert np.isclose(avg_neutron_energy, reaction.total_neutron_energy, atol=0.1E6)
-        n_per_second = sum(source.num_neutrons_per_second.values())
-        neutron_power = avg_neutron_energy * n_per_second
-        assert np.isclose(neutron_power, full_fusion_power * frac_n, atol=0, rtol=0.01)
+        print(f"This branch has been etered for source_type={source.source_type}")
+        assert np.isclose(avg_neutron_energy, reaction.total_neutron_energy, rtol=raw_uc(0.1, "MeV", "J"))
+        if len(source.source_type)==1: # comparison only works if there are no aneutronic reactions
+            n_per_second = sum(source.num_neutrons_per_second.values())
+            neutron_power = avg_neutron_energy * n_per_second
+            frac_n = reaction.total_neutron_energy/reaction.total_energy
+            assert np.isclose(neutron_power, full_fusion_power * frac_n, atol=0, rtol=0.01)
