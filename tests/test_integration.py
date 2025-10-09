@@ -214,8 +214,8 @@ class TestOpenMCSimulation:
 
     def test_energy(self, run_sim_and_track_particles):
         source, locations, directions, energies = run_sim_and_track_particles
-        full_fusion_power = source.calculate_total_fusion_power()
-        if Reactions.T_T in source.source_type:
+        reaction_neutron_counter = sum(reaction.num_neutrons for reaction in source_type)
+        if reaction_neutron_counter>1:
             # Plot the neutron spectrum for when there are multiple types of reactions.
             plt.hist(energies, bins=500)
             plt.title("Neutron spectrum across the entire tokamak")
@@ -226,10 +226,9 @@ class TestOpenMCSimulation:
 
         # calculate obtained value.
         avg_neutron_energy = raw_uc(energies.mean(), "eV", "J")
-        print(f"This branch has been etered for source_type={source.source_type}")
         assert np.isclose(avg_neutron_energy, reaction.total_neutron_energy, rtol=raw_uc(0.1, "MeV", "J"))
-        if len(source.source_type)==1: # comparison only works if there are no aneutronic reactions
-            n_per_second = sum(source.num_neutrons_per_second.values())
-            neutron_power = avg_neutron_energy * n_per_second
-            frac_n = reaction.total_neutron_energy/reaction.total_energy
-            assert np.isclose(neutron_power, full_fusion_power * frac_n, atol=0, rtol=0.01)
+
+        desired_neutron_power = sum(rx.total_neutron_energy * source.num_reaction_per_second.get(rx, 0.0) for rx in source.source_type)
+        n_per_second = sum(source.num_neutrons_per_second.values())
+        neutron_power = avg_neutron_energy * n_per_second
+        assert np.isclose(neutron_power, desired_neutron_power, atol=0, rtol=0.01)
