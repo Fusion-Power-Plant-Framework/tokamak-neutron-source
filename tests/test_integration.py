@@ -114,7 +114,8 @@ class OpenMCSimulation:
     )
     # f, ax = source.plot()
     print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
-    source.normalise_fusion_power(2.2e9)
+    POWER = 2.2E9
+    source.normalise_fusion_power(POWER)
     print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
 
     universe = openmc.Universe()
@@ -159,6 +160,10 @@ class OpenMCSimulation:
         directions.append(start_state.direction_spherical)
         energies.append(start_state.energy)
     locations, directions, energies = np.array(locations), np.array(directions), np.array(energies)
+
+    # if I wanted the tallies to be converted from [per source particle] to [per second],
+    # I would need to use this factor:
+    # number of neutrons per second
 
     @staticmethod
     def assert_is_uniform(array: npt.NDArray, known_range:Optional[tuple[float, float]]=None):
@@ -205,10 +210,16 @@ class OpenMCSimulation:
         self.assert_is_cosine(dir_theta)
         self.assert_is_uniform(dir_phi, (-np.pi, np.pi))
 
-    def test_power_equal(self):
+    def test_avg_energy(self):
         """Confirm total power is close enough to the desired value."""
         mean_eV = self.energies.mean()
         assert np.isclose(mean_eV, 14E6, rtol=0, atol=0.1E6)
+
+    def test_neutron_power_equal(self):
+        overall_fusion_power = self.POWER
+        avg_neutron_energy = raw_uc(self.energies.mean(), "eV", "J")
+        neutron_power = avg_neutron_energy * sum(src.strength for src in self.openmc_source)
+        assert np.isclose(neutron_power, overall_fusion_power * 4/5, atol=0, rtol=0.05)
 
     def test_spectrum_at_known_temp(self):
         """Confirm neutron spectrum is as expected."""
