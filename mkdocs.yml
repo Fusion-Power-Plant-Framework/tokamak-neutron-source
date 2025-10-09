@@ -1,9 +1,9 @@
 site_name: Tokamak Neutron Source Documentation
 site_description: Tokamak Neutron Source, a python package for materials that are dependent on conditions
-site_url: https://example.com
+site_url: https://fusion-power-plant-framework.github.io/tokamak-neutron-source/
 
-repo_name: Fusion-Power-Plant-Framework/tokamak_neutron_source
-repo_url: https://github.com/Fusion-Power-Plant-Framework/tokamak_neutron_source
+repo_name: Fusion-Power-Plant-Framework/tokamak-neutron-source
+repo_url: https://github.com/Fusion-Power-Plant-Framework/tokamak-neutron-source
 
 watch:
   - tokamak_neutron_source
