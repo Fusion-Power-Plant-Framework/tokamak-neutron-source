@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/<TODO>.svg)](https://zenodo.org/badge/latestdoi/<TODO>)
+
 # Introduction
 
 `tokamak-neutron-source` is a package that provides a flexible and high-fidelity fusion neutron source for tokamaks in OpenMC and other Monte Carlo radiation transport codes.
