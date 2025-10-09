@@ -67,13 +67,13 @@ def make_openmc_ring_source(
     Parameters
     ----------
     r_lim:
-        Lower and upper limits of the radial position of this volumetric ring [m]
+        Lower and upper limits of the radial position of this 3D ring [m]
     z_lim:
-        Lower and upper limits of the vertical position of this volumetric ring [m]
+        Lower and upper limits of the vertical position of this 3D ring [m]
     energy_distribution:
         Neutron energy distribution
     strength:
-        Strength of the source [arbitrary units]
+        Strength of the source [number of neutrons]
 
     Returns
     -------
