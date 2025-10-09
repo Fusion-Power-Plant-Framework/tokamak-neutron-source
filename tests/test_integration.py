@@ -85,7 +85,7 @@ class OpenMCTrack:
     @property
     def direction_spherical(self):
         r, phi, z = xyz_to_rphiz(*self.direction)
-        theta = np.atan2(r, z)
+        theta = np.atan2(z, r)
         return theta, phi
 
 
@@ -95,7 +95,7 @@ def xyz_to_rphiz(x, y, z):
     return r, phi, z
 
 @pytest.mark.integration
-class OpenMCSimulation:
+class TestOpenMCSimulation:
     """A simple openmc simulation to create the particle tracks data. """
     temperature_profile = ParabolicPedestalProfile(25.0, 5.0, 0.1, 1.45, 2.0, 0.95)  # [keV]
     density_profile = ParabolicPedestalProfile(0.8e20, 0.5e19, 0.5e17, 1.0, 2.0, 0.95)
@@ -111,11 +111,8 @@ class OpenMCSimulation:
         ),
         flux_map=flux_map,
         cell_side_length=0.05,
+        total_fusion_power=2.2E9
     )
-    # f, ax = source.plot()
-    print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
-    source.normalise_fusion_power(2.2E9)
-    print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
 
     universe = openmc.Universe()
     dx, dz = extract_spacing(source.xz[:, 0]), extract_spacing(source.xz[:, 1])
@@ -144,9 +141,8 @@ class OpenMCSimulation:
     Path("geometry.xml").unlink(missing_ok=True)
     Path("settings.xml").unlink(missing_ok=True)
     Path("materials.xml").unlink(missing_ok=True)
-    # Should take about 2 minutes and 10 seconds for cell_side_length=0.05
-    # (len(source)==17374).
-    # Expected Leakage fraction = 1.0 since all neutrons should leave the source
+    # Should take about <2 minutes for 10000 particles.
+    # Expected leakage fraction = 1.0 since all neutrons should leave the source
     # cell (made of vacuum) without interacting with anything.
     locations, directions, energies = [], [], []
     print("Processing the track info into a useful format.")
@@ -160,10 +156,6 @@ class OpenMCSimulation:
         energies.append(start_state.energy)
     locations, directions, energies = np.array(locations), np.array(directions), np.array(energies)
 
-    # if I wanted the tallies to be converted from [per source particle] to [per second],
-    # I would need to use this factor:
-    # number of neutrons per second
-
     @staticmethod
     def assert_is_uniform(array: npt.NDArray, known_range:Optional[tuple[float, float]]=None):
         if known_range:
@@ -171,8 +163,8 @@ class OpenMCSimulation:
             assert array.max()<=known_range[1]
         counts, bins = np.histogram(array, range=known_range)
         avg = counts.mean()
-        # poisson distribution
-        assert np.isclose(counts, avg, rtol=0, atol=3.5*np.sqrt(avg)).all(), "This test (3.5 sigmas) has a false positive failure rate of 0.046% per comparison."
+        # Close enough to a Poisson distribution, so sigma = sqrt(count)
+        assert np.isclose(counts, avg, rtol=0, atol=3.5*np.sqrt(avg)).all(), "This test (3.5 sigmas) has a false negative/failure rate of 0.046% per comparison."
         # 3.5 sigma should be enough.
 
     @staticmethod
@@ -196,7 +188,7 @@ class OpenMCSimulation:
         plt.scatter(r/100, z/100, alpha=0.1, marker="o", s=0.5)
         plt.xlabel("r (m)"), plt.ylabel("z (m)")
         plt.title("Neutron generation positions\n(poloidal view)\nEach dot is a neutron emitted")
-        o_point, lcfs = source.flux_map.o_point, source.flux_map.lcfs
+        o_point, lcfs = self.source.flux_map.o_point, self.source.flux_map.lcfs
         plt.scatter(o_point.x, o_point.z, label="o-point", facecolors='none', edgecolor="C1")
         plt.plot(lcfs.x, lcfs.z, label="LCFS")
         plt.legend()
