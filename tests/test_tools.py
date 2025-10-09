@@ -2,12 +2,13 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 from copy import deepcopy
+from pathlib import Path
 
 import numpy as np
 import pytest
 from eqdsk import EQDSKInterface
 
-from tokamak_neutron_source.tools import get_centroid_2d, load_eqdsk
+from tokamak_neutron_source.tools import get_centroid_2d, load_eqdsk, load_jsp
 
 
 class TestGetCentroid:
@@ -42,3 +43,26 @@ class TestLoadEQDSK:
         neq = deepcopy(self.eq).to_cocos(cocos)
         eq = load_eqdsk(neq)
         assert eq.psimag > eq.psibdry
+
+
+TEST_DATA = Path(__file__).parent / "test_data"
+
+
+class TestLoadJSP:
+    path = Path(TEST_DATA, "jetto.jsp").as_posix()
+
+    @pytest.mark.parametrize("bad_frame", [-10, 1e6])
+    def test_error_on_bad_frame(self, bad_frame):
+        with pytest.raises(ValueError):
+            load_jsp(self.path, bad_frame)
+
+    def test_array_lengths(self):
+        data = load_jsp(self.path)
+        sizes = [
+            data.rho.size,
+            data.d_density.size,
+            data.t_density.size,
+            data.he3_density.size,
+            data.ion_temperature.size,
+        ]
+        assert all(x == sizes[0] for x in sizes[1:])

@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024-present Tokamak Neutron Source Maintainers
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
+from pathlib import Path
+
 import numpy as np
 import pytest
 from eqdsk import EQDSKInterface
@@ -19,6 +21,7 @@ from tokamak_neutron_source.reactions import AneutronicReactions, Reactions
 from tokamak_neutron_source.reactivity import (
     ReactivityMethod,
 )
+from tokamak_neutron_source.tools import load_jsp
 from tokamak_neutron_source.transport import (
     FractionalFuelComposition,
     TransportInformation,
@@ -160,3 +163,28 @@ class TestPROCESSFusionBenchmark:
         source = self.make_source(reaction)
         total_fusion_power_mw = source.calculate_total_fusion_power() / 1e6
         assert np.isclose(total_fusion_power_mw, expected_mw, rtol=1.5e-2, atol=0.0)
+
+
+TEST_DATA = Path(__file__).parent / "test_data"
+
+
+# TODO @je-cook: remove once JETTO data public
+@pytest.mark.xfail(raises=Exception)
+class TestJETTOFusionBenchmark:
+    jsp_path = Path(TEST_DATA, "STEP_jetto.jsp").as_posix()
+    eqdsk_path = path = Path(TEST_DATA, "STEP_jetto.eqdsk_out").as_posix()
+
+    def test_source_power(self):
+        data = load_jsp(self.jsp_path)
+        source = TokamakNeutronSource(
+            TransportInformation.from_jetto(self.jsp_path),
+            FluxMap.from_eqdsk(self.eqdsk_path, flux_convention=FluxConvention.SQRT),
+            source_type=[Reactions.D_T],
+            cell_side_length=0.05,
+            # reactivity_method=ReactivityMethod.XS,
+        )
+
+        dt_rate = sum(source.strength[Reactions.D_T])
+        jetto_dt_rate = float(data.dt_neutron_rate)
+
+        assert np.isclose(dt_rate, jetto_dt_rate, rtol=5e-3, atol=0.0)

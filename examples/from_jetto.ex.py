@@ -21,12 +21,9 @@
 """Example Reading from JETTO files"""
 # %%
 
-import numpy as np
-
 from tokamak_neutron_source import (
     FluxConvention,
     FluxMap,
-    FractionalFuelComposition,
     TokamakNeutronSource,
     TransportInformation,
 )
@@ -34,22 +31,23 @@ from tokamak_neutron_source.reactions import Reactions
 
 # %% [markdown]
 # # JETTO Source
+# These JETTO data are available here:
+# https://gitlab.com/jintrac/jetto-pythontools/-/tree/1.8.13/testdata?ref_type=tags
+
+# %%
+
 source = TokamakNeutronSource(
-    transport=TransportInformation.from_jetto("jetto.jsp"),
-    flux_map=FluxMap.from_eqdsk("jetto.eqdsk_out", flux_convention=FluxConvention.SQRT),
-    source_type=[Reactions.D_T, Reactions.D_D],
+    transport=TransportInformation.from_jetto("tests/test_data/jetto.jsp"),
+    flux_map=FluxMap.from_eqdsk(
+        "tests/test_data/jetto_600_100000.eqdsk", flux_convention=FluxConvention.SQRT
+    ),
+    source_type=[Reactions.D_D],
     cell_side_length=0.05,
 )
 
 # Print the calculated total neutron rate from the ion density and temperature profiles
-print("Total DT source neutrons:", sum(source.strength[Reactions.D_T]))
-print("Total DD source neutrons:", sum(source.strength[Reactions.D_D]))
-# print("Total TT source neutrons:", sum(source.strength[Reactions.T_T])*2)
+print("Total D-D source neutrons:", sum(source.strength[Reactions.D_D]))
+
 print("Calculated total source fusion power: ", source.calculate_total_fusion_power())
 
-# Print the total neutron rate from the JETTO file for comparison
-total_n_per_sec = source.transport.cumulative_neutron_rate[-1]
-print("JETTO Reference total neutron rate: ", total_n_per_sec)
-
 source.plot()
-
