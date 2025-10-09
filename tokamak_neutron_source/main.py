@@ -103,11 +103,10 @@ class TokamakNeutronSource:
     ):
         self.source_type = _parse_source_type(source_type)
 
-        self.xz, self.d_volume = sample_space_2d(
+        self.x, self.z, self.d_volume = sample_space_2d(
             flux_map.lcfs, flux_map.o_point, cell_side_length
         )
-        self.dxdz = (cell_side_length, cell_side_length)
-        psi_norm = flux_map.psi_norm(*self.xz.T)
+        psi_norm = flux_map.psi_norm(self.x, self.z)
 
         self.temperature = transport.temperature_profile.value(psi_norm)
         density_d = transport.deuterium_density_profile.value(psi_norm)
@@ -202,8 +201,8 @@ class TokamakNeutronSource:
 
         
         return make_openmc_full_combined_source(
-            self.xz,
-            self.dxdz,
+            self.x
+            self.z,
             self.temperature,
             self.strength,
             energy_method,
@@ -274,7 +273,8 @@ class TokamakNeutronSource:
             self.flux_map.plot(f=f, ax=axis)
             axis.set_title(f"{reaction.label} reaction")
             cm = axis.scatter(
-                self.xz,
+                self.x
+                self.z,
                 c=self.strength[reaction],
                 cmap="inferno",
             )

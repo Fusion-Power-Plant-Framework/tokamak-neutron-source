@@ -117,8 +117,8 @@ def run_openmc_sim(source, tmp_path):
 
 def source_creation(source):
     """Make the openmc universe"""
-    dx, dz = extract_spacing(source.xz[:, 0]), extract_spacing(source.xz[:, 1])
-    source_cell = make_universe_cylinder(min(source.xz[:, 1])-dz, max(source.xz[:, 1])+dz, max(source.xz[:, 0])+dx)
+    dx, dz = extract_spacing(source.x), extract_spacing(source.z)
+    source_cell = make_universe_cylinder(min(source.z)-dz, max(source.z)+dz, max(source.x)+dx)
     universe = openmc.Universe(cells=[source_cell])
     return universe, openmc.Geometry(universe)
 

@@ -14,8 +14,7 @@ def test_sample_space_2d_simple(cell_side_length):
     lcfs = ClosedFluxSurface(x=[4, 8, 8, 4, 4], z=[-2, -2, 2, 2, -2])
     o_point = FluxPoint(*lcfs.center_of_mass, 0.0)
 
-    xz, dv = sample_space_2d(lcfs, o_point, cell_side_length)
-    x, z = xz.T
+    x, z, dv = sample_space_2d(lcfs, o_point, cell_side_length)
     assert np.all((x >= 4) & (x <= 8))
     assert np.all((z >= -2) & (z <= 2))
     true_volume = lcfs.volume
@@ -28,8 +27,7 @@ def test_sample_space_2d_odd(cell_side_length):
     lcfs = ClosedFluxSurface(x=[4, 8, 6, 4], z=[-2, -2, 1, -2])
     o_point = FluxPoint(*lcfs.center_of_mass, 0.0)
 
-    xz, dv = sample_space_2d(lcfs, o_point, cell_side_length)
-    x, z = xz.T
+    x, z, dv = sample_space_2d(lcfs, o_point, cell_side_length)
     assert np.all((x >= 4) & (x <= 8))
     assert np.all((z >= -2) & (z <= 2))
     true_volume = lcfs.volume
@@ -43,8 +41,7 @@ def test_sample_space_2d_odd2(cell_side_length):
     lcfs = ClosedFluxSurface(x=[4, 8, 6, 4], z=[-2, -2, 0.75, -2])
     o_point = FluxPoint(*lcfs.center_of_mass, 0.0)
 
-    xz, dv = sample_space_2d(lcfs, o_point, cell_side_length)
-    x, z = xz.T
+    x, z, dv = sample_space_2d(lcfs, o_point, cell_side_length)
     assert np.all((x >= 4) & (x <= 8))
     assert np.all((z >= -2) & (z <= 2))
     true_volume = lcfs.volume
@@ -57,7 +54,7 @@ def test_sample_space_2d_real(cell_side_length):
     eq = load_eqdsk("tests/test_data/eqref_OOB.json")
     lcfs = ClosedFluxSurface(eq.xbdry, eq.zbdry)
     o_point = FluxPoint(eq.xmag, eq.zmag, eq.psimag)
-    _, dv = sample_space_2d(lcfs, o_point, cell_side_length)
+    _, _, dv = sample_space_2d(lcfs, o_point, cell_side_length)
     true_volume = lcfs.volume
     sampled_volume = np.sum(dv)
     assert np.isclose(true_volume, sampled_volume, rtol=2e-3, atol=1e-12)

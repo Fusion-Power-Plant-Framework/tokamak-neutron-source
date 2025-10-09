@@ -31,8 +31,10 @@ def sample_space_2d(
 
     Returns
     -------
-    xz:
-        Radial and vertical coordinates of sampled points [m]
+    x:
+        Radial coordinate of sampled points [m]
+    z:
+        Vertical coordinates of sampled points [m]
     d_volume:
         Volumes of cells centred at points [m^3]
 
@@ -67,4 +69,4 @@ def sample_space_2d(
     # Volumes: toroidal rotation of each square cell
     d_volume = 2 * np.pi * points[:, 0] * cell_side_length**2
 
-    return points, d_volume
+    return points[:, 0], points[:, 1], d_volume
