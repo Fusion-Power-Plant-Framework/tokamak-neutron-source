@@ -98,7 +98,7 @@ def test_source_defined_intensities(source: TokamakNeutronSource):
     """
     source.normalise_fusion_power(2.2e9)
     openmc_source = source.to_openmc_source()
-    desired_intensities = np.sum([source.strength[rx] for rx in Reactions], axis=0)
+    desired_intensities = np.sum([source.strength[rx] * rx.num_neutrons for rx in Reactions], axis=0)
     openmc_source_intensities = np.array([src.strength for src in openmc_source])
     scale_factor = desired_intensities.sum()/openmc_source_intensities.sum()
     assert np.isclose(openmc_source_intensities*scale_factor, desired_intensities, atol=0.0, rtol=1E-12).all()
