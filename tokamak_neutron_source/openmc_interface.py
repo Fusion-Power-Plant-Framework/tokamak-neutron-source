@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 """OpenMC neutron source interface."""
 
-from typing import Any
-
 import numpy as np
 import numpy.typing as npt
 from openmc import IndependentSource
@@ -16,6 +14,7 @@ from openmc.stats import (
     Normal,
     Tabular,
     Uniform,
+    Univariate,
 )
 
 from tokamak_neutron_source.constants import raw_uc
@@ -64,9 +63,9 @@ def get_neutron_energy_spectrum(
 
 
 def make_openmc_ring_source(
-    r: float,
-    z: float,
-    energy_distribution: Any,
+    r_lim: npt.NDArray | tuple[float, float],
+    z_lim: npt.NDArray | tuple[float, float],
+    energy_distribution: Univariate,
     strength: float,
 ) -> IndependentSource:
     """
@@ -74,14 +73,14 @@ def make_openmc_ring_source(
 
     Parameters
     ----------
-    r:
-        Radial position of the ring [m]
-    z:
-        Vertical position of the ring [m]
+    r_lim:
+        Lower and upper limits of the radial position of this 3D ring [m]
+    z_lim:
+        Lower and upper limits of the vertical position of this 3D ring [m]
     energy_distribution:
         Neutron energy distribution
     strength:
-        Strength of the source [numebr of neutrons]
+        Strength of the source [number of neutrons]
 
     Returns
     -------
@@ -89,12 +88,15 @@ def make_openmc_ring_source(
         An OpenMC IndependentSource object, or None if strength is zero.
     """
     if strength > 0:
+        r_lim_cm = raw_uc(r_lim, "m", "cm")
+        z_lim_cm = raw_uc(z_lim, "m", "cm")
+        r_lim_prob = np.array(r_lim_cm) / sum(r_lim_cm)
         return IndependentSource(
             energy=energy_distribution,
             space=CylindricalIndependent(
-                r=Discrete([raw_uc(r, "m", "cm")], [1.0]),
+                r=Tabular(r_lim_cm, r_lim_prob),
                 phi=Uniform(0, 2 * np.pi),
-                z=Discrete([raw_uc(z, "m", "cm")], [1.0]),
+                z=Uniform(*z_lim_cm),
                 origin=(0.0, 0.0, 0.0),
             ),
             angle=Isotropic(),
@@ -106,6 +108,8 @@ def make_openmc_ring_source(
 def make_openmc_full_combined_source(
     r: npt.NDArray,
     z: npt.NDArray,
+    dr: float,
+    dz: float,
     temperature: npt.NDArray,
     strength: dict[AllReactions, npt.NDArray],
     source_rate: float,
@@ -120,6 +124,10 @@ def make_openmc_full_combined_source(
         Radial positions of the rings [m]
     z:
         Vertical positions of the rings [m]
+    dr:
+        Spacing of radial positions of the rings [m]
+    dz:
+        Spacing of vertical positions of the rings [m]
     temperature:
         Ion temperatures at the rings [keV]
     strength:
@@ -143,6 +151,7 @@ def make_openmc_full_combined_source(
         if isinstance(reaction, Reactions)
     }
 
+    dr_2, dz_2 = dr / 2, dz / 2
     with QuietTTSpectrumWarnings():
         for i, (ri, zi, ti) in enumerate(zip(r, z, temperature, strict=False)):
             distributions = []
@@ -159,8 +168,10 @@ def make_openmc_full_combined_source(
 
             distribution = Mixture(np.array(weights) / local_strength, distributions)
 
+            r_lim = ri - dr_2, ri + dr_2
+            z_lim = zi - dz_2, zi + dz_2
             source = make_openmc_ring_source(
-                ri, zi, distribution, local_strength / source_rate
+                r_lim, z_lim, distribution, local_strength / source_rate
             )
             if source is not None:
                 sources.append(source)
