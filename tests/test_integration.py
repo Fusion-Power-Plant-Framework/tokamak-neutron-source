@@ -114,8 +114,7 @@ class OpenMCSimulation:
     )
     # f, ax = source.plot()
     print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
-    POWER = 2.2E9
-    source.normalise_fusion_power(POWER)
+    source.normalise_fusion_power(2.2E9)
     print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
 
     universe = openmc.Universe()
@@ -216,9 +215,9 @@ class OpenMCSimulation:
         assert np.isclose(mean_eV, 14E6, rtol=0, atol=0.1E6)
 
     def test_neutron_power_equal(self):
-        overall_fusion_power = self.POWER
+        overall_fusion_power = self.source.calculate_total_fusion_power()
         avg_neutron_energy = raw_uc(self.energies.mean(), "eV", "J")
-        neutron_power = avg_neutron_energy * sum(src.strength for src in self.openmc_source)
+        neutron_power = avg_neutron_energy * sum(self.source.num_neutrons_per_second.values())
         assert np.isclose(neutron_power, overall_fusion_power * 4/5, atol=0, rtol=0.05)
 
     def test_spectrum_at_known_temp(self):
