@@ -143,9 +143,7 @@ class TransportInformation:
         )
 
     @classmethod
-    def from_jetto(
-        cls, jsp_file: str, frame_number: int = -1
-    ) -> TransportInformation:
+    def from_jetto(cls, jsp_file: str, frame_number: int = -1) -> TransportInformation:
         """
         Instantiate TransportInformation from JETTO file.
 
@@ -157,7 +155,7 @@ class TransportInformation:
             The specific time-slice of the JETTO run that we want to investigate.
             This ensures that all of the extracted quantities are describing the same
             point in time.
-        """   # noqa: DOC201
+        """  # noqa: DOC201
         data = load_jsp(jsp_file, frame_number)
 
         return cls(

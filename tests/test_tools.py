@@ -53,10 +53,12 @@ class TestLoadJSP:
 
     @pytest.mark.parametrize("bad_frame", [-10, 1e6])
     def test_error_on_bad_frame(self, bad_frame):
-        with pytest.raises(ValueError):
+        pytest.importorskip("jetto_tools")
+        with pytest.raises(ValueError, match="frame number"):
             load_jsp(self.path, bad_frame)
 
     def test_array_lengths(self):
+        pytest.importorskip("jetto_tools")
         data = load_jsp(self.path)
         sizes = [
             data.rho.size,
