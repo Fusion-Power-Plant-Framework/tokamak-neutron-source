@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -21,7 +23,7 @@ from tokamak_neutron_source.profile import ParabolicPedestalProfile
 from tokamak_neutron_source.reactions import Reactions
 
 if TYPE_CHECKING:
-    import openmc  # noqa: TC004
+    import openmc
 
 CELL_SIDE_LENGTH = 0.05
 
@@ -84,23 +86,23 @@ class OpenMCTrack:
     mat_id: int
 
     @property
-    def position_cylindrical(self):
+    def position_cylindrical(self) -> tuple[np.float64, np.float64, np.float64]:
         return xyz_to_rphiz(*self.position)
 
     @property
-    def direction_spherical(self):
+    def direction_spherical(self) -> tuple[np.float64, np.float64]:
         r, phi, z = xyz_to_rphiz(*self.direction)
         theta = np.atan2(z, r)
         return theta, phi
 
 
-def xyz_to_rphiz(x, y, z):
+def xyz_to_rphiz(x, y, z) -> tuple[np.float64, np.float64, np.float64]:
     r = np.sqrt(x**2 + y**2)
     phi = np.atan2(x, y)
     return r, phi, z
 
 
-def run_openmc_sim(source, tmp_path):
+def run_openmc_sim(source, tmp_path) -> openmc.Tracks:
     # run an empty simulation
     import openmc  # noqa: PLC0415
 
@@ -123,7 +125,7 @@ def run_openmc_sim(source, tmp_path):
     return openmc.Tracks(tmp_path / "tracks.h5")
 
 
-def source_creation(source):
+def source_creation(source) -> openmc.Geometry:
     """Make the openmc universe
 
     Returns
