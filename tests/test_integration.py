@@ -228,7 +228,7 @@ class TestOpenMCSimulation:
         avg_neutron_energy = raw_uc(energies.mean(), "eV", "J")
         assert np.isclose(avg_neutron_energy, reaction.total_neutron_energy, rtol=raw_uc(0.1, "MeV", "J"))
 
-        desired_neutron_power = sum(rx.total_neutron_energy * source.num_reaction_per_second.get(rx, 0.0) for rx in source.source_type)
+        desired_neutron_power = sum(rx.total_neutron_energy * source.num_reactions_per_second.get(rx, 0.0) for rx in source.source_type)
         n_per_second = sum(source.num_neutrons_per_second.values())
         neutron_power = avg_neutron_energy * n_per_second
         assert np.isclose(neutron_power, desired_neutron_power, atol=0, rtol=0.01)

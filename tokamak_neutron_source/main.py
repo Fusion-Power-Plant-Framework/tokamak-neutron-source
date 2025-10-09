@@ -130,7 +130,7 @@ class TokamakNeutronSource:
         self.flux_map = flux_map
         self.transport = transport
 
-        self.num_reaction_per_second = {}
+        self.num_reactions_per_second = {}
         self.num_neutrons_per_second = {}
         if total_fusion_power is not None:
             self.normalise_fusion_power(total_fusion_power)
@@ -173,10 +173,10 @@ class TokamakNeutronSource:
         """
         actual_fusion_power = self.calculate_total_fusion_power()
         scaling_factor = total_fusion_power / actual_fusion_power
-        self.num_reaction_per_second, self.num_neutrons_per_second = {}, {}
+        self.num_reactions_per_second, self.num_neutrons_per_second = {}, {}
         for reaction in self.source_type:
             self.strength[reaction] *= scaling_factor
-            self.num_reaction_per_second[reaction] = sum(self.strength[reaction])
+            self.num_reactions_per_second[reaction] = sum(self.strength[reaction])
             self.num_neutrons_per_second[reaction] = sum(self.strength[reaction]) * reaction.num_neutrons
 
     def to_openmc_source(
