@@ -21,12 +21,9 @@
 """Example Reading from JETTO files"""
 # %%
 
-import numpy as np
-
 from tokamak_neutron_source import (
     FluxConvention,
     FluxMap,
-    FractionalFuelComposition,
     TokamakNeutronSource,
     TransportInformation,
 )
@@ -34,36 +31,23 @@ from tokamak_neutron_source.reactions import Reactions
 
 # %% [markdown]
 # # JETTO Source
+# These JETTO data are available here:
+# https://gitlab.com/jintrac/jetto-pythontools/-/tree/1.8.13/testdata?ref_type=tags
+
 # %%
-eqdsk_file = "tests/test_data/jetto_600_100000.eqdsk"
-rho_profile = np.linspace(0, 1, 30)
-
-# fmt:off
-t_profile = 2.0 * np.array([
-    15.2, 15.0, 14.8, 14.5, 14.0, 13.6, 13.1, 12.7, 12.0, 11.3,
-    10.5, 9.7, 8.9, 8.1, 7.3, 6.5, 5.6, 4.8, 3.9, 3.0,
-    2.2, 1.6, 1.1, 0.7, 0.5, 0.3, 0.2, 0.1, 0.05, 0.0
-])
-n_profile = 1e19 * np.array([
-    9.6, 9.7, 9.6, 9.5, 9.5, 9.4, 9.3, 9.3, 9.2, 9.1,
-    9.0, 8.9, 8.8, 8.6, 8.4, 7.9, 7.2, 6.5, 5.5, 4.4,
-    3.5, 2.7, 2.0, 1.4, 0.9, 0.6, 0.35, 0.2, 0.1, 0.0
-])
-# fmt:on
-
-# %% [markdown]
-# Here we make sure to use the SQRT flux convention, as this is used
-# in JETTO.
 
 source = TokamakNeutronSource(
-    transport=TransportInformation.from_profiles(
-        ion_temperature_profile=t_profile,
-        fuel_density_profile=n_profile,
-        rho_profile=rho_profile,
-        fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
+    transport=TransportInformation.from_jetto("tests/test_data/jetto.jsp"),
+    flux_map=FluxMap.from_eqdsk(
+        "tests/test_data/jetto_600_100000.eqdsk", flux_convention=FluxConvention.SQRT
     ),
-    flux_map=FluxMap.from_eqdsk(eqdsk_file, flux_convention=FluxConvention.SQRT),
-    source_type=[Reactions.D_T, Reactions.D_D],
-    cell_side_length=0.1,
+    source_type=[Reactions.D_D],
+    cell_side_length=0.05,
 )
+
+# Print the calculated total neutron rate from the ion density and temperature profiles
+print("Total D-D source neutrons:", sum(source.strength[Reactions.D_D]))
+
+print("Calculated total source fusion power: ", source.calculate_total_fusion_power())
+
 source.plot()

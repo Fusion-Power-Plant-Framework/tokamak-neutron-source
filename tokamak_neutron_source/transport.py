@@ -14,6 +14,7 @@ import numpy as np
 import numpy.typing as npt
 
 from tokamak_neutron_source.profile import DataProfile, PlasmaProfile
+from tokamak_neutron_source.tools import load_jsp
 
 logger = logging.getLogger(__name__)
 
@@ -142,9 +143,37 @@ class TransportInformation:
         )
 
     @classmethod
-    def from_jetto(cls, *_args):
-        """Instantiate TransportInformation from JETTO output."""
-        raise NotImplementedError
+    def from_jetto(cls, jsp_file: str, frame_number: int = -1) -> TransportInformation:
+        """
+        Instantiate TransportInformation from JETTO file.
+
+        Parameters
+        ----------
+        jsp_file:
+            Path to the JETTO .jsp file
+        frame_number:
+            The specific time-slice of the JETTO run that we want to investigate.
+            This ensures that all of the extracted quantities are describing the same
+            point in time.
+        """  # noqa: DOC201
+        data = load_jsp(jsp_file, frame_number)
+
+        return cls(
+            DataProfile(
+                data.d_density,
+                data.rho,
+            ),
+            DataProfile(
+                data.t_density,
+                data.rho,
+            ),
+            DataProfile(
+                data.he3_density,
+                data.rho,
+            ),
+            DataProfile(data.ion_temperature, data.rho),
+            data.rho,
+        )
 
     def plot(self) -> tuple[plt.Figure, plt.Axes]:
         """
