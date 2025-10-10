@@ -207,4 +207,7 @@ max-args = 6
 
 [tool.pytest.ini_options]
 addopts = "--html=report.html --self-contained-html --strict-markers -r fEX"
-markers = ["integration: Run integration tests with neutronics codes"]
+markers = [
+  "integration: Run integration tests with neutronics codes",
+  "classplot: Show and close figures after running all tests in class",
+]

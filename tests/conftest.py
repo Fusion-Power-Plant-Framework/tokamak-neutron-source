@@ -7,6 +7,7 @@ Used by pytest for configuration like adding command line options.
 """
 
 import matplotlib as mpl
+import pytest
 
 
 def pytest_addoption(parser):
@@ -44,3 +45,51 @@ def pytest_configure(config):
         config.option.markexpr = " and ".join([
             name if value else f"not {name}" for name, value in options.items()
         ])
+
+
+@pytest.fixture(autouse=True)
+def _plot_show_and_close(request):
+    """Fixture to show and close plots
+
+    Notes
+    -----
+    Does not do anything if testclass marked with 'classplot'
+    """
+    import matplotlib.pyplot as plt  # noqa: PLC0415
+
+    cls = request.node.getparent(pytest.Class)
+
+    if cls and "classplot" in cls.keywords:
+        yield
+    else:
+        yield
+        clstitle = "" if cls is None else cls.name
+        for fig in list(map(plt.figure, plt.get_fignums())):
+            fig.suptitle(
+                f"{fig.get_suptitle()} {clstitle}::"
+                f"{request.node.getparent(pytest.Function).name}"
+            )
+        plt.show()
+        plt.close()
+
+
+@pytest.fixture(scope="class", autouse=True)
+def _plot_show_and_close_class(request):
+    """Fixture to show and close plots for marked classes
+
+    Notes
+    -----
+    Only shows and closes figures on classes marked with 'classplot'
+    """
+    import matplotlib.pyplot as plt  # noqa: PLC0415
+
+    if "classplot" in request.keywords:
+        yield
+        clstitle = request.node.getparent(pytest.Class).name
+
+        for fig in list(map(plt.figure, plt.get_fignums())):
+            fig.suptitle(f"{fig.get_suptitle()} {clstitle}")
+        plt.show()
+        plt.close()
+    else:
+        yield
