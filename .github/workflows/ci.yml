@@ -34,6 +34,7 @@ jobs:
           environment: docs
 
       - name: Test docs build
+        shell: bash -l {0}
         run: hatch run docs:build --strict
 
   pytest:
