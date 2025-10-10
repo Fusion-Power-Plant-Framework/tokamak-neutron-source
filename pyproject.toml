@@ -93,12 +93,13 @@ python = "3.11"
 tests      = "pytest --integration {args:tests}"
 
 [tool.hatch.envs.docs]
+template = "tns_conda"
 features = ["docs"]
 
 [tool.hatch.envs.docs.scripts]
-build = "mkdocs build"
-serve = "mkdocs serve"
-deploy = "mkdocs gh-deploy"
+build = "mkdocs build {args:}"
+serve = "mkdocs serve {args:}"
+deploy = "mkdocs gh-deploy {args:}"
 
 [tool.ty.terminal]
 output-format = "concise"
