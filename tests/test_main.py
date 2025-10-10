@@ -168,6 +168,7 @@ class TestPROCESSFusionBenchmark:
 TEST_DATA = Path(__file__).parent / "test_data"
 
 
+@pytest.mark.integration
 class TestJETTOFusionBenchmark:
     jsp_path = Path(TEST_DATA, "STEP_jetto.jsp").as_posix()
     eqdsk_path = path = Path(TEST_DATA, "STEP_jetto.eqdsk_out").as_posix()
