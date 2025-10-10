@@ -20,7 +20,7 @@ from tokamak_neutron_source import (
 )
 from tokamak_neutron_source.constants import raw_uc
 from tokamak_neutron_source.profile import ParabolicPedestalProfile
-from tokamak_neutron_source.reactions import Reactions, _APPROX_NEUTRON_ENERGY
+from tokamak_neutron_source.reactions import _APPROX_NEUTRON_ENERGY, Reactions
 
 if TYPE_CHECKING:
     import openmc
