@@ -107,7 +107,7 @@ class TokamakNeutronSource:
         self.x, self.z, self.d_volume = sample_space_2d(
             flux_map.lcfs, flux_map.o_point, cell_side_length
         )
-        self.dx, self.dz = cell_side_length, cell_side_length
+        self.cell_side_length = cell_side_length
         psi_norm = flux_map.psi_norm(self.x, self.z)
 
         self.temperature = transport.temperature_profile.value(psi_norm)
@@ -234,8 +234,7 @@ class TokamakNeutronSource:
         return make_openmc_full_combined_source(
             self.x,
             self.z,
-            self.dx,
-            self.dz,
+            self.cell_side_length,
             self.temperature,
             self.strength,
             self.source_rate,

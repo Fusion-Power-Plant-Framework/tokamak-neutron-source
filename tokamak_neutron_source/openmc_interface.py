@@ -63,8 +63,10 @@ def get_neutron_energy_spectrum(
 
 
 def make_openmc_ring_source(
-    r_lim: npt.NDArray | tuple[float, float],
-    z_lim: npt.NDArray | tuple[float, float],
+    r_lower: float,
+    r_upper: float,
+    z_lower: float,
+    z_upper: float,
     energy_distribution: Univariate,
     strength: float,
 ) -> IndependentSource:
@@ -88,8 +90,8 @@ def make_openmc_ring_source(
         An OpenMC IndependentSource object, or None if strength is zero.
     """
     if strength > 0:
-        r_lim_cm = raw_uc(r_lim, "m", "cm")
-        z_lim_cm = raw_uc(z_lim, "m", "cm")
+        r_lim_cm = raw_uc([r_lower, r_upper], "m", "cm")
+        z_lim_cm = raw_uc([z_lower, z_upper], "m", "cm")
         r_lim_prob = np.array(r_lim_cm) / sum(r_lim_cm)
         return IndependentSource(
             energy=energy_distribution,
@@ -108,8 +110,7 @@ def make_openmc_ring_source(
 def make_openmc_full_combined_source(
     r: npt.NDArray,
     z: npt.NDArray,
-    dr: float,
-    dz: float,
+    cell_side_length: float,
     temperature: npt.NDArray,
     strength: dict[AllReactions, npt.NDArray],
     source_rate: float,
@@ -124,10 +125,8 @@ def make_openmc_full_combined_source(
         Radial positions of the rings [m]
     z:
         Vertical positions of the rings [m]
-    dr:
-        Spacing of radial positions of the rings [m]
-    dz:
-        Spacing of vertical positions of the rings [m]
+    cell_side_length:
+        Radial and vertical spacings of the rings [m]
     temperature:
         Ion temperatures at the rings [keV]
     strength:
@@ -151,7 +150,7 @@ def make_openmc_full_combined_source(
         if isinstance(reaction, Reactions)
     }
 
-    dr_2, dz_2 = dr / 2, dz / 2
+    l_2 = cell_side_length / 2
     with QuietTTSpectrumWarnings():
         for i, (ri, zi, ti) in enumerate(zip(r, z, temperature, strict=False)):
             distributions = []
@@ -168,10 +167,13 @@ def make_openmc_full_combined_source(
 
             distribution = Mixture(np.array(weights) / local_strength, distributions)
 
-            r_lim = ri - dr_2, ri + dr_2
-            z_lim = zi - dz_2, zi + dz_2
             source = make_openmc_ring_source(
-                r_lim, z_lim, distribution, local_strength / source_rate
+                ri - l_2,
+                ri + l_2,
+                zi - l_2,
+                zi + l_2,
+                distribution,
+                local_strength / source_rate,
             )
             if source is not None:
                 sources.append(source)
