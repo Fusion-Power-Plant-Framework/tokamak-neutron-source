@@ -145,14 +145,14 @@ def source_creation(source) -> openmc.Geometry:
 
 
 @pytest.fixture(scope="module", autouse=True)
-def new_path(tmp_path_factory):
-    return tmp_path_factory.mktemp("subdir")
+def omc_path(tmp_path_factory):
+    return tmp_path_factory.mktemp("openmc_output")
 
 
 @pytest.fixture(
     scope="module", params=[None, Reactions.D_T, Reactions.T_T, Reactions.D_D]
 )
-def run_sim_and_track_particles(request, new_path):
+def run_sim_and_track_particles(request, omc_path):
     """Run a simulation and get all of the particle tracks out of it.
 
     Returns
@@ -188,7 +188,7 @@ def run_sim_and_track_particles(request, new_path):
         cell_side_length=CELL_SIDE_LENGTH,
         total_fusion_power=2.2e9,
     )
-    tracks = run_openmc_sim(source, new_path)
+    tracks = run_openmc_sim(source, omc_path)
 
     # Should take about <1 minutes per 5000 particles.
     # Expected leakage fraction = 1.0 since all neutrons should leave the source
