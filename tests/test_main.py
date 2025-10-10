@@ -168,21 +168,18 @@ class TestPROCESSFusionBenchmark:
 TEST_DATA = Path(__file__).parent / "test_data"
 
 
-# TODO @je-cook: remove once JETTO data public
-# 22
-@pytest.mark.xfail(raises=Exception)
 class TestJETTOFusionBenchmark:
     jsp_path = Path(TEST_DATA, "STEP_jetto.jsp").as_posix()
     eqdsk_path = path = Path(TEST_DATA, "STEP_jetto.eqdsk_out").as_posix()
 
     def test_source_power(self):
+        pytest.importorskip("jetto_tools")
         data = load_jsp(self.jsp_path)
         source = TokamakNeutronSource(
             TransportInformation.from_jetto(self.jsp_path),
             FluxMap.from_eqdsk(self.eqdsk_path, flux_convention=FluxConvention.SQRT),
             source_type=[Reactions.D_T],
             cell_side_length=0.05,
-            # reactivity_method=ReactivityMethod.XS,
         )
 
         dt_rate = sum(source.strength[Reactions.D_T])

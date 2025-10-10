@@ -49,7 +49,7 @@ TEST_DATA = Path(__file__).parent / "test_data"
 
 
 class TestLoadJSP:
-    path = Path(TEST_DATA, "jetto.jsp").as_posix()
+    path = Path(TEST_DATA, "STEP_jetto.jsp").as_posix()
 
     @pytest.mark.parametrize("bad_frame", [-10, 1e6])
     def test_error_on_bad_frame(self, bad_frame):
