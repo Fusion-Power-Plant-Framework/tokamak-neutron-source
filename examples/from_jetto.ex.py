@@ -37,11 +37,11 @@ from tokamak_neutron_source.reactions import Reactions
 # %%
 
 source = TokamakNeutronSource(
-    transport=TransportInformation.from_jetto("tests/test_data/jetto.jsp"),
+    transport=TransportInformation.from_jetto("tests/test_data/STEP_jetto.jsp"),
     flux_map=FluxMap.from_eqdsk(
-        "tests/test_data/jetto_600_100000.eqdsk", flux_convention=FluxConvention.SQRT
+        "tests/test_data/STEP_jetto.eqdsk_out", flux_convention=FluxConvention.SQRT
     ),
-    source_type=[Reactions.D_D],
+    source_type=[Reactions.D_T, Reactions.D_D],
     cell_side_length=0.05,
 )
 

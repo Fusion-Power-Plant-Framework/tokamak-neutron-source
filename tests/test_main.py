@@ -168,9 +168,6 @@ class TestPROCESSFusionBenchmark:
 TEST_DATA = Path(__file__).parent / "test_data"
 
 
-# TODO @je-cook: remove once JETTO data public
-# 22
-@pytest.mark.xfail(raises=Exception)
 class TestJETTOFusionBenchmark:
     jsp_path = Path(TEST_DATA, "STEP_jetto.jsp").as_posix()
     eqdsk_path = path = Path(TEST_DATA, "STEP_jetto.eqdsk_out").as_posix()
