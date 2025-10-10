@@ -109,7 +109,7 @@ def make_openmc_full_combined_source(
     r:
         Radial position of the rings[m]
     z:
-        Radial positions of the rings [m]
+        Vertical positions of the rings [m]
     temperature:
         Ion temperatures at the rings [keV]
     strength:
