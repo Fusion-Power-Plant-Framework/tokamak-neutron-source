@@ -196,6 +196,21 @@ def load_jsp(file: str | Path, frame_number: int = -1) -> SimpleJETTOOutput:
     )
 
 
+def load_citation() -> dict:
+    """
+    Load the CITATION.cff file.
+
+    Returns
+    -------
+    :
+        The contents of the CITATION.cff file as a dictionary.
+    """
+    import yaml  # noqa: PLC0415
+
+    with open((get_tns_path("","")/"CITATION.cff").as_posix(), 'r') as citation_file:
+        citation = yaml.safe_load(citation_file)
+    return citation
+
 @nb.jit(cache=True, nopython=True)
 def check_ccw(x: np.ndarray, z: np.ndarray) -> bool:
     """

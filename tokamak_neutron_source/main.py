@@ -106,6 +106,7 @@ class TokamakNeutronSource:
         self.x, self.z, self.d_volume = sample_space_2d(
             flux_map.lcfs, flux_map.o_point, cell_side_length
         )
+        self.dx, self.dz = cell_side_length, cell_side_length
         psi_norm = flux_map.psi_norm(self.x, self.z)
 
         self.temperature = transport.temperature_profile.value(psi_norm)
@@ -202,7 +203,7 @@ class TokamakNeutronSource:
             energy_method,
         )
 
-    def to_sdef_card(self):
+    def to_sdef_card(self, filename, energy_method: EnergySpectrumMethod = EnergySpectrumMethod.BALLABIO_M_GAUSSIAN) -> str:
         """
         Create an SDEF card which MCNP/openmc can use to make a tokamak neutron source.
 
@@ -212,7 +213,22 @@ class TokamakNeutronSource:
         energy distribution of neutrons is averaged, and the same (frozen) distribution
         is used everywhere in the reactor.
         """
-        raise NotImplementedError
+        from tokamak_neutron_source.mcnp_interface import (  # noqa: PLC0415
+            write_mcnp_sdef_source,
+        )
+
+        write_mcnp_sdef_source(
+            filename,
+            self.x,
+            self.z,
+            self.dx,
+            self.dz,
+            self.temperature,
+            self.strength,
+            energy_method,
+        )
+
+        return()
 
     def to_h5_source(self):
         """
