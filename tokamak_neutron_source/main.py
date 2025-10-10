@@ -177,7 +177,7 @@ class TokamakNeutronSource:
             self.strength[reaction] *= scaling_factor
             self.num_reactions_per_second[reaction] = sum(self.strength[reaction])
             self.num_neutrons_per_second[reaction] = (
-                sum(self.strength[reaction]) * reaction.num_neutrons
+                self.num_reactions_per_second[reaction] * reaction.num_neutrons
             )
 
     def to_openmc_source(
