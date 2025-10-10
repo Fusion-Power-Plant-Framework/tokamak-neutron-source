@@ -32,7 +32,7 @@ def sample_space_2d(
     Returns
     -------
     x:
-        Radial coordinate of sampled points [m]
+        Radial coordinates of sampled points [m]
     z:
         Vertical coordinates of sampled points [m]
     d_volume:
