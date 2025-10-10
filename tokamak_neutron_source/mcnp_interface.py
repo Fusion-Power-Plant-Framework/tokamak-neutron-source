@@ -174,7 +174,7 @@ sdef erg=d2 par=1 wgt=1
     
     # Neutron energy distribution (use MCNP's built-in gaussian spectrum for D-T and D-D reactions)
     if reaction == Reactions.D_T or reaction == Reactions.D_D:
-        header += "SP2 -4 {:5e} {}".format(
+        header += "SP2 -4 {:5e} {}\n".format(
                                     raw_uc(ion_temp, "keV", "MeV"),                           # convert to MeV from keV
                                     -1 if reaction == Reactions.D_T else -2  # -1 for D-T and -2 for D-D
                                     )
@@ -182,8 +182,8 @@ sdef erg=d2 par=1 wgt=1
     # Neutron energy distribution (use tabulated data for T-T reaction)
     elif reaction == Reactions.T_T:
         energies, probabilities = energy_spectrum(ion_temp, reaction, EnergySpectrumMethod.DATA)
-        header += "SI2 D " + insert_linebreak(" ".join(f"{e:.5e}" for e in raw_uc(energies, "keV", "MeV")))
-        header += "SP2 H " + insert_linebreak(" ".join(f"{p:.5e}" for p in probabilities))
+        header += "SI2 H " + insert_linebreak(f"{0.0:.5e} " + " ".join(f"{e:.5e}" for e in raw_uc(energies, "keV", "MeV")))
+        header += "SP2 D " + insert_linebreak(f"{0.0:.5e} " + " ".join(f"{p:.5e}" for p in probabilities))
 
     header +="""C
 C 2. Neutron Emission Probability - Radial Distribution
