@@ -109,13 +109,6 @@ class Reactions(ReactionEnumMixin, Enum):
     )
 
 
-approx_neutron_energy = {
-    Reactions.D_D: E_DD_NEUTRON,
-    Reactions.D_T: E_DT_NEUTRON,
-    Reactions.T_T: E_TT_FUSION,
-}  # obsolete except for use in tests.
-
-
 class AneutronicReactions(ReactionEnumMixin, Enum):
     """Aneutronic reaction channels."""
 
@@ -138,6 +131,15 @@ class AneutronicReactions(ReactionEnumMixin, Enum):
 
 
 AllReactions: TypeAlias = Reactions | AneutronicReactions
+
+approx_neutron_energy = {
+    Reactions.D_D: E_DD_NEUTRON,
+    Reactions.D_T: E_DT_NEUTRON,
+    Reactions.T_T: E_TT_FUSION * (1 - 1 / 6 * 1 / 5),
+    # assuming sequential ejection of two neutrons by the TT cluster at classical speeds.
+    AneutronicReactions.D_D: 0.0,
+    AneutronicReactions.D_He3: 0.0,
+}  # obsolete except for use in tests.
 
 
 def _parse_reaction(reaction: str | AllReactions) -> AllReactions:
