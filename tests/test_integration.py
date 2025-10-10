@@ -96,6 +96,14 @@ class OpenMCTrack:
         return theta, phi
 
 
+@dataclass
+class OpenMCSimulatedSourceParticles:
+    source: openmc.Source
+    locations: npt.NDArray
+    directions: npt.NDArray
+    energies: npt.NDArray
+
+
 def xyz_to_rphiz(x, y, z) -> tuple[np.float64, np.float64, np.float64]:
     r = np.sqrt(x**2 + y**2)
     phi = np.atan2(x, y)
@@ -201,7 +209,9 @@ def run_sim_and_track_particles(request, omc_path):
         locations.append(start_state.position_cylindrical)
         directions.append(start_state.direction_spherical)
         energies.append(start_state.energy)
-    return source, np.array(locations), np.array(directions), np.array(energies)
+    return OpenMCSimulatedSourceParticles(
+        source, np.array(locations), np.array(directions), np.array(energies)
+    )
 
 
 @pytest.mark.integration
@@ -250,8 +260,8 @@ class TestOpenMCSimulation:
         """Confirm the sources are distributed uniformly in phi and according to the
         required distribution poloidally.
         """
-        source, locations, _, _ = run_sim_and_track_particles
-        r, phi, z = locations.T
+        sim = run_sim_and_track_particles
+        r, phi, z = sim.locations.T
         self.assert_is_uniform(phi, (-np.pi, np.pi))
         plt.scatter(r / 100, z / 100, alpha=0.1, marker="o", s=0.5)
         plt.xlabel("r (m)"), plt.ylabel("z (m)")
@@ -259,7 +269,7 @@ class TestOpenMCSimulation:
             "Neutron generation positions\n(poloidal view)"
             "\nEach dot is a neutron emitted"
         )
-        o_point, lcfs = source.flux_map.o_point, source.flux_map.lcfs
+        o_point, lcfs = sim.source.flux_map.o_point, sim.source.flux_map.lcfs
         plt.scatter(
             o_point.x, o_point.z, label="o-point", facecolors="none", edgecolor="C1"
         )
@@ -270,26 +280,26 @@ class TestOpenMCSimulation:
 
     def test_isotropic(self, run_sim_and_track_particles):
         """Confirm the sources are emitting neutrons isotropically."""
-        _, _, directions, _ = run_sim_and_track_particles
-        dir_theta, dir_phi = directions.T
+        sim = run_sim_and_track_particles
+        dir_theta, dir_phi = sim.directions.T
         self.assert_is_cosine(dir_theta)
         self.assert_is_uniform(dir_phi, (-np.pi, np.pi))
 
     def test_energy(self, run_sim_and_track_particles):
-        source, _, _, energies = run_sim_and_track_particles
+        sim = run_sim_and_track_particles
         reaction_neutron_counter = sum(
-            reaction.num_neutrons for reaction in source.source_type
+            reaction.num_neutrons for reaction in sim.source.source_type
         )
         if reaction_neutron_counter > 1:
             # Plot the neutron spectrum for when there are multiple types of reactions.
-            plt.hist(energies, bins=500)
+            plt.hist(sim.energies, bins=500)
             plt.title("Neutron spectrum across the entire tokamak")
             plt.show()
             return
-        reaction = source.source_type[0]
+        reaction = sim.source.source_type[0]
 
         # calculate obtained value.
-        avg_neutron_energy = raw_uc(energies.mean(), "eV", "J")
+        avg_neutron_energy = raw_uc(sim.energies.mean(), "eV", "J")
         assert np.isclose(
             avg_neutron_energy,
             _APPROX_NEUTRON_ENERGY[reaction],
@@ -297,9 +307,9 @@ class TestOpenMCSimulation:
         )
 
         desired_neutron_power = sum(
-            _APPROX_NEUTRON_ENERGY[rx] * source.num_reactions_per_second.get(rx, 0.0)
-            for rx in source.source_type
+            _APPROX_NEUTRON_ENERGY[rx] * sim.source.num_reactions_per_second.get(rx, 0.0)
+            for rx in sim.source.source_type
         )
-        n_per_second = sum(source.num_neutrons_per_second.values())
+        n_per_second = sum(sim.source.num_neutrons_per_second.values())
         neutron_power = avg_neutron_energy * n_per_second
         assert np.isclose(neutron_power, desired_neutron_power, atol=0, rtol=0.03)
