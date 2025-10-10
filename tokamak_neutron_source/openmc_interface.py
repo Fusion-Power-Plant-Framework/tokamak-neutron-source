@@ -72,7 +72,7 @@ def make_openmc_ring_source(
     energy_distribution:
         Neutron energy distribution
     strength:
-        Strength of the source [arbitrary units]
+        Strength of the source [numebr of neutrons]
 
     Returns
     -------
@@ -113,7 +113,7 @@ def make_openmc_full_combined_source(
     temperature:
         Ion temperatures at the rings [keV]
     strength:
-        Dictionary of strengths for each reaction at the rings [arbitrary units]
+        Dictionary of strengths for each reaction at the rings [numebr of neutrons]
     energy_spectrum_method:
         Which method to use when calculating neutron spectra
 
@@ -126,9 +126,9 @@ def make_openmc_full_combined_source(
     # Neutronic reaction channels only
     # We multiply the T-T channel by 2 because it is 2n
     n_strength = {
-        k: (v * 2 if k == Reactions.T_T else v)
-        for k, v in strength.items()
-        if isinstance(k, Reactions)
+        reaction: rate * reaction.num_neutrons
+        for reaction, rate in strength.items()
+        if isinstance(reaction, Reactions)
     }
 
     for i, (ri, zi, ti) in enumerate(zip(r, z, temperature, strict=False)):
