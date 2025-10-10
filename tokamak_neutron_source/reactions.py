@@ -132,7 +132,8 @@ class AneutronicReactions(ReactionEnumMixin, Enum):
 
 AllReactions: TypeAlias = Reactions | AneutronicReactions
 
-approx_neutron_energy = {
+# Calculated from non-relativistic mass difference
+_APPROX_NEUTRON_ENERGY = {
     Reactions.D_D: E_DD_NEUTRON,
     Reactions.D_T: E_DT_NEUTRON,
     Reactions.T_T: E_TT_FUSION * (1 - 1 / 6 * 1 / 5),
