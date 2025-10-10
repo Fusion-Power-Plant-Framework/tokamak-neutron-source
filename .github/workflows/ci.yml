@@ -21,6 +21,20 @@ jobs:
       - name: Lint
         uses: Fusion-Power-Plant-Framework/fppf-actions/hatch-lint@main
 
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup python and hatch
+        uses: Fusion-Power-Plant-Framework/fppf-actions/setup-hatch@main
+        with:
+          python-version: "3.11"
+
+      - name: Test docs build
+        run: hatch run docs:build --strict
+
   pytest:
     runs-on: ubuntu-latest
     strategy:
