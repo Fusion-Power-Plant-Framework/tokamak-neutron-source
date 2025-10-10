@@ -87,16 +87,13 @@ def test_openmc_source_conversion(composition_dict: dict):
     lower_lim_r, upper_lim_r = min(lcfs.x), max(lcfs.x)
     lower_lim_z, upper_lim_z = min(lcfs.z), max(lcfs.z)
     min_r, max_r, min_z, max_z = [], [], [], []
-    dx, dz = CELL_SIDE_LENGTH, CELL_SIDE_LENGTH
+    dx, dz = source.cell_side_length, source.cell_side_length
     for src in openmc_source:
-        (
-            min_r.append(get_x_dist(src.space.r).min() / 100),
-            max_r.append(get_x_dist(src.space.r).max() / 100),
-        )
-        (
-            min_z.append(get_x_dist(src.space.z).min() / 100),
-            max_z.append(get_x_dist(src.space.z).max() / 100),
-        )
+        min_r.append(get_x_dist(src.space.r).min() / 100)
+        max_r.append(get_x_dist(src.space.r).max() / 100)
+        min_z.append(get_x_dist(src.space.z).min() / 100)
+        max_z.append(get_x_dist(src.space.z).max() / 100)
+
     assert lower_lim_r - dx <= min(min_r), "Sensible minimum radius"
     assert max(max_r) <= upper_lim_r + dx, "Sensible maximum radius"
     assert lower_lim_z - dz <= min(min_z), "Sensible minimum height"
