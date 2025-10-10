@@ -16,16 +16,20 @@ from tokamak_neutron_source.tools import get_tns_path
 
 
 class ReactionCrossSection:
-    """
-    Fusion reaction cross-section.
-
-    Parameters
-    ----------
-    file_name:
-        Cross-sectional data file (ENDF format)
-    """
+    """Fusion reaction cross-section."""
 
     def __init__(self, file_name: str):
+        """
+        Parameters
+        ----------
+        file_name:
+            Cross-sectional data file (ENDF format)
+
+        Raises
+        ------
+        ReactivityError
+            Data file path is not a file
+        """
         path = get_tns_path("data/cross_sections")
         path = Path(path, file_name)
         if not path.is_file():

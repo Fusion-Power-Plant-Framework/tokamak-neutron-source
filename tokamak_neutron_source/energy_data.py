@@ -25,16 +25,20 @@ TWO_SQRT_2LN2 = 2.3548200450309493
 
 
 class TTNeutronEnergyDataSpectrum:
-    """
-    Fusion neutron energy data spectrum.
-
-    Parameters
-    ----------
-    file_name:
-        Data file
-    """
+    """Fusion neutron energy data spectrum."""
 
     def __init__(self, file_name: str):
+        """
+        Parameters
+        ----------
+        file_name:
+            Data file
+
+        Raises
+        ------
+        EnergySpectrumError
+            Data file path is not a file
+        """
         path = get_tns_path("data/spectra")
         path = Path(path, file_name)
         if not path.is_file():

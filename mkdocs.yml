@@ -25,6 +25,7 @@ plugins:
             docstring_style: numpy
             show_if_no_docstring: true
             members_order: source
+            force_inspection: true
             filters:
               - "!^_" # Ignore private members starting with underscore
               - "!log"
