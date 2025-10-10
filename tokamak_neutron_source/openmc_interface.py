@@ -107,7 +107,7 @@ def make_openmc_full_combined_source(
     Parameters
     ----------
     r:
-        Radial position of the rings[m]
+        Radial positions of the rings [m]
     z:
         Vertical positions of the rings [m]
     temperature:
