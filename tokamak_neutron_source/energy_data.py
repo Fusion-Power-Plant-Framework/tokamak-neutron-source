@@ -68,7 +68,7 @@ class TTNeutronEnergyDataSpectrum:
         if not self._min_temp <= temp_kev <= self._max_temp:
             logger.warning(
                 f"T-T spectral data only available "
-                f" for {self._min_temp} <= T <= {self._max_temp} keV, clipping to bounds",
+                f"for {self._min_temp} <= T <= {self._max_temp} keV, clipping to bounds",
                 stacklevel=2,
             )
             temp_kev = np.clip(temp_kev, self._min_temp, self._max_temp)
