@@ -136,7 +136,7 @@ AllReactions: TypeAlias = Reactions | AneutronicReactions
 _APPROX_NEUTRON_ENERGY = {
     Reactions.D_D: E_DD_NEUTRON,
     Reactions.D_T: E_DT_NEUTRON,
-    Reactions.T_T: E_TT_FUSION * (1 - 1 / 6 * 1 / 5),
+    Reactions.T_T: E_TT_FUSION * (1 - 1 / 6 * 1 / 5) / 2,
     # assuming sequential ejection of two neutrons by the TT cluster at classical speeds.
     AneutronicReactions.D_D: 0.0,
     AneutronicReactions.D_He3: 0.0,
