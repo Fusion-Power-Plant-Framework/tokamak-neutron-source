@@ -16,12 +16,12 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from tokamak_neutron_source.energy import EnergySpectrumMethod
 from tokamak_neutron_source.error import ReactivityError, TNSError
 from tokamak_neutron_source.reactions import (
+    AllReactions,
     AneutronicReactions,
     Reactions,
     _parse_reaction,
 )
 from tokamak_neutron_source.reactivity import (
-    AllReactions,
     ReactivityMethod,
     density_weighted_reactivity,
 )
@@ -129,6 +129,8 @@ class TokamakNeutronSource:
         self.flux_map = flux_map
         self.transport = transport
 
+        self.num_reactions_per_second = {}
+        self.num_neutrons_per_second = {}
         if total_fusion_power is not None:
             self.normalise_fusion_power(total_fusion_power)
 
@@ -170,8 +172,13 @@ class TokamakNeutronSource:
         """
         actual_fusion_power = self.calculate_total_fusion_power()
         scaling_factor = total_fusion_power / actual_fusion_power
+        self.num_reactions_per_second, self.num_neutrons_per_second = {}, {}
         for reaction in self.source_type:
             self.strength[reaction] *= scaling_factor
+            self.num_reactions_per_second[reaction] = sum(self.strength[reaction])
+            self.num_neutrons_per_second[reaction] = (
+                self.num_reactions_per_second[reaction] * reaction.num_neutrons
+            )
 
     def to_openmc_source(
         self,

@@ -342,6 +342,13 @@ E_TT_FUSION: float = raw_uc(
     "J",
 )
 
+# The Q value of the t + t -> 5He + n reaction, which is an intermediate state of the
+# t + t -> 4He + n + n reaction.
+_TT_TO_5HE_Q_VALUE = raw_uc(10597, "keV", "J")
+_5HE_TO_4HE_Q_VALUE = E_TT_FUSION - _TT_TO_5HE_Q_VALUE
+E_TT_NEUTRON: float = (_TT_TO_5HE_Q_VALUE * 5 / 6 + _5HE_TO_4HE_Q_VALUE * 4 / 5) / 2
+
+
 # The energy released from a single D-3He fusion reaction [J]
 # 18.354208506129673 MeV
 E_DHE3_FUSION = raw_uc(
