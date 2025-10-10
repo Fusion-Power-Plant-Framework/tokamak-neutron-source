@@ -179,7 +179,6 @@ class TestJETTOFusionBenchmark:
             FluxMap.from_eqdsk(self.eqdsk_path, flux_convention=FluxConvention.SQRT),
             source_type=[Reactions.D_T],
             cell_side_length=0.05,
-            # reactivity_method=ReactivityMethod.XS,
         )
 
         dt_rate = sum(source.strength[Reactions.D_T])
