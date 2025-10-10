@@ -15,7 +15,6 @@ from tokamak_neutron_source.constants import (
     E_DT_FUSION,
     E_DT_NEUTRON,
     E_TT_FUSION,
-    raw_uc,
 )
 from tokamak_neutron_source.energy_data import (
     BALLABIO_DD_NEUTRON,
@@ -43,7 +42,7 @@ class ReactionData:
 
     label: str
     total_energy: float
-    neutron_energies: list[float]
+    num_neutrons: int
     cross_section: ReactionCrossSection
     bosch_hale_coefficients: BoschHaleCoefficients | None
     ballabio_spectrum: BallabioEnergySpectrum | None
@@ -65,16 +64,8 @@ class ReactionEnumMixin:
         return self.value.total_energy
 
     @property
-    def neutron_energies(self) -> list[float]:  # noqa: D102
-        return self.value.neutron_energies
-
-    @property
-    def total_neutron_energy(self) -> float:  # noqa: D102
-        return sum(self.value.neutron_energies)
-
-    @property
     def num_neutrons(self) -> int:  # noqa: D102
-        return len(self.value.neutron_energies)
+        return self.value.num_neutrons
 
     @property
     def cross_section(self) -> ReactionCrossSection:  # noqa: D102
@@ -95,7 +86,7 @@ class Reactions(ReactionEnumMixin, Enum):
     D_T = ReactionData(
         label="D + T → ⁴He + n",
         total_energy=E_DT_FUSION,
-        neutron_energies=[E_DT_NEUTRON],
+        num_neutrons=1,
         cross_section=DT_XS,
         bosch_hale_coefficients=BOSCH_HALE_DT_4HEN,
         ballabio_spectrum=BALLABIO_DT_NEUTRON,
@@ -103,7 +94,7 @@ class Reactions(ReactionEnumMixin, Enum):
     D_D = ReactionData(
         label="D + D → ³He + n",
         total_energy=E_DD_HE3N_FUSION,
-        neutron_energies=[E_DD_NEUTRON],
+        num_neutrons=1,
         cross_section=DD_HE3N_XS,
         bosch_hale_coefficients=BOSCH_HALE_DD_3HEN,
         ballabio_spectrum=BALLABIO_DD_NEUTRON,
@@ -111,11 +102,18 @@ class Reactions(ReactionEnumMixin, Enum):
     T_T = ReactionData(
         label="T + T → ⁴He + 2n",
         total_energy=E_TT_FUSION,
-        neutron_energies=[raw_uc(2.5, "MeV", "J"), raw_uc(9.0, "MeV", "J")],
+        num_neutrons=2,
         cross_section=TT_XS,
         bosch_hale_coefficients=None,
         ballabio_spectrum=None,
     )
+
+
+approx_neutron_energy = {
+    Reactions.D_D: E_DD_NEUTRON,
+    Reactions.D_T: E_DT_NEUTRON,
+    Reactions.T_T: E_TT_FUSION,
+}  # obsolete except for use in tests.
 
 
 class AneutronicReactions(ReactionEnumMixin, Enum):
@@ -124,7 +122,7 @@ class AneutronicReactions(ReactionEnumMixin, Enum):
     D_D = ReactionData(
         label="D + D → T + p",
         total_energy=E_DD_TP_FUSION,
-        neutron_energies=[],  # no neutrons in aneutronic branch
+        num_neutrons=0,  # no neutrons in aneutronic branch
         cross_section=DD_TP_XS,
         bosch_hale_coefficients=BOSCH_HALE_DD_TP,
         ballabio_spectrum=None,
@@ -132,7 +130,7 @@ class AneutronicReactions(ReactionEnumMixin, Enum):
     D_He3 = ReactionData(
         label="D + ³He → ⁴He + p",
         total_energy=E_DHE3_FUSION,
-        neutron_energies=[],
+        num_neutrons=0,
         cross_section=DHE3_HEP_XS,
         bosch_hale_coefficients=None,
         ballabio_spectrum=None,
