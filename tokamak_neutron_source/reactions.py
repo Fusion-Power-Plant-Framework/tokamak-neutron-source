@@ -15,6 +15,7 @@ from tokamak_neutron_source.constants import (
     E_DT_FUSION,
     E_DT_NEUTRON,
     E_TT_FUSION,
+    E_TT_NEUTRON,
 )
 from tokamak_neutron_source.energy_data import (
     BALLABIO_DD_NEUTRON,
@@ -136,7 +137,7 @@ AllReactions: TypeAlias = Reactions | AneutronicReactions
 _APPROX_NEUTRON_ENERGY = {
     Reactions.D_D: E_DD_NEUTRON,
     Reactions.D_T: E_DT_NEUTRON,
-    Reactions.T_T: E_TT_FUSION * (1 - 1 / 6 * 1 / 5) / 2,
+    Reactions.T_T: E_TT_NEUTRON,
     # assuming sequential ejection of two neutrons by the TT cluster at classical speeds.
     AneutronicReactions.D_D: 0.0,
     AneutronicReactions.D_He3: 0.0,
