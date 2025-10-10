@@ -20,7 +20,7 @@ from tokamak_neutron_source import (
 )
 from tokamak_neutron_source.constants import raw_uc
 from tokamak_neutron_source.profile import ParabolicPedestalProfile
-from tokamak_neutron_source.reactions import Reactions
+from tokamak_neutron_source.reactions import _APPROX_NEUTRON_ENERGY, Reactions
 
 if TYPE_CHECKING:
     import openmc
@@ -292,12 +292,12 @@ class TestOpenMCSimulation:
         avg_neutron_energy = raw_uc(energies.mean(), "eV", "J")
         assert np.isclose(
             avg_neutron_energy,
-            reaction.total_neutron_energy,
+            _APPROX_NEUTRON_ENERGY[reaction],
             rtol=raw_uc(0.1, "MeV", "J"),
         )
 
         desired_neutron_power = sum(
-            rx.total_neutron_energy * source.num_reactions_per_second.get(rx, 0.0)
+            _APPROX_NEUTRON_ENERGY[rx] * source.num_reactions_per_second.get(rx, 0.0)
             for rx in source.source_type
         )
         n_per_second = sum(source.num_neutrons_per_second.values())
