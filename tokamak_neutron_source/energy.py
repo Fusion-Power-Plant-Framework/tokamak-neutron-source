@@ -26,6 +26,7 @@ class EnergySpectrumMethod(Enum):
     DATA = auto()
     BALLABIO_GAUSSIAN = auto()
     BALLABIO_M_GAUSSIAN = auto()
+    AUTO = auto()
 
 
 def energy_spectrum(
@@ -69,6 +70,14 @@ def energy_spectrum(
 
         case EnergySpectrumMethod.DATA:
             return _data_spectrum(reaction, temp_kev)
+        case EnergySpectrumMethod.AUTO:
+            match reaction:
+                case Reactions.D_D | Reactions.D_T:
+                    return energy_spectrum(
+                        temp_kev, reaction, EnergySpectrumMethod.BALLABIO_M_GAUSSIAN
+                    )
+                case Reactions.T_T:
+                    return energy_spectrum(temp_kev, reaction, EnergySpectrumMethod.DATA)
 
 
 def _data_spectrum(
