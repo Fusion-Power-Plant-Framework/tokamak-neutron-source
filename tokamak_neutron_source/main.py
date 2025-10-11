@@ -210,7 +210,7 @@ class TokamakNeutronSource:
 
     def to_openmc_source(
         self,
-        energy_method: EnergySpectrumMethod = EnergySpectrumMethod.BALLABIO_M_GAUSSIAN,
+        energy_method: EnergySpectrumMethod = EnergySpectrumMethod.AUTO,
     ) -> list[IndependentSource]:
         """
         Create an OpenMC tokamak neutron source.
