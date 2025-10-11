@@ -48,10 +48,13 @@ def get_neutron_energy_spectrum(
     -----
     Log-linear interpolation is used within OpenMC.
     """
-    if method is EnergySpectrumMethod.BALLABIO_GAUSSIAN:
-        mean = reaction.ballabio_spectrum(temp_kev)
-        std = reaction.ballabio_spectrum(temp_kev)
-        return Normal(mean, std)
+    if (
+        method is EnergySpectrumMethod.BALLABIO_GAUSSIAN
+        and reaction.ballabio_spectrum is not None
+    ):
+        mean = reaction.ballabio_spectrum.mean_energy(temp_kev)
+        std = reaction.ballabio_spectrum.std_deviation(temp_kev)
+        return Normal(raw_uc(mean, "keV", "eV"), raw_uc(std, "keV", "eV"))
     energy, probability = energy_spectrum(temp_kev, reaction, method)
     energy_ev = raw_uc(energy, "keV", "eV")
     # Log-linear interpolation is not supported in OpenMC at present
