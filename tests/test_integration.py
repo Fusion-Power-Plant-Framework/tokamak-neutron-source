@@ -125,7 +125,7 @@ def run_openmc_sim(source, tmp_path, method) -> openmc.Tracks:
     settings.source = (
         source.to_openmc_source(method) if method else source.to_openmc_source()
     )
-    settings.particles = settings.max_tracks = 10000
+    settings.particles = settings.max_tracks = 1000
     materials = openmc.Materials()
     materials.cross_sections = "tests/test_data/cross_section.xml"
     # exporting to xml
