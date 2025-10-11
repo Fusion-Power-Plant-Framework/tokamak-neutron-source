@@ -19,6 +19,7 @@ from tokamak_neutron_source import (
     TransportInformation,
 )
 from tokamak_neutron_source.constants import raw_uc
+from tokamak_neutron_source.energy import EnergySpectrumMethod
 from tokamak_neutron_source.profile import ParabolicPedestalProfile
 from tokamak_neutron_source.reactions import _APPROX_NEUTRON_ENERGY, Reactions
 
@@ -121,8 +122,8 @@ def run_openmc_sim(source, tmp_path) -> openmc.Tracks:
         output={"path": tmp_path.as_posix(), "summary": False},
     )
     settings.seed = 1
-    settings.source = source.to_openmc_source()
-    settings.particles = settings.max_tracks = 1000
+    settings.source = source.to_openmc_source(EnergySpectrumMethod.BALLABIO_GAUSSIAN)
+    settings.particles = settings.max_tracks = 10000
     materials = openmc.Materials()
     materials.cross_sections = "tests/test_data/cross_section.xml"
     # exporting to xml
