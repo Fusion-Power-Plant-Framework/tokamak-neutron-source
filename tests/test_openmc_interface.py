@@ -73,6 +73,7 @@ def test_openmc_source_conversion(composition_dict: dict):
         (dt_comp, EnergySpectrumMethod.BALLABIO_GAUSSIAN),
         (dt_comp, EnergySpectrumMethod.BALLABIO_M_GAUSSIAN),
         (tt_comp, EnergySpectrumMethod.DATA),
+        (dt_comp, EnergySpectrumMethod.AUTO),
     ],
 )
 def test_source_defined_energies(composition_dict: dict, method: EnergySpectrumMethod):
