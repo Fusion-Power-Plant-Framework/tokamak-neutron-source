@@ -104,9 +104,9 @@ def test_source_defined_intensities(composition_dict: dict):
         [source.strength[rx] * rx.num_neutrons for rx in Reactions], axis=0
     )
     openmc_source_intensities = np.array([src.strength for src in openmc_source])
-    scale_factor = desired_intensities.sum() / openmc_source_intensities.sum()
+    assert np.isclose(openmc_source_intensities.sum(), 1.0, rtol=0.0, atol=1e-12)
     assert np.isclose(
-        openmc_source_intensities * scale_factor,
+        openmc_source_intensities * desired_intensities.sum(),
         desired_intensities,
         atol=0.0,
         rtol=1e-12,
