@@ -146,7 +146,7 @@ class TokamakNeutronSource:
         return sum(self.num_neutrons_per_second.values())
 
     @property
-    def source_T_rate(self) -> float:
+    def source_T_rate(self) -> float:  # noqa: N802
         """
         The T consumption rate in [tritons / s].
 
