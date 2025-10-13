@@ -134,6 +134,13 @@ class TokamakNeutronSource:
         if total_fusion_power is not None:
             self.normalise_fusion_power(total_fusion_power)
 
+    @property
+    def source_rate(self) -> float:
+        """
+        The total source rate in [neutrons / s].
+        """
+        return sum(self.num_neutrons_per_second.values())
+
     def calculate_total_fusion_power(self) -> float:
         """
         Calculate the total fusion power from all reaction channels.
@@ -206,6 +213,7 @@ class TokamakNeutronSource:
             self.z,
             self.temperature,
             self.strength,
+            self.source_rate,
             energy_method,
         )
 

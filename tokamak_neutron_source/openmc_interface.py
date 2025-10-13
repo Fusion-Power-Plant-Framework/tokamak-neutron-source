@@ -99,6 +99,7 @@ def make_openmc_full_combined_source(
     z: npt.NDArray,
     temperature: npt.NDArray,
     strength: dict[AllReactions, npt.NDArray],
+    source_rate: float,
     energy_spectrum_method: EnergySpectrumMethod,
 ) -> IndependentSource:
     """
@@ -113,7 +114,9 @@ def make_openmc_full_combined_source(
     temperature:
         Ion temperatures at the rings [keV]
     strength:
-        Dictionary of strengths for each reaction at the rings [numebr of neutrons]
+        Dictionary of strengths for each reaction at the rings [neutrons]
+    source_rate:
+        Total source rate [neutrons/s]
     energy_spectrum_method:
         Which method to use when calculating neutron spectra
 
@@ -142,11 +145,11 @@ def make_openmc_full_combined_source(
                 )
                 weights.append(s[i])
 
-        total_strength = sum(weights)
+        local_strength = sum(weights)
 
-        distribution = Mixture(np.array(weights) / total_strength, distributions)
+        distribution = Mixture(np.array(weights) / local_strength, distributions)
 
-        source = make_openmc_ring_source(ri, zi, distribution, total_strength)
+        source = make_openmc_ring_source(ri, zi, distribution, local_strength / source_rate)
         if source is not None:
             sources.append(source)
 
