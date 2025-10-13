@@ -88,6 +88,7 @@ nav:
       - theory.md
       - profiles.md
       - equilibrium.md
+      - units.md
       - codes.md
   - Examples:
       - examples/*.ex.py
