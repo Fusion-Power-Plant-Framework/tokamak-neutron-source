@@ -167,17 +167,24 @@ class TestPROCESSFusionBenchmark:
     def test_DD_source_T_rate(self):
         source = self.make_source(Reactions.D_D)
         assert source.source_T_rate == 0.0
-    
+
     def test_source_rates(self):
         source = self.make_source([Reactions.D_T, Reactions.D_D])
         dt_source_t_rate = source.source_T_rate
+        assert source.source_rate > 0
         assert dt_source_t_rate < source.source_rate
-        assert source.source_rate
 
         source = self.make_source([Reactions.D_T, Reactions.D_D, Reactions.T_T])
+        assert source.source_rate > 0
+        assert source.source_T_rate < source.source_rate
         assert dt_source_t_rate < source.source_T_rate
 
-
+    def test_TT_source_rate(self):
+        source = self.make_source(Reactions.T_T)
+        # NOTE: T-T consumes 2 tritons but also produces 2 neutrons, so these
+        # should be equal
+        assert source.source_rate > 0
+        assert np.isclose(source.source_T_rate, source.source_rate, rtol=0.0, atol=1e-16)
 
 
 TEST_DATA = Path(__file__).parent / "test_data"

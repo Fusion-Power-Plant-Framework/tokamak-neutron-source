@@ -15,7 +15,9 @@ If you are using a "(n,Xt)" tally to calculate TBR, note that the definition of 
 To correctly scale your "(n,Xt)" tally in [1/particles], you should scale by:
     `tbr *= source_rate / source_T_rate`
 
-The source strengths are not quantised; i.e., the rates are floats, not integers.
+to obtain the correct TBR. This is of course only relevant if you specify reactions in addition to the D-T reaction.
+
+Note that the source strengths are not quantised; i.e., the rates are floats, not integers.
 
 ### Equilibrium coordinate
 
