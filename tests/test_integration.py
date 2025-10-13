@@ -303,7 +303,7 @@ class TestOpenMCSimulation:
         reaction_neutron_counter = sum(
             reaction.num_neutrons for reaction in sim.source.source_type
         )
-            # Plot the neutron spectrum for when there are multiple types of reactions.
+        # Plot the neutron spectrum for when there are multiple types of reactions.
         _f, ax = plt.subplots()
         ax.hist(sim.energies, bins=500)
         ax.set_title("Neutron spectrum across the entire tokamak")
