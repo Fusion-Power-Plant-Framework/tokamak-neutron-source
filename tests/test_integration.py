@@ -263,20 +263,21 @@ class TestOpenMCSimulation:
         sim = run_sim_and_track_particles
         r, phi, z = sim.locations.T
         self.assert_is_uniform(phi, (-np.pi, np.pi))
-        plt.scatter(r / 100, z / 100, alpha=0.1, marker="o", s=0.5)
-        plt.xlabel("r (m)"), plt.ylabel("z (m)")
-        plt.title(
+        _f, (ax1, ax2) = plt.subplots(2)
+        ax1.scatter(r / 100, z / 100, alpha=0.1, marker="o", s=0.5)
+        ax1.set_xlabel("r (m)")
+        ax1.set_ylabel("z (m)")
+        ax1.set_title(
             "Neutron generation positions\n(poloidal view)"
             "\nEach dot is a neutron emitted"
         )
         o_point, lcfs = sim.source.flux_map.o_point, sim.source.flux_map.lcfs
-        plt.scatter(
+        ax2.scatter(
             o_point.x, o_point.z, label="o-point", facecolors="none", edgecolor="C1"
         )
-        plt.plot(lcfs.x, lcfs.z, label="LCFS")
-        plt.legend()
-        plt.gca().set_aspect("equal")
-        plt.show()
+        ax2.plot(lcfs.x, lcfs.z, label="LCFS")
+        ax2.legend()
+        ax2.set_aspect("equal")
 
     def test_isotropic(self, run_sim_and_track_particles):
         """Confirm the sources are emitting neutrons isotropically."""
@@ -292,9 +293,9 @@ class TestOpenMCSimulation:
         )
         if reaction_neutron_counter > 1:
             # Plot the neutron spectrum for when there are multiple types of reactions.
-            plt.hist(sim.energies, bins=500)
-            plt.title("Neutron spectrum across the entire tokamak")
-            plt.show()
+            _f, ax = plt.subplots()
+            ax.hist(sim.energies, bins=500)
+            ax.set_title("Neutron spectrum across the entire tokamak")
             return
         reaction = sim.source.source_type[0]
 
