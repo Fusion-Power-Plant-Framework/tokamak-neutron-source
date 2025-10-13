@@ -10,6 +10,7 @@ from pathlib import Path
 import numba as nb
 import numpy as np
 import numpy.typing as npt
+import yaml
 from eqdsk import EQDSKInterface
 
 from tokamak_neutron_source.constants import raw_uc
@@ -205,11 +206,9 @@ def load_citation() -> dict:
     :
         The contents of the CITATION.cff file as a dictionary.
     """
-    import yaml  # noqa: PLC0415
+    with open(get_tns_path("data") / "CITATION.cff") as citation_file:
+        return yaml.safe_load(citation_file)
 
-    with open((get_tns_path("","")/"CITATION.cff").as_posix(), 'r') as citation_file:
-        citation = yaml.safe_load(citation_file)
-    return citation
 
 @nb.jit(cache=True, nopython=True)
 def check_ccw(x: np.ndarray, z: np.ndarray) -> bool:
