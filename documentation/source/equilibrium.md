@@ -2,8 +2,6 @@
 
 A `TokamakNeutronSource` requires the specification of some distribution of poloidal magnetic flux in the poloidal plane. This is in order to determine the strength of the source at a given spatial location. The poloidal magnetic flux distribution is used to interpolate the 1-D plasma profiles (temperature and density) in 2-D cylindrical coordinates.
 
-Two methods are available for the specification for the poloidal magnetic flux ($\psi$).
-
 ## Equilibrium parameterisations
 
 By means of a parameterisation, such as the one described in (Fausser et al., 2012) and made available here via the `FausserFluxSurface` class.
