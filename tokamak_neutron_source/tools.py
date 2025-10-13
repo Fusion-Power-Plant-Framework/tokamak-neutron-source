@@ -308,7 +308,7 @@ class WarningFilter:
             logger.removeFilter(self)
 
 
-class QuieterTTSpectrumWarnings(WarningFilter):
+class QuietTTSpectrumWarnings(WarningFilter):
     """Filter away all duplicate warnings from the energy and energy_data module."""
 
     def __init__(self):
