@@ -164,6 +164,21 @@ class TestPROCESSFusionBenchmark:
         total_fusion_power_mw = source.calculate_total_fusion_power() / 1e6
         assert np.isclose(total_fusion_power_mw, expected_mw, rtol=1.5e-2, atol=0.0)
 
+    def test_DD_source_T_rate(self):
+        source = self.make_source(Reactions.D_D)
+        assert source.source_T_rate == 0.0
+    
+    def test_source_rates(self):
+        source = self.make_source([Reactions.D_T, Reactions.D_D])
+        dt_source_t_rate = source.source_T_rate
+        assert dt_source_t_rate < source.source_rate
+        assert source.source_rate
+
+        source = self.make_source([Reactions.D_T, Reactions.D_D, Reactions.T_T])
+        assert dt_source_t_rate < source.source_T_rate
+
+
+
 
 TEST_DATA = Path(__file__).parent / "test_data"
 

@@ -115,6 +115,8 @@ class TokamakNeutronSource:
 
         # All reactions (neutronic and aneutronic)
         self.strength = {}
+        self.num_reactions_per_second = {}
+        self.num_neutrons_per_second = {}
         for reaction in self.source_type:
             n1_n2_sigma = density_weighted_reactivity(
                 self.temperature,
@@ -125,12 +127,14 @@ class TokamakNeutronSource:
                 method=reactivity_method,
             )
             self.strength[reaction] = n1_n2_sigma * self.d_volume
+            self.num_reactions_per_second[reaction] = sum(self.strength[reaction])
+            self.num_neutrons_per_second[reaction] = (
+                self.num_reactions_per_second[reaction] * reaction.num_neutrons
+            )
 
         self.flux_map = flux_map
         self.transport = transport
 
-        self.num_reactions_per_second = {}
-        self.num_neutrons_per_second = {}
         if total_fusion_power is not None:
             self.normalise_fusion_power(total_fusion_power)
 
@@ -140,22 +144,25 @@ class TokamakNeutronSource:
         The total source rate in [neutrons / s].
         """
         return sum(self.num_neutrons_per_second.values())
-    
+
     @property
-    def source_DT_rate(self) -> float:
+    def source_T_rate(self) -> float:
         """
-        The D-T source rate in [neutrons / s].
+        The T consumption rate in [tritons / s].
 
         Notes
         -----
-        If you are using a "(n,Xt)" tally to calculate TBR, note that the definition 
+        If you are using a "(n,Xt)" tally to calculate TBR, note that the definition
         of TBR is relative to the number of D-T reactions, not the total number
         of fusion reactions.
 
         To correctly scale your "(n,Xt)" tally in [1/particles], you should scale by:
-            tbr *= source_rate / source_DT_rate
+            tbr *= source_rate / source_T_rate
         """
-        return self.num_neutrons_per_second[Reactions.D_T]
+        return sum([
+            self.num_reactions_per_second.get(Reactions.D_T, 0.0),
+            2.0 * self.num_reactions_per_second.get(Reactions.T_T, 0.0),
+        ])
 
     def calculate_total_fusion_power(self) -> float:
         """
