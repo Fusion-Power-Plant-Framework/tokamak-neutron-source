@@ -166,6 +166,7 @@ class TestPROCESSFusionBenchmark:
 
     def test_DD_source_T_rate(self):
         source = self.make_source(Reactions.D_D)
+        assert source.source_rate > 0.0
         assert source.source_T_rate == 0.0
 
     def test_source_rates(self):
