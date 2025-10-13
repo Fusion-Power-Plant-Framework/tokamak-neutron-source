@@ -149,7 +149,9 @@ def make_openmc_full_combined_source(
 
         distribution = Mixture(np.array(weights) / local_strength, distributions)
 
-        source = make_openmc_ring_source(ri, zi, distribution, local_strength / source_rate)
+        source = make_openmc_ring_source(
+            ri, zi, distribution, local_strength / source_rate
+        )
         if source is not None:
             sources.append(source)
 
