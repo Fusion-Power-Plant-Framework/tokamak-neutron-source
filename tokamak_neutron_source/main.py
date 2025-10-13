@@ -202,7 +202,7 @@ class TokamakNeutronSource:
         """
         actual_fusion_power = self.calculate_total_fusion_power()
         scaling_factor = total_fusion_power / actual_fusion_power
-        self.num_reactions_per_second, self.num_neutrons_per_second = {}, {}
+
         for reaction in self.source_type:
             self.strength[reaction] *= scaling_factor
             self.num_reactions_per_second[reaction] *= scaling_factor
