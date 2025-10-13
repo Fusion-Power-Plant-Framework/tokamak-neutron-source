@@ -295,7 +295,7 @@ class TestOpenMCSimulation:
             # Plot the neutron spectrum for when there are multiple types of reactions.
             _f, ax = plt.subplots()
             ax.hist(sim.energies, bins=500)
-            ax.title("Neutron spectrum across the entire tokamak")
+            ax.set_title("Neutron spectrum across the entire tokamak")
             return
         reaction = sim.source.source_type[0]
 
