@@ -23,6 +23,7 @@ classifiers = [
 ]
 
 dependencies= [
+    "Babel",
     "numpy >=1.26",
     "matplotlib >=3.8",
     "scipy>=1.11.2",
@@ -31,7 +32,7 @@ dependencies= [
     "numba>=0.59",
     "pint",
     "periodictable",
-    "Babel",
+    "pyyaml",
 ]
 
 [project.optional-dependencies]
