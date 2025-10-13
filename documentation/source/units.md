@@ -10,6 +10,13 @@ All length quantities are units of `[m]`, and all temperature / energy quantitie
 
 Following a common practice in neutronics, the fixed source strength is normalised to 1 `[neutrons/s]`. Tallies can then be multiplied by the `source_rate` to obtain total values, as and when required.
 
+If you are using a "(n,Xt)" tally to calculate TBR, note that the definition of TBR is relative to the number of tritons consumed by the plasma, not the total number of fusion reactions.
+
+To correctly scale your "(n,Xt)" tally in [1/particles], you should scale by:
+    `tbr *= source_rate / source_T_rate`
+
+The source strengths are not quantised; i.e., the rates are floats, not integers.
+
 ### Equilibrium coordinate
 
 For the `FluxMap`, some description of the plasma magneto-hydrodynamic equilibrium is required. Regardless of whether this is provided via an EQDSK file or a parameterisation, the convention for the calculation of the normalised coordinate, should be specified correctly. This can be done using the `FluxConvention` enum. Here we use the normalised flux coordinate, $\psi_n$, which we define as being 1.0 at the magnetic axis, and 0.0 at the edge. The corresponding equilibrium radial coordinate, $\rho$, follows the opposite trend; 0.0 at the magnetic axis, and 1.0 at the edge.
