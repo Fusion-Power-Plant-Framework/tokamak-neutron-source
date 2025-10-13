@@ -155,7 +155,7 @@ class TokamakNeutronSource:
         To correctly scale your "(n,Xt)" tally in [1/particles], you should scale by:
             tbr *= source_rate / source_DT_rate
         """
-        self.num_neutrons_per_second[Reactions.D_T]
+        return self.num_neutrons_per_second[Reactions.D_T]
 
     def calculate_total_fusion_power(self) -> float:
         """
