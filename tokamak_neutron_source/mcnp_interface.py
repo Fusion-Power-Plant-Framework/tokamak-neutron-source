@@ -155,11 +155,11 @@ def sdef_header(
 
     Parameters
     ----------
-    reactions:
-
-    strength:
+    reaction:
+        Reaction to be created
+    reaction_data:
         strength of source
-    ion_temp:
+    temperature:
         Ion temperature
 
     Notes
