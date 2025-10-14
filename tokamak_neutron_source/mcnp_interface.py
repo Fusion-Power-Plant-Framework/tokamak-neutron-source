@@ -80,7 +80,7 @@ def write_mcnp_sdef_source(
             z_ints = np.concatenate([[-1], np.nonzero(r[1:] != r[:-1])[0], [len(r) - 1]])
 
             si_card = _text_wrap(
-                "SI3 H " + " ".join(f"{ri:.5e}" for ri in r_bounds), new_lines=2
+                "SI3 H " + " ".join(f"{ri:.5e}" for ri in r_bounds), new_lines=1
             )
             sp_card = _text_wrap(
                 f"SP3 D {0.0:.5e} "
@@ -88,13 +88,13 @@ def write_mcnp_sdef_source(
                     f"{np.sum(r_data[z_ints[i] + 1 : z_ints[i + 1] + 1]):.5e}"
                     for i in range(len(z_ints) - 1)
                 ),
-                new_lines=2,
+                new_lines=1,
             )
 
             ds_card = _text_wrap(
                 "DS4 S "
                 + " ".join(f"{i:d}" for i in range(offset, offset + len(r_bounds) - 1)),
-                new_lines=2,
+                new_lines=1,
             )
 
             with open(file_name, "w") as sdef_file:
@@ -136,14 +136,14 @@ def _si_sp_vertical_dist_cards(
         zs, zf = z_ints[i] + 1, z_ints[i + 1] + 1
         z_i = " ".join(f"{zi:.5e}" for zi in z[zs:zf] - dzed)
         si_card = _text_wrap(
-            f"SI {i + offset} H {z_i} {z[z_ints[i + 1]] + dzed:.5e}",
+            f"SI{i + offset} H {z_i} {z[z_ints[i + 1]] + dzed:.5e}",
             indent=indent_offset,
-            new_lines=2,
+            new_lines=1,
         )
 
         rd = " ".join(f"{s:.5e}" for s in r_data[zs:zf])
         sp_card = _text_wrap(
-            f"SP {i + offset} D {0.0:.5e} {rd}", indent=indent_offset, new_lines=2
+            f"SP{i + offset} D {0.0:.5e} {rd}", indent=indent_offset, new_lines=1
         )
         yield si_card, sp_card
 
@@ -230,8 +230,7 @@ sdef erg=d2 par=1 wgt=1
       axs = 0 0 1    $ Cylinder points along the Z axis
       rad = d3       $ radial distribution defined by distribution 3
       ext = frad d4  $ extent distribution defined by distribution 4 which is dependent on distribution rad
-{reaction_data}
-C
+{reaction_data}C
 C 2. Neutron Emission Probability - Radial Distribution
 C
 """  # noqa: E501
