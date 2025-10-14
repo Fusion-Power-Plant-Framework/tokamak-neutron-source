@@ -22,6 +22,7 @@ from tokamak_neutron_source.constants import raw_uc
 from tokamak_neutron_source.energy import EnergySpectrumMethod, energy_spectrum
 from tokamak_neutron_source.reactions import Reactions
 from tokamak_neutron_source.reactivity import AllReactions
+from tokamak_neutron_source.tools import QuietTTSpectrumWarnings
 
 
 def get_neutron_energy_spectrum(
@@ -142,25 +143,26 @@ def make_openmc_full_combined_source(
         if isinstance(reaction, Reactions)
     }
 
-    for i, (ri, zi, ti) in enumerate(zip(r, z, temperature, strict=False)):
-        distributions = []
-        weights = []
+    with QuietTTSpectrumWarnings():
+        for i, (ri, zi, ti) in enumerate(zip(r, z, temperature, strict=False)):
+            distributions = []
+            weights = []
 
-        for reaction, s in n_strength.items():
-            if s[i] > 0.0:
-                distributions.append(
-                    get_neutron_energy_spectrum(reaction, ti, energy_spectrum_method)
-                )
-                weights.append(s[i])
+            for reaction, s in n_strength.items():
+                if s[i] > 0.0:
+                    distributions.append(
+                        get_neutron_energy_spectrum(reaction, ti, energy_spectrum_method)
+                    )
+                    weights.append(s[i])
 
-        local_strength = sum(weights)
+            local_strength = sum(weights)
 
-        distribution = Mixture(np.array(weights) / local_strength, distributions)
+            distribution = Mixture(np.array(weights) / local_strength, distributions)
 
-        source = make_openmc_ring_source(
-            ri, zi, distribution, local_strength / source_rate
-        )
-        if source is not None:
-            sources.append(source)
+            source = make_openmc_ring_source(
+                ri, zi, distribution, local_strength / source_rate
+            )
+            if source is not None:
+                sources.append(source)
 
     return sources

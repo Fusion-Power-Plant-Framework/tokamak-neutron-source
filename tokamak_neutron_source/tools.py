@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 """Tools."""
 
+import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -279,3 +280,38 @@ def get_centroid_2d(x: np.ndarray, z: np.ndarray) -> list[float]:
         cz /= 6 * area
 
     return [cx, cz]
+
+
+class WarningFilter:
+    """
+    Filters away duplicate log messages.
+    Source: https://stackoverflow.com/questions/31953272/60462619#60462619
+    """
+
+    def __init__(self, *names: str):
+        self.msgs = set()
+        self.loggers = [logging.getLogger(name) for name in names]
+
+    def filter(self, record):  # noqa: D102
+        msg = str(record.msg)
+        is_duplicate = msg in self.msgs
+        if not is_duplicate:
+            self.msgs.add(msg)
+        return not is_duplicate
+
+    def __enter__(self):  # noqa: D105
+        for logger in self.loggers:
+            logger.addFilter(self)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):  # noqa: D105
+        for logger in self.loggers:
+            logger.removeFilter(self)
+
+
+class QuietTTSpectrumWarnings(WarningFilter):
+    """Filter away all duplicate warnings from the energy and energy_data module."""
+
+    def __init__(self):
+        super().__init__(
+            "tokamak_neutron_source.energy", "tokamak_neutron_source.energy_data"
+        )

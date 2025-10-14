@@ -67,8 +67,8 @@ class TTNeutronEnergyDataSpectrum:
         """Get spectrum at a given temperature"""  # noqa: DOC201
         if not self._min_temp < temp_kev < self._max_temp:
             logger.warning(
-                f"T-T spectral data only available "
-                f" for {self._min_temp} < T < {self._max_temp} keV, clipping to bounds",
+                f"T-T spectral data not available at T = {temp_kev} keV, clipping back "
+                f"to the bounds of {self._min_temp} <= T <= {self._max_temp} keV",
                 stacklevel=2,
             )
             temp_kev = np.clip(temp_kev, self._min_temp, self._max_temp)

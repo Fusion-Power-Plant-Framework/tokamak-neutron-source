@@ -55,18 +55,15 @@ def make_universe_cylinder(
     bottom = openmc.ZPlane(
         raw_uc(z_min, "m", "cm"),
         boundary_type="vacuum",
-        surface_id=1,
         name="Universe bottom",
     )
     top = openmc.ZPlane(
         raw_uc(z_max, "m", "cm"),
         boundary_type="vacuum",
-        surface_id=2,
         name="Universe top",
     )
     universe_cylinder = openmc.ZCylinder(
         r=raw_uc(r_max, "m", "cm"),
-        surface_id=3,
         boundary_type="vacuum",
         name="Max radius of Universe",
     )
