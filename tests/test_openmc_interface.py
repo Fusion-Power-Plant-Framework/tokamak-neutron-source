@@ -4,6 +4,7 @@
 
 import numpy as np
 import pytest
+from numpy import typing as npt
 
 from tokamak_neutron_source import (
     FluxMap,
@@ -29,7 +30,15 @@ tt_comp = {"D": 0.0, "T": 1.0}
 CELL_SIDE_LENGTH = 0.2
 
 
-def make_source(composition_dict):
+def make_source(composition_dict) -> TokamakNeutronSource:
+    """
+    Make neutron source for testing
+
+    Returns
+    -------
+    :
+        TokamakNeutronSource
+    """
     return TokamakNeutronSource(
         transport=TransportInformation.from_parameterisations(
             ion_temperature_profile=ion_temperature_profile,
@@ -40,6 +49,30 @@ def make_source(composition_dict):
         flux_map=flux_map,
         cell_side_length=CELL_SIDE_LENGTH,
     )
+
+
+def get_x_dist(dist) -> npt.NDArray[np.float64]:
+    """
+    Get an array of numbers that is representative of the span of this dist.
+
+    Returns
+    -------
+    array:
+        a flat npt.NDArray with floats inside. Taking the min(array) and max(array)
+        should give the extrema to the distribution.
+    """
+    from openmc.stats import Discrete, Normal, Tabular, Uniform  # noqa: PLC0415
+
+    if isinstance(dist, (Discrete, Tabular)):
+        return dist.x
+    if isinstance(dist, Uniform):
+        return np.array([dist.a, dist.b])
+    if isinstance(dist, Normal):
+        return np.array([
+            dist.mean_value - 3 * dist.std_dev,
+            dist.mean_value + 3 * dist.std_dev,
+        ])
+    return None
 
 
 @pytest.mark.integration
@@ -56,8 +89,14 @@ def test_openmc_source_conversion(composition_dict: dict):
     min_r, max_r, min_z, max_z = [], [], [], []
     dx, dz = CELL_SIDE_LENGTH, CELL_SIDE_LENGTH
     for src in openmc_source:
-        min_r.append(src.space.r.x.min() / 100), max_r.append(src.space.r.x.max() / 100)
-        min_z.append(src.space.z.x.min() / 100), max_z.append(src.space.z.x.max() / 100)
+        (
+            min_r.append(get_x_dist(src.space.r).min() / 100),
+            max_r.append(get_x_dist(src.space.r).max() / 100),
+        )
+        (
+            min_z.append(get_x_dist(src.space.z).min() / 100),
+            max_z.append(get_x_dist(src.space.z).max() / 100),
+        )
     assert lower_lim_r - dx <= min(min_r), "Sensible minimum radius"
     assert max(max_r) <= upper_lim_r + dx, "Sensible maximum radius"
     assert lower_lim_z - dz <= min(min_z), "Sensible minimum height"
@@ -86,8 +125,8 @@ def test_source_defined_energies(composition_dict: dict, method: EnergySpectrumM
     min_E, max_E = [], []
     for src in openmc_source:
         for dist in src.energy.distribution:
-            min_E.append(dist.x.min())
-            max_E.append(dist.x.max())
+            min_E.append(get_x_dist(dist).min())
+            max_E.append(get_x_dist(dist).max())
     assert min(min_E) >= 0.0, "Sensible minimum energy."
     assert max(max_E) <= 17e6, "Sensible maximum energy."
 

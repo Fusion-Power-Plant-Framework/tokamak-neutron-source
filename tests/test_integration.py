@@ -19,6 +19,7 @@ from tokamak_neutron_source import (
     TransportInformation,
 )
 from tokamak_neutron_source.constants import raw_uc
+from tokamak_neutron_source.energy import EnergySpectrumMethod
 from tokamak_neutron_source.profile import ParabolicPedestalProfile
 from tokamak_neutron_source.reactions import _APPROX_NEUTRON_ENERGY, Reactions
 
@@ -110,7 +111,7 @@ def xyz_to_rphiz(x, y, z) -> tuple[np.float64, np.float64, np.float64]:
     return r, phi, z
 
 
-def run_openmc_sim(source, tmp_path) -> openmc.Tracks:
+def run_openmc_sim(source, tmp_path, method) -> openmc.Tracks:
     # run an empty simulation
     import openmc  # noqa: PLC0415
 
@@ -121,7 +122,9 @@ def run_openmc_sim(source, tmp_path) -> openmc.Tracks:
         output={"path": tmp_path.as_posix(), "summary": False},
     )
     settings.seed = 1
-    settings.source = source.to_openmc_source()
+    settings.source = (
+        source.to_openmc_source(method) if method else source.to_openmc_source()
+    )
     settings.particles = settings.max_tracks = 1000
     materials = openmc.Materials()
     materials.cross_sections = "tests/test_data/cross_section.xml"
@@ -158,7 +161,15 @@ def omc_path(tmp_path_factory):
 
 
 @pytest.fixture(
-    scope="module", params=[None, Reactions.D_T, Reactions.T_T, Reactions.D_D]
+    scope="module",
+    params=[
+        (None, None),
+        (Reactions.D_D, EnergySpectrumMethod.BALLABIO_GAUSSIAN),
+        (Reactions.D_D, EnergySpectrumMethod.BALLABIO_M_GAUSSIAN),
+        (Reactions.D_T, EnergySpectrumMethod.BALLABIO_GAUSSIAN),
+        (Reactions.D_T, EnergySpectrumMethod.BALLABIO_M_GAUSSIAN),
+        (Reactions.T_T, EnergySpectrumMethod.DATA),
+    ],
 )
 def run_sim_and_track_particles(request, omc_path):
     """Run a simulation and get all of the particle tracks out of it.
@@ -177,6 +188,7 @@ def run_sim_and_track_particles(request, omc_path):
         The energy of every particle, stored as an array of shape (N,), where the
         final axis stores the energy in [eV].
     """
+    source_type, method = request.param
     temperature_profile = ParabolicPedestalProfile(
         25.0, 5.0, 0.1, 1.45, 2.0, 0.95
     )  # [keV]
@@ -192,11 +204,11 @@ def run_sim_and_track_particles(request, omc_path):
             fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
         ),
         flux_map=flux_map,
-        source_type=request.param,
+        source_type=source_type,
         cell_side_length=CELL_SIDE_LENGTH,
         total_fusion_power=2.2e9,
     )
-    tracks = run_openmc_sim(source, omc_path)
+    tracks = run_openmc_sim(source, omc_path, method)
 
     # Should take about <1 minutes per 5000 particles.
     # Expected leakage fraction = 1.0 since all neutrons should leave the source
@@ -291,11 +303,11 @@ class TestOpenMCSimulation:
         reaction_neutron_counter = sum(
             reaction.num_neutrons for reaction in sim.source.source_type
         )
+        # Plot the neutron spectrum for when there are multiple types of reactions.
+        _f, ax = plt.subplots()
+        ax.hist(sim.energies, bins=500)
+        ax.set_title("Neutron spectrum across the entire tokamak")
         if reaction_neutron_counter > 1:
-            # Plot the neutron spectrum for when there are multiple types of reactions.
-            _f, ax = plt.subplots()
-            ax.hist(sim.energies, bins=500)
-            ax.set_title("Neutron spectrum across the entire tokamak")
             return
         reaction = sim.source.source_type[0]
 
