@@ -8,7 +8,12 @@ import numpy as np
 import pytest
 from eqdsk import EQDSKInterface
 
-from tokamak_neutron_source.tools import get_centroid_2d, load_eqdsk, load_jsp
+from tokamak_neutron_source.tools import (
+    get_centroid_2d,
+    load_citation,
+    load_eqdsk,
+    load_jsp,
+)
 
 
 class TestGetCentroid:
@@ -68,3 +73,9 @@ class TestLoadJSP:
             data.ion_temperature.size,
         ]
         assert all(x == sizes[0] for x in sizes[1:])
+
+
+@pytest.mark.xfail(reason="actions doesnt follow symlinks")
+def test_load_citation():
+    out = load_citation()
+    assert out["licence"] == "LGPL-2.1-or-later"

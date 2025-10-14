@@ -11,6 +11,7 @@ from pathlib import Path
 import numba as nb
 import numpy as np
 import numpy.typing as npt
+import yaml
 from eqdsk import EQDSKInterface
 
 from tokamak_neutron_source.constants import raw_uc
@@ -195,6 +196,19 @@ def load_jsp(file: str | Path, frame_number: int = -1) -> SimpleJETTOOutput:
         he3_density=he3_density,
         dt_neutron_rate=dt_neutron_rate,
     )
+
+
+def load_citation() -> dict:
+    """
+    Load the CITATION.cff file.
+
+    Returns
+    -------
+    :
+        The contents of the CITATION.cff file as a dictionary.
+    """
+    with open(get_tns_path("data") / "CITATION.cff") as citation_file:
+        return yaml.safe_load(citation_file)
 
 
 @nb.jit(cache=True, nopython=True)
