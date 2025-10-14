@@ -65,7 +65,7 @@ class TTNeutronEnergyDataSpectrum:
 
     def __call__(self, temp_kev: float) -> tuple[npt.NDArray, npt.NDArray]:
         """Get spectrum at a given temperature"""  # noqa: DOC201
-        if not self._min_temp <= temp_kev <= self._max_temp:
+        if not self._min_temp < temp_kev < self._max_temp:
             logger.warning(
                 f"T-T spectral data not available at T = {temp_kev} keV, clipping back "
                 f"to the bounds of {self._min_temp} <= T <= {self._max_temp} keV",
