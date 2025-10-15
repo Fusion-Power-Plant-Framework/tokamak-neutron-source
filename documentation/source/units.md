@@ -28,6 +28,6 @@ Regardless of whether the `FluxMap` is provided via an EQDSK file or a parameter
 * `FluxConvention.LINEAR`: $\psi_n = \dfrac{\psi_{a} - \psi}{\psi_{a} - \psi_{b}}$
 * `FluxConvention.SQRT`: $\psi_n = \sqrt{\dfrac{\psi_{a} - \psi}{\psi_{a} - \psi_{b}}}$
 
-In other words, when specifying a plasma profile values with some $\rho$ coordinate convention, the flux map should be initialised with the corresponding convention in $\psi_n$. 
+In other words, when specifying a plasma profile values with some $\rho$ coordinate convention, the flux map should be initialised with the corresponding convention in $\psi_n$.
 
 Note that if an equilibrium is loaded from a file, the COCOS convention is made irrelevant here: we treat $\psi$ such that it complies with the inner workings of the code.
