@@ -6,11 +6,11 @@ The following reactions are presently supported:
 
 $$
 \begin{aligned}
-\textrm{DT}: \textrm{D}+ \textrm{T} &\rightarrow \!{}^4_2\textrm{He}~(3.52~\textrm{MeV}) + \textrm{n} ~(14.06~\textrm{MeV}) \\
-\textrm{DD}_{[1]}: \textrm{D}+ \textrm{D} &\rightarrow \!{}^3_2\textrm{He}~(0.82~\textrm{MeV}) + \textrm{n} ~(2.45~\textrm{MeV}) \\
-\textrm{DD}_{[2]}: \textrm{D}+ \textrm{D} &\rightarrow \textrm{T}~(1.01~\textrm{MeV}) + \textrm{p}~(3.02~\textrm{MeV}) \\
-\textrm{TT}: \textrm{T} + \textrm{T} &\rightarrow \!{}^4_2\textrm{He}~(6.83~\textrm{MeV})\textrm{n}~(9.0~\textrm{MeV}) + \textrm{n}~(2.5~\textrm{MeV}) \\
-\textrm{DHe3}: \textrm{3} + \!{}^3_2\textrm{He} &\rightarrow \!{}^4_2\textrm{He}~(14.66~\textrm{MeV}) + \textrm{p}~(3.69~\textrm{MeV}) \\
+\textrm{D}+ \textrm{T} &\rightarrow \!{}^4_2\textrm{He}~(3.52~\textrm{MeV}) + \textrm{n} ~(14.06~\textrm{MeV}) \\
+\textrm{D}+ \textrm{D} &\rightarrow \!{}^3_2\textrm{He}~(0.82~\textrm{MeV}) + \textrm{n} ~(2.45~\textrm{MeV}) \\
+\textrm{D}+ \textrm{D} &\rightarrow \textrm{T}~(1.01~\textrm{MeV}) + \textrm{p}~(3.02~\textrm{MeV}) \\
+\textrm{T} + \textrm{T} &\rightarrow \!{}^4_2\textrm{He} + 2\textrm{n}~(11.33~\textrm{MeV}) \\
+\textrm{D} + \!{}^3_2\textrm{He} &\rightarrow \!{}^4_2\textrm{He}~(14.66~\textrm{MeV}) + \textrm{p}~(3.69~\textrm{MeV}) \\
 \end{aligned}
 $$
 
