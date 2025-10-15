@@ -105,7 +105,7 @@ for reaction in [Reactions.D_D, Reactions.D_T]:
 
 # %% [markdown]
 # Here we recreate Fig 1. of Appelbe and Chittenden
-
+# %%
 temperatures = [1.0, 5.0, 10.0, 20.0]
 
 f, ax = plt.subplots()
