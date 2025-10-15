@@ -189,6 +189,12 @@ class TestFluxMapFromEQDSK:
         psi_norm = flux_map.psi_norm(x, z)
         assert np.all(np.diff(psi_norm) >= 0)
 
+    def test_psi_norm_core(self, flux_map):
+        x_mag = flux_map.o_point.x
+        z_mag = flux_map.o_point.z
+        psi_norm = flux_map.psi_norm(x_mag, z_mag)
+        assert np.isclose(psi_norm, 0.0, rtol=0.0, atol=3e-4)
+
     def test_plot(self, flux_map):
         _f, ax = flux_map.plot()
         assert isinstance(ax, plt.Axes)
