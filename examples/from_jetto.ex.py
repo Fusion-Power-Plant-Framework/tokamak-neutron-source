@@ -31,8 +31,10 @@ from tokamak_neutron_source.reactions import Reactions
 
 # %% [markdown]
 # # JETTO Source
-# These JETTO data are available here:
-# https://gitlab.com/jintrac/jetto-pythontools/-/tree/1.8.13/testdata?ref_type=tags
+# These JETTO data files are available here:
+# https://github.com/ukaea/openstep
+#
+# A copy is available in the `tests/test_data` folder
 
 # %%
 
