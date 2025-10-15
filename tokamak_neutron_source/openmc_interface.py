@@ -99,7 +99,7 @@ def make_openmc_ring_source(
         return IndependentSource(
             energy=energy_distribution,
             space=CylindricalIndependent(
-                r=Tabular(r_lim_cm, r_lim_prob),
+                r=Tabular(r_lim_cm, r_lim_prob, interpolation="linear-linear"),
                 phi=Uniform(0, 2 * np.pi),
                 z=Uniform(*z_lim_cm),
                 origin=(0.0, 0.0, 0.0),
