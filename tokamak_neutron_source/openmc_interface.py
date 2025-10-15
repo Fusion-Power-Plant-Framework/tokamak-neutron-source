@@ -63,22 +63,23 @@ def get_neutron_energy_spectrum(
 
 
 def make_openmc_ring_source(
-    r_lower: float,
-    r_upper: float,
-    z_lower: float,
-    z_upper: float,
+    r: float,
+    z: float,
+    half_cell_length: float,
     energy_distribution: Univariate,
     strength: float,
 ) -> IndependentSource:
     """
-    Make a single OpenMC ring source.
+    Make a single OpenMC ring source with a square cross-section.
 
     Parameters
     ----------
-    r_lim:
-        Lower and upper limits of the radial position of this 3D ring [m]
-    z_lim:
-        Lower and upper limits of the vertical position of this 3D ring [m]
+    r:
+        Radial position of the centroid of the  3-D ring [m]
+    z:
+        Vertical position of the centroid of the 3-D ring [m]
+    half_cell_length:
+        Half the square cell length [m]
     energy_distribution:
         Neutron energy distribution
     strength:
@@ -90,8 +91,10 @@ def make_openmc_ring_source(
         An OpenMC IndependentSource object, or None if strength is zero.
     """
     if strength > 0:
-        r_lim_cm = raw_uc([r_lower, r_upper], "m", "cm")
-        z_lim_cm = raw_uc([z_lower, z_upper], "m", "cm")
+        r_in, r_out = r - half_cell_length, r + half_cell_length
+        z_down, z_up = z - half_cell_length, z + half_cell_length
+        r_lim_cm = raw_uc([r_in, r_out], "m", "cm")
+        z_lim_cm = raw_uc([z_down, z_up], "m", "cm")
         r_lim_prob = np.array(r_lim_cm) / sum(r_lim_cm)
         return IndependentSource(
             energy=energy_distribution,
@@ -107,14 +110,14 @@ def make_openmc_ring_source(
     return None
 
 
-def make_openmc_full_combined_source(
+def make_openmc_full_combined_source(  # noqa: PLR0913, PLR0917
     r: npt.NDArray,
     z: npt.NDArray,
     cell_side_length: float,
     temperature: npt.NDArray,
     strength: dict[AllReactions, npt.NDArray],
     source_rate: float,
-    energy_spectrum_method: EnergySpectrumMethod,
+    energy_spectrum_method: EnergySpectrumMethod = EnergySpectrumMethod.AUTO,
 ) -> IndependentSource:
     """
     Make an OpenMC source combining multiple reactions across the whole plasma.
@@ -168,10 +171,9 @@ def make_openmc_full_combined_source(
             distribution = Mixture(np.array(weights) / local_strength, distributions)
 
             source = make_openmc_ring_source(
-                ri - l_2,
-                ri + l_2,
-                zi - l_2,
-                zi + l_2,
+                ri,
+                zi,
+                l_2,
                 distribution,
                 local_strength / source_rate,
             )
