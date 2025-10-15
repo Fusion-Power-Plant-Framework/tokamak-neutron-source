@@ -89,6 +89,11 @@ def make_openmc_ring_source(
     -------
     :
         An OpenMC IndependentSource object, or None if strength is zero.
+
+    Notes
+    -----
+    The z values within the square cell are uniform, and the r values vary
+    linearly with increasing radius.
     """
     if strength > 0:
         r_in, r_out = r - half_cell_length, r + half_cell_length
