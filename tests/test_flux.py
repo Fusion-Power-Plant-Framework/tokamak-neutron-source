@@ -124,6 +124,13 @@ class TestFluxMapFromParameterisation:
         psi_norm = self.flux_map.psi_norm(x, z)
         assert np.all(np.diff(psi_norm) >= 0)
 
+    def test_psi_norm_core(self):
+        x_mag = self.flux_map.o_point.x
+        z_mag = self.flux_map.o_point.z
+        assert np.isclose(
+            self.flux_map.psi_norm(x_mag, z_mag), 0.0, rtol=0.0, atol=1e-14
+        )
+
     def test_plot(self):
         _f, ax = self.flux_map.plot()
         assert isinstance(ax, plt.Axes)
