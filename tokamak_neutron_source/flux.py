@@ -617,9 +617,9 @@ class ParameterisationInterpolator(FluxInterpolator):
         x = np.concatenate([f.x for f in flux_surfaces])
         z = np.concatenate([f.z for f in flux_surfaces])
 
-        # NOTE: Here we need to assign values to psi, and follow the convention that the maximum
-        # psi is at the magnetic axis. We arbitrarily assign psi a value of 1.0 at the axis,
-        # and 0.0 at the edge.
+        # NOTE: Here we need to assign values to psi, and follow the convention that
+        # the maximum psi is at the magnetic axis. We arbitrarily assign psi a value
+        # of 1.0 at the axis, and 0.0 at the edge.
         # This is not to be confused with the normalised psi, which follows the reverse
         # trend.
         psi = np.concatenate([[1 - rho] * n_points for rho in rho_profile])
