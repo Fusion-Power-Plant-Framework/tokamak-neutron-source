@@ -234,6 +234,7 @@ class TokamakNeutronSource:
         return make_openmc_full_combined_source(
             self.x,
             self.z,
+            self.cell_side_length,
             self.temperature,
             self.strength,
             self.source_rate,
