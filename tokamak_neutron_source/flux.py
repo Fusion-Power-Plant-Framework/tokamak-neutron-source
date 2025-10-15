@@ -617,14 +617,20 @@ class ParameterisationInterpolator(FluxInterpolator):
         x = np.concatenate([f.x for f in flux_surfaces])
         z = np.concatenate([f.z for f in flux_surfaces])
 
+        # NOTE: Here we need to assign values to psi, and follow the convention that
+        # the maximum psi is at the magnetic axis. We arbitrarily assign psi a value
+        # of 1.0 at the axis, and 0.0 at the edge.
+        # This is not to be confused with the normalised psi, which follows the reverse
+        # trend.
         psi = np.concatenate([[1 - rho] * n_points for rho in rho_profile])
 
-        # Add the core
-        x = np.concatenate([x, [o_point.x]])
-        z = np.concatenate([z, [o_point.z]])
-        psi = np.concatenate([psi, [o_point.psi]])
+        # Prepend the core
+        x = np.concatenate([[o_point.x], x])
+        z = np.concatenate([[o_point.z], z])
+        psi = np.concatenate([[1.0], psi])
 
-        psi_norm = normalise_psi(psi, o_point.psi, 0.0, flux_convention)
+        psi_norm = normalise_psi(psi, 1.0, 0.0, flux_convention)
+
         super().__init__(x, z, psi_norm, o_point)
         self._psi_norm_func = CloughTocher2DInterpolator(
             np.column_stack((x, z)),
