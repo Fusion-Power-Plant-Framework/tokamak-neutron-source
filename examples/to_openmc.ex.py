@@ -37,7 +37,7 @@ from tokamak_neutron_source import (
 from tokamak_neutron_source.constants import raw_uc
 
 # %% [markdown]
-# # Load an arbitrary source.
+# ## Load an arbitrary source.
 # For this example the same source as from_jetto.ex.py is used. One can equally use the
 # source from from_eqdsk.ex.py.
 

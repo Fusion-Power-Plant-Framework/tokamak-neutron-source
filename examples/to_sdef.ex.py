@@ -55,14 +55,14 @@ sdef_path_root = Path("examples/example_sdef")
 openmc_source = source.to_sdef_card(sdef_path_root)
 
 # %% [markdown]
-# ## Read the SDEF files created.
+# # Read the SDEF files created.
 # This should create as many SDEF files as there are reactions; in the case, 3 files are
 # made. The user can use these 3 files sequentially in 3 respective simulations,
 # multiply each simulation's tally result by the **total number of neutrons** generated
 # by that reaction, and then sum them together to obtain the desired quantity (e.g.
 # neutron damage, heating, etc.)
 # 
-# ### How to get the **total number of neutrons** from each reaction
+# ## How to get the **total number of neutrons** from each reaction
 # Note the line printed in the header section of each file that says "Total source
 # neutrons". This records the number of neutrons emitted per second through that reaction
 # for a reactor that is operating at the specified fusion power of 2.2E9 W.
@@ -75,7 +75,7 @@ for reaction in Reactions:
 
 
 # %% [markdown]
-# ## Clean up the example SDEF files created.
+# # Clean up the example SDEF files created.
 
 # %%
 for reaction in Reactions:
