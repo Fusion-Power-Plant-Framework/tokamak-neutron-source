@@ -20,12 +20,8 @@
 """Example Reading from JETTO files"""
 
 # %%
-from pathlib import Path
 import re
-
-import numpy as np
-from numpy import typing as npt
-import matplotlib.pyplot as plt
+from pathlib import Path
 
 from tokamak_neutron_source import (
     FluxConvention,
@@ -50,7 +46,7 @@ source = TokamakNeutronSource(
     source_type=[Reactions.D_D, Reactions.D_T, Reactions.T_T],
     cell_side_length=0.3,
 )
-source.normalise_fusion_power(2.2E9)
+source.normalise_fusion_power(2.2e9)
 sdef_path_root = Path("examples/example_sdef")
 openmc_source = source.to_sdef_card(sdef_path_root)
 
@@ -61,7 +57,7 @@ openmc_source = source.to_sdef_card(sdef_path_root)
 # multiply each simulation's tally result by the **total number of neutrons** generated
 # by that reaction, and then sum them together to obtain the desired quantity (e.g.
 # neutron damage, heating, etc.)
-# 
+#
 # ## How to get the **total number of neutrons** from each reaction
 # Note the line printed in the header section of each file that says "Total source
 # neutrons". This records the number of neutrons emitted per second through that reaction
@@ -70,8 +66,7 @@ openmc_source = source.to_sdef_card(sdef_path_root)
 # %%
 for reaction in Reactions:
     reactant = re.findall(r"[DT]", reaction.label)
-    with open(sdef_path_root.as_posix()+"."+reactant[0]+reactant[1], "r") as sdef:
-        print(sdef.read())
+    print(Path(sdef_path_root.as_posix() + "." + reactant[0] + reactant[1]).read_text())
 
 
 # %% [markdown]
@@ -80,4 +75,6 @@ for reaction in Reactions:
 # %%
 for reaction in Reactions:
     reactant = re.findall(r"[DT]", reaction.label)
-    Path(sdef_path_root.as_posix()+"."+reactant[0]+reactant[1]).unlink(missing_ok=True)
+    Path(sdef_path_root.as_posix() + "." + reactant[0] + reactant[1]).unlink(
+        missing_ok=True
+    )
