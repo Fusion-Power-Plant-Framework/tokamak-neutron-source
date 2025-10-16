@@ -37,6 +37,7 @@ class ReactivityMethod(Enum):
 
     XS = auto()
     BOSCH_HALE = auto()
+    AUTO = auto()
 
 
 def density_weighted_reactivity(
@@ -45,7 +46,7 @@ def density_weighted_reactivity(
     density_t: float | npt.NDArray,
     density_he3: float | npt.NDArray,
     reaction: str | AllReactions = Reactions.D_T,
-    method: ReactivityMethod = ReactivityMethod.BOSCH_HALE,
+    method: ReactivityMethod = ReactivityMethod.AUTO,
 ) -> float | npt.NDArray:
     """
     Calculate the density-weighted thermal reactivity of a fusion reaction in
@@ -92,7 +93,7 @@ def density_weighted_reactivity(
 def reactivity(
     temp_kev: float | npt.NDArray,
     reaction: str | AllReactions = Reactions.D_T,
-    method: ReactivityMethod = ReactivityMethod.BOSCH_HALE,
+    method: ReactivityMethod = ReactivityMethod.AUTO,
 ) -> float | npt.NDArray:
     """
     Calculate the thermal reactivity of a fusion reaction in Maxwellian plasmas,
@@ -115,6 +116,10 @@ def reactivity(
     reaction = _parse_reaction(reaction)
 
     match method:
+        case ReactivityMethod.AUTO:
+            if reaction.bosch_hale_coefficients is not None:
+                return _reactivity_bosch_hale(temp_kev, reaction)
+            return _reactivity_from_xs(temp_kev, reaction.cross_section)
         case ReactivityMethod.BOSCH_HALE:
             if reaction.bosch_hale_coefficients is not None:
                 return _reactivity_bosch_hale(temp_kev, reaction)
