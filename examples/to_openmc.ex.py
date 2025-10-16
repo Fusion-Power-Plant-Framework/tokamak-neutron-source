@@ -20,13 +20,13 @@
 """Example Reading from JETTO files"""
 
 # %%
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
 
-import numpy as np
-from numpy import typing as npt
 import matplotlib.pyplot as plt
+import numpy as np
 import openmc
+from numpy import typing as npt
 
 from tokamak_neutron_source import (
     FluxConvention,
@@ -66,13 +66,13 @@ tracks_path = examples_path / "tracks.h5"
 # ## Set up the geometry
 
 # %%
-bot_z = raw_uc(source.z.min() - CELL_SIDE_LENGTH / 2 , "m", "cm")
-top_z = raw_uc(source.z.max() + CELL_SIDE_LENGTH / 2 , "m", "cm")
-radius = raw_uc(source.x.max() + CELL_SIDE_LENGTH / 2 , "m", "cm")
+bot_z = raw_uc(source.z.min() - CELL_SIDE_LENGTH / 2, "m", "cm")
+top_z = raw_uc(source.z.max() + CELL_SIDE_LENGTH / 2, "m", "cm")
+radius = raw_uc(source.x.max() + CELL_SIDE_LENGTH / 2, "m", "cm")
 bot = openmc.ZPlane(bot_z, boundary_type="vacuum")
 top = openmc.ZPlane(top_z, boundary_type="vacuum")
 cyl = openmc.ZCylinder(r=radius, boundary_type="vacuum")
-source_cell = openmc.Cell(region= +bot & -top & -cyl, fill=None, name="source cell")
+source_cell = openmc.Cell(region=+bot & -top & -cyl, fill=None, name="source cell")
 universe = openmc.Universe(cells=[source_cell])
 geometry = openmc.Geometry(universe)
 geometry.export_to_xml(geometry_path)
@@ -117,17 +117,22 @@ settings_path.unlink(missing_ok=True)
 Path(examples_path / f"statepoint.{NUM_BATCHES}.h5").unlink(missing_ok=True)
 tracks_path.unlink(missing_ok=True)
 
+
 # %% [markdown]
 # ## Making sense of the results
-# the openmc.Tracks class stores an iterable of openmc.Track, each of which has a property
+# `openmc.Tracks` stores an iterable of openmc.Track, each of which has a property
 # particle_tracks, which records the particle's position, direction, and energy etc.
-# 
-# particle_tracks would have length >1 if there are more than 1 track per source particle.
-# but due to the lack of obstacles in this simulation len(particle_tracks)==1 always.
+#
+# particle_tracks would have length >1 if there are more than one track per source
+# particle, but due to the lack of obstacles in this simulation,
+# len(particle_tracks) always ==1.
+
 
 # %%
 @dataclass
 class OpenMCTrack:
+    """Extract the state into a more readable format."""
+
     position: float
     direction: float
     energy: float  # eV
@@ -139,10 +144,14 @@ class OpenMCTrack:
 
     @property
     def position_cylindrical(self) -> tuple[np.float64, np.float64, np.float64]:
+        """Turn position into cylindrical coordinate for ease of plotting."""
         return xyz_to_rphiz(*self.position)
 
     @property
     def direction_spherical(self) -> tuple[np.float64, np.float64]:
+        """
+        Condense thes direction (3D) into a spherical (2D) coordinate representation
+        """
         r, phi, z = xyz_to_rphiz(*self.direction)
         theta = np.atan2(z, r)
         return theta, phi
@@ -150,6 +159,10 @@ class OpenMCTrack:
 
 @dataclass
 class OpenMCSimulatedSourceParticles:
+    """
+    Important information about where the particle was born and how it was travelling.
+    """
+
     source: openmc.Source
     locations: npt.NDArray
     directions: npt.NDArray
@@ -157,9 +170,11 @@ class OpenMCSimulatedSourceParticles:
 
 
 def xyz_to_rphiz(x, y, z) -> tuple[np.float64, np.float64, np.float64]:
+    """Convert cartesian into cylindrical coordinates."""
     r = np.sqrt(x**2 + y**2)
     phi = np.atan2(x, y)
     return r, phi, z
+
 
 locations, directions, energies = [], [], []
 for ptrac in tracks:
@@ -181,13 +196,10 @@ ax.scatter(r / 100, z / 100, alpha=0.3, marker="o", s=0.5)
 ax.set_xlabel("r (m)")
 ax.set_ylabel("z (m)")
 ax.set_title(
-    "Neutron generation positions\n(poloidal view)"
-    "\nEach dot is a neutron emitted"
+    "Neutron generation positions\n(poloidal view)\nEach dot is a neutron emitted"
 )
 o_point, lcfs = source.flux_map.o_point, source.flux_map.lcfs
-ax.scatter(
-    o_point.x, o_point.z, label="o-point", facecolors="none", edgecolor="C1"
-)
+ax.scatter(o_point.x, o_point.z, label="o-point", facecolors="none", edgecolor="C1")
 ax.plot(lcfs.x, lcfs.z, label="LCFS")
 ax.legend()
 ax.set_aspect("equal")
