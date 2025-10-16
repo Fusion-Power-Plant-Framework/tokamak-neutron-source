@@ -21,7 +21,11 @@
 
 # %%
 from pathlib import Path
+from dataclasses import dataclass
 
+import numpy as np
+from numpy import typing as npt
+import matplotlib.pyplot as plt
 import openmc
 
 from tokamak_neutron_source import (
@@ -53,7 +57,6 @@ openmc_source = source.to_openmc_source()
 
 # %%
 examples_path = Path("examples/").resolve()
-print(examples_path.as_posix())
 geometry_path = examples_path / "geometry.xml"
 materials_path = examples_path / "materials.xml"
 settings_path = examples_path / "settings.xml"
@@ -63,14 +66,13 @@ tracks_path = examples_path / "tracks.h5"
 # ## Set up the geometry
 
 # %%
-bot_z = raw_uc(source.z.min() - CELL_SIDE_LENGTH / 2, "m", "cm")
-top_z = raw_uc(source.z.max() + CELL_SIDE_LENGTH / 2, "m", "cm")
-radius = raw_uc(source.x.max() + CELL_SIDE_LENGTH / 2, "m", "cm")
-print(f"{bot_z=}, {top_z=}, {radius=}")
+bot_z = raw_uc(source.z.min() - CELL_SIDE_LENGTH / 2 , "m", "cm")
+top_z = raw_uc(source.z.max() + CELL_SIDE_LENGTH / 2 , "m", "cm")
+radius = raw_uc(source.x.max() + CELL_SIDE_LENGTH / 2 , "m", "cm")
 bot = openmc.ZPlane(bot_z, boundary_type="vacuum")
 top = openmc.ZPlane(top_z, boundary_type="vacuum")
-cyl = openmc.ZCylinder(radius, boundary_type="vacuum")
-source_cell = openmc.Cell(region=+bot & -top & -cyl, fill=None, name="source cell")
+cyl = openmc.ZCylinder(r=radius, boundary_type="vacuum")
+source_cell = openmc.Cell(region= +bot & -top & -cyl, fill=None, name="source cell")
 universe = openmc.Universe(cells=[source_cell])
 geometry = openmc.Geometry(universe)
 geometry.export_to_xml(geometry_path)
@@ -116,7 +118,77 @@ Path(examples_path / f"statepoint.{NUM_BATCHES}.h5").unlink(missing_ok=True)
 tracks_path.unlink(missing_ok=True)
 
 # %% [markdown]
-# ## Plot the results
+# ## Making sense of the results
+# the openmc.Tracks class stores an iterable of openmc.Track, each of which has a property
+# particle_tracks, which records the particle's position, direction, and energy etc.
+# 
+# particle_tracks would have length >1 if there are more than 1 track per source particle.
+# but due to the lack of obstacles in this simulation len(particle_tracks)==1 always.
 
 # %%
-tracks
+@dataclass
+class OpenMCTrack:
+    position: float
+    direction: float
+    energy: float  # eV
+    time: float
+    wgt: float
+    cell_id: int
+    cell_instance: int
+    mat_id: int
+
+    @property
+    def position_cylindrical(self) -> tuple[np.float64, np.float64, np.float64]:
+        return xyz_to_rphiz(*self.position)
+
+    @property
+    def direction_spherical(self) -> tuple[np.float64, np.float64]:
+        r, phi, z = xyz_to_rphiz(*self.direction)
+        theta = np.atan2(z, r)
+        return theta, phi
+
+
+@dataclass
+class OpenMCSimulatedSourceParticles:
+    source: openmc.Source
+    locations: npt.NDArray
+    directions: npt.NDArray
+    energies: npt.NDArray
+
+
+def xyz_to_rphiz(x, y, z) -> tuple[np.float64, np.float64, np.float64]:
+    r = np.sqrt(x**2 + y**2)
+    phi = np.atan2(x, y)
+    return r, phi, z
+
+locations, directions, energies = [], [], []
+for ptrac in tracks:
+    start_state = OpenMCTrack(*ptrac.particle_tracks[0].states[0])
+    locations.append(start_state.position_cylindrical)
+    directions.append(start_state.direction_spherical)
+    energies.append(start_state.energy)
+locations = np.array(locations)
+directions = np.array(directions)
+energies = np.array(energies)
+
+# %% [markdown]
+# ## Plot the location where neutrons are emitted
+
+# %%
+ax = plt.axes()
+r, phi, z = locations.T
+ax.scatter(r / 100, z / 100, alpha=0.3, marker="o", s=0.5)
+ax.set_xlabel("r (m)")
+ax.set_ylabel("z (m)")
+ax.set_title(
+    "Neutron generation positions\n(poloidal view)"
+    "\nEach dot is a neutron emitted"
+)
+o_point, lcfs = source.flux_map.o_point, source.flux_map.lcfs
+ax.scatter(
+    o_point.x, o_point.z, label="o-point", facecolors="none", edgecolor="C1"
+)
+ax.plot(lcfs.x, lcfs.z, label="LCFS")
+ax.legend()
+ax.set_aspect("equal")
+plt.show()
