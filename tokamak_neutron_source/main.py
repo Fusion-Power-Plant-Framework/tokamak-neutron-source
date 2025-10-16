@@ -100,7 +100,7 @@ class TokamakNeutronSource:
         source_type: AllReactions | list[AllReactions] | None = None,
         cell_side_length: float = 0.1,
         total_fusion_power: float | None = None,
-        reactivity_method: ReactivityMethod = ReactivityMethod.BOSCH_HALE,
+        reactivity_method: ReactivityMethod = ReactivityMethod.AUTO,
     ):
         self.source_type = _parse_source_type(source_type)
 
