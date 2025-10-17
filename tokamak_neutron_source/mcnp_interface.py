@@ -13,7 +13,7 @@ import numpy as np
 import numpy.typing as npt
 
 from tokamak_neutron_source.energy import EnergySpectrumMethod, energy_spectrum
-from tokamak_neutron_source.reactions import AneutronicReactions, Reactions
+from tokamak_neutron_source.reactions import Reactions
 from tokamak_neutron_source.reactivity import AllReactions
 from tokamak_neutron_source.tools import load_citation, raw_uc
 
@@ -65,51 +65,49 @@ def write_mcnp_sdef_source(
 
     for reaction, r_data in strength.items():
         rates = r_data * reaction.num_neutrons
-        if reaction not in AneutronicReactions:
-            short_react = re.findall(r"[DT]", reaction.label)
-            file_name = f"{file}.{short_react[0]}{short_react[1]}"
+        if reaction not in Reactions:
+            continue  # skip AneutronicReactions
+        short_react = re.findall(r"[DT]", reaction.label)
+        file_name = f"{file}.{short_react[0]}{short_react[1]}"
 
-            header = sdef_header(reaction, rates, temperature)
+        header = sdef_header(reaction, rates, temperature)
 
-            # Calculate the radial boundaries based on the ring centres
-            # and 'cell width' (dr)
-            r_bounds = np.unique(r) - drad
-            r_bounds = np.append(r_bounds, r_bounds[-1] + dr)  # Add the last boundary
+        # Calculate the radial boundaries based on the ring centres
+        # and 'cell width' (dr)
+        r_bounds = np.unique(r) - drad
+        r_bounds = np.append(r_bounds, r_bounds[-1] + dr)  # Add the last boundary
 
-            # Identify where radial position changes
-            # and therefore the range of each vertical distribution
-            z_ints = np.concatenate([[-1], np.nonzero(r[1:] != r[:-1])[0], [len(r) - 1]])
+        # Identify where radial position changes
+        # and therefore the range of each vertical distribution
+        z_ints = np.concatenate([[-1], np.nonzero(r[1:] != r[:-1])[0], [len(r) - 1]])
 
-            si_card = _text_wrap(
-                "SI3 H " + " ".join(f"{ri:.5e}" for ri in r_bounds), new_lines=1
+        si_card = _text_wrap(
+            "SI3 H " + " ".join(f"{ri:.5e}" for ri in r_bounds), new_lines=1
+        )
+        sp_card = _text_wrap(
+            f"SP3 D {0.0:.5e} "
+            + " ".join(
+                f"{np.sum(rates[z_ints[i] + 1 : z_ints[i + 1] + 1]):.5e}"
+                for i in range(len(z_ints) - 1)
+            ),
+            new_lines=1,
+        )
+
+        ds_card = _text_wrap(
+            "DS4 S "
+            + " ".join(f"{i:d}" for i in range(offset, offset + len(r_bounds) - 1)),
+            new_lines=1,
+        )
+
+        with open(file_name, "w") as sdef_file:
+            sdef_file.write(
+                f"{header}{si_card}{sp_card}{ds_card}"
+                "C\nC 3. Neutron Emission Probability - Vertical Distribution\nC\n"
             )
-            sp_card = _text_wrap(
-                f"SP3 D {0.0:.5e} "
-                + " ".join(
-                    f"{np.sum(rates[z_ints[i] + 1 : z_ints[i + 1] + 1]):.5e}"
-                    for i in range(len(z_ints) - 1)
-                ),
-                new_lines=1,
-            )
-
-            ds_card = _text_wrap(
-                "DS4 S "
-                + " ".join(f"{i:d}" for i in range(offset, offset + len(r_bounds) - 1)),
-                new_lines=1,
-            )
-
-            with open(file_name, "w") as sdef_file:
-                sdef_file.write(
-                    f"{header}{si_card}{sp_card}{ds_card}"
-                    "C\nC 3. Neutron Emission Probability - Vertical Distribution\nC\n"
-                )
-                for si_card, sp_card in _si_sp_vertical_dist_cards(
-                    offset, z, z_ints, dzed, rates
-                ):
-                    sdef_file.write(f"{si_card}{sp_card}")
-
-        else:
-            logger.info(f"Skipping reaction {reaction.label} for MCNP SDEF source.")
+            for si_card, sp_card in _si_sp_vertical_dist_cards(
+                offset, z, z_ints, dzed, rates
+            ):
+                sdef_file.write(f"{si_card}{sp_card}")
 
 
 def _si_sp_vertical_dist_cards(
