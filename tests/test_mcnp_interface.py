@@ -205,7 +205,7 @@ def get_next_si_and_sp(
     si, remaining_texts = scroll_and_get_next_data_line(text_list, f"SI{i}")
     sp, remaining_texts = scroll_and_get_next_data_line(remaining_texts, f"SP{i}")
     si, sp = tokenize(si), tokenize(sp)
-    assert (si.dist_type, sp.dist_type) in set(("H", "D"), ("A", None)), (
+    assert (si.dist_type, sp.dist_type) in {("H", "D"), ("A", None)}, (
         "Either histogramic or tabular distribution expected."
     )
     assert len(si.data) == len(sp.data), "Equal number of x- and y-values expected."
