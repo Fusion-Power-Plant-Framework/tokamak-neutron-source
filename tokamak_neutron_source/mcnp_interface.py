@@ -64,11 +64,12 @@ def write_mcnp_sdef_source(
     offset = 5  # First 5 distribution are reserved
 
     for reaction, r_data in strength.items():
+        rates = r_data * reaction.num_neutrons
         if reaction not in AneutronicReactions:
             short_react = re.findall(r"[DT]", reaction.label)
             file_name = f"{file}.{short_react[0]}{short_react[1]}"
 
-            header = sdef_header(reaction, r_data, temperature)
+            header = sdef_header(reaction, rates, temperature)
 
             # Calculate the radial boundaries based on the ring centres
             # and 'cell width' (dr)
@@ -85,7 +86,7 @@ def write_mcnp_sdef_source(
             sp_card = _text_wrap(
                 f"SP3 D {0.0:.5e} "
                 + " ".join(
-                    f"{np.sum(r_data[z_ints[i] + 1 : z_ints[i + 1] + 1]):.5e}"
+                    f"{np.sum(rates[z_ints[i] + 1 : z_ints[i + 1] + 1]):.5e}"
                     for i in range(len(z_ints) - 1)
                 ),
                 new_lines=1,
@@ -103,7 +104,7 @@ def write_mcnp_sdef_source(
                     "C\nC 3. Neutron Emission Probability - Vertical Distribution\nC\n"
                 )
                 for si_card, sp_card in _si_sp_vertical_dist_cards(
-                    offset, z, z_ints, dzed, r_data
+                    offset, z, z_ints, dzed, rates
                 ):
                     sdef_file.write(f"{si_card}{sp_card}")
 
