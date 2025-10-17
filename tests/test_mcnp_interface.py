@@ -16,13 +16,18 @@ from tokamak_neutron_source import (
     TokamakNeutronSource,
     TransportInformation,
 )
+from tokamak_neutron_source.constants import raw_uc
 from tokamak_neutron_source.profile import ParabolicPedestalProfile
-from tokamak_neutron_source.reactions import Reactions
+from tokamak_neutron_source.reactions import _APPROX_NEUTRON_ENERGY, Reactions
 
 
 @pytest.fixture(scope="module", autouse=True)
 def sdef_path(tmp_path_factory):
     return tmp_path_factory.mktemp("sdef_output")
+
+
+CELL_SIDE_LENGTH = 0.3
+CELL_SIDE_LENGTH_CM = raw_uc(CELL_SIDE_LENGTH, "m", "cm")
 
 
 @pytest.fixture(scope="module")
@@ -39,7 +44,7 @@ def make_source():
             fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
         ),
         flux_map=FluxMap.from_eqdsk("tests/test_data/eqref_OOB.json"),
-        cell_side_length=0.3,
+        cell_side_length=CELL_SIDE_LENGTH,
     )
 
 
@@ -97,7 +102,9 @@ def test_energy_dist(find_sdef_file):
 
     # Test neutron energy distribution
     if reaction is Reactions.T_T:
-        _, sp, _ = get_next_si_and_sp(sdef_text, 2)
+        si, sp, _ = get_next_si_and_sp(sdef_text, 2)
+        max_exp_energy = raw_uc(_APPROX_NEUTRON_ENERGY[Reactions.T_T] * 2, "eV", "MeV")
+        assert si.data.max() > max_exp_energy, "Should cover the entire energy spectrum."
     else:
         energy_dist_str, _ = scroll_and_get_next_data_line(sdef_text, "SP2")
         sp = tokenize(energy_dist_str)
@@ -114,7 +121,10 @@ def test_radial_dist(find_sdef_file):
     sdef_text, _, _ = find_sdef_file
 
     # Test radial distribution
-    get_next_si_and_sp(sdef_text, 3)
+    si, _, _ = get_next_si_and_sp(sdef_text, 3)
+    assert np.allclose(np.diff(si.data), CELL_SIDE_LENGTH_CM, rtol=5e-4), (
+        "Spacing check."
+    )
 
 
 def test_DS4_and_vertical_dists(find_sdef_file):
@@ -125,7 +135,10 @@ def test_DS4_and_vertical_dists(find_sdef_file):
     ds4 = tokenize(ds4, dtype=int)
     assert ds4.dist_type == "S", "defined by cell"
     for i in ds4.data:
-        _, _, sdef_text = get_next_si_and_sp(sdef_text, i)
+        si, _, sdef_text = get_next_si_and_sp(sdef_text, i)
+        assert np.allclose(np.diff(si.data), CELL_SIDE_LENGTH_CM, rtol=5e-4), (
+            "Spacing check."
+        )
 
     # Test end of file
     assert not scroll_and_get_next_data_line(sdef_text, "SP")[0], "EoF expected"
