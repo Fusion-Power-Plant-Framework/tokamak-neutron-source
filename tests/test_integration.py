@@ -74,8 +74,8 @@ def make_universe_cylinder(
 
 @dataclass
 class OpenMCTrack:
-    position: float
-    direction: float
+    position: npt.NDArray
+    direction: npt.NDArray
     energy: float  # eV
     time: float
     wgt: float
