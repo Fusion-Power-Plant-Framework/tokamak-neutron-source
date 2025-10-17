@@ -92,14 +92,14 @@ def test_sdef_line(find_sdef_file):
     assert bool(sdef), "SDEF file line must exist"
 
 
-def test_radial_dist(find_sdef_file):
+def test_energy_dist(find_sdef_file):
     sdef_text, _, reaction = find_sdef_file
 
     # Test neutron energy distribution
     if reaction is Reactions.T_T:
-        _, sp, sdef_text = get_next_si_and_sp(sdef_text, 2)
+        _, sp, _ = get_next_si_and_sp(sdef_text, 2)
     else:
-        energy_dist_str, sdef_text = scroll_and_get_next_data_line(sdef_text, "SP2")
+        energy_dist_str, _ = scroll_and_get_next_data_line(sdef_text, "SP2")
         sp = tokenize(energy_dist_str)
         assert int(sp.dist_type) == -4, "-4 for fusion neutron source of DD/DT type."
         ion_temp_mev = sp.data[0]
@@ -109,8 +109,12 @@ def test_radial_dist(find_sdef_file):
         assert sp.data[-1] == SP_4_SCHEME[reaction], "-1 for DT, -2 for DD."
     assert sp.def_number == 2
 
+
+def test_radial_dist(find_sdef_file):
+    sdef_text, _, _ = find_sdef_file
+
     # Test radial distribution
-    _, sp, sdef_text = get_next_si_and_sp(sdef_text, 3)
+    get_next_si_and_sp(sdef_text, 3)
 
 
 def test_DS4_and_vertical_dists(find_sdef_file):
