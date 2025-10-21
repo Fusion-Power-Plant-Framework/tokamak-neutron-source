@@ -15,11 +15,16 @@ authors=[{ name = "The tokamak neutron source team" }]
 readme = "README.md"
 requires-python = ">=3.10"
 license = "LGPL-2.1-or-later"
+description = """Create an arbitrary parametric tokamak neutron source for OpenMC and MCNP"""
 dynamic = ['version']
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: POSIX :: Linux",
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
+    "Natural Language :: English",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Physics",
 ]
 
 dependencies= [
@@ -34,6 +39,11 @@ dependencies= [
     "periodictable",
     "pyyaml",
 ]
+
+[project.urls]
+Source        = "https://github.com/Fusion-Power-Plant-Framework/tokamak-neutron-source"
+Documentation = "https://github.com/Fusion-Power-Plant-Framework/tokamak-neutron-source#readme"
+Issues        = "https://github.com/Fusion-Power-Plant-Framework/tokamak-neutron-source/issues"
 
 [project.optional-dependencies]
 openmc = ["openmc"]
