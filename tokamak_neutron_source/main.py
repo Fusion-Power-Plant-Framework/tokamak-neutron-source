@@ -16,7 +16,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from tokamak_neutron_source.energy import EnergySpectrumMethod
 from tokamak_neutron_source.error import ReactivityError, TNSError
 from tokamak_neutron_source.mcnp_interface import write_mcnp_sdef_source
-from tokamak_neutron_source.hdf5_interface import write_hdf5_source
 from tokamak_neutron_source.reactions import (
     AllReactions,
     AneutronicReactions,
@@ -264,12 +263,11 @@ class TokamakNeutronSource:
         """
         Create a source in the HDF5 format such that the full distribution of neutron
         energies and position
-
-        Returns
-        -------
-        :
-            H5 format
         """
+        from tokamak_neutron_source.hdf5_interface import (  # noqa: PLC0415
+            write_hdf5_source,
+        )
+
         write_hdf5_source(
             filename,
             self.x,
@@ -278,7 +276,6 @@ class TokamakNeutronSource:
             self.temperature,
             self.strength,
         )
-       
 
     def plot(
         self, reactions: list[AllReactions] | None = None
