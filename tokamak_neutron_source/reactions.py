@@ -41,6 +41,7 @@ from tokamak_neutron_source.reactivity_data import (
 class ReactionData:
     """Reaction dataclass."""
 
+    short_name: str
     label: str
     total_energy: float
     num_neutrons: int
@@ -55,6 +56,10 @@ class ReactionEnumMixin:
     @property
     def data(self) -> ReactionData:  # noqa: D102
         return self.value
+    
+    @property
+    def short_name(self) -> str:
+        return self.value.short_name
 
     @property
     def label(self) -> str:  # noqa: D102
@@ -85,6 +90,7 @@ class Reactions(ReactionEnumMixin, Enum):
     """Neutronic reaction channels."""
 
     D_T = ReactionData(
+        short_name="DTn",
         label="D + T → ⁴He + n",
         total_energy=E_DT_FUSION,
         num_neutrons=1,
@@ -93,6 +99,7 @@ class Reactions(ReactionEnumMixin, Enum):
         ballabio_spectrum=BALLABIO_DT_NEUTRON,
     )
     D_D = ReactionData(
+        short_name="DDn",
         label="D + D → ³He + n",
         total_energy=E_DD_HE3N_FUSION,
         num_neutrons=1,
@@ -101,6 +108,7 @@ class Reactions(ReactionEnumMixin, Enum):
         ballabio_spectrum=BALLABIO_DD_NEUTRON,
     )
     T_T = ReactionData(
+        short_name="TTn",
         label="T + T → ⁴He + 2n",
         total_energy=E_TT_FUSION,
         num_neutrons=2,
@@ -114,6 +122,7 @@ class AneutronicReactions(ReactionEnumMixin, Enum):
     """Aneutronic reaction channels."""
 
     D_D = ReactionData(
+        short_name="DDp",
         label="D + D → T + p",
         total_energy=E_DD_TP_FUSION,
         num_neutrons=0,  # no neutrons in aneutronic branch
@@ -122,6 +131,7 @@ class AneutronicReactions(ReactionEnumMixin, Enum):
         ballabio_spectrum=None,
     )
     D_He3 = ReactionData(
+        short_name="DHep",
         label="D + ³He → ⁴He + p",
         total_energy=E_DHE3_FUSION,
         num_neutrons=0,
