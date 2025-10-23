@@ -93,3 +93,10 @@ def _plot_show_and_close_class(request):
         plt.close()
     else:
         yield
+
+
+@pytest.fixture
+def jetto_skip():
+    with pytest.raises(ModuleNotFoundError, match="jetto_tools"):
+        import jetto_tools  # noqa: F401, PLC0415
+    pytest.importorskip("jetto_skip")
