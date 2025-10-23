@@ -39,6 +39,7 @@ dependencies= [
 openmc = ["openmc"]
 jetto = ["jetto_tools == 1.8.13"]
 dev = ["pre-commit", "ruff", "ty"]
+h5 = ["h5py"]
 test = [
   "pytest",
   "pytest-cov",
