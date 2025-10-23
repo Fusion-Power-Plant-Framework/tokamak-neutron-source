@@ -122,6 +122,7 @@ def write_hdf5_source(  # noqa: PLR0914
             # Energy is a scalar for DD & DT, but a distribution for TT
             if reaction == Reactions.T_T: 
                 bins, values = TT_N_SPECTRUM(0)
+                bins = np.append(bins, (bins[-1] - bins[-2]) + bins[-1])
                 histograms[erg_name] = Histogram(
                     name=erg_name,
                     property="energy",
