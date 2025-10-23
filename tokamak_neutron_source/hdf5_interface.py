@@ -11,6 +11,7 @@ import numpy as np
 import numpy.typing as npt
 
 from tokamak_neutron_source.constants import E_DD_NEUTRON, E_DT_NEUTRON, E_TT_NEUTRON
+from tokamak_neutron_source.energy_data import TT_N_SPECTRUM
 from tokamak_neutron_source.reactions import AneutronicReactions, Reactions
 from tokamak_neutron_source.reactivity import AllReactions
 from tokamak_neutron_source.tools import raw_uc
@@ -98,9 +99,8 @@ def write_hdf5_source(  # noqa: PLR0914
 
     histograms = {}
     reaction_energy = {
-        Reactions.D_T: np.atleast1d(raw_uc(E_DT_NEUTRON, "J", "MeV")),
-        Reactions.D_D: np.atleast1d(raw_uc(E_DD_NEUTRON, "J", "MeV")),
-        Reactions.T_T: np.atleast1d(raw_uc(E_TT_NEUTRON, "J", "MeV")),
+        Reactions.D_T: np.atleast_1d(raw_uc(E_DT_NEUTRON, "J", "MeV")),
+        Reactions.D_D: np.atleast_1d(raw_uc(E_DD_NEUTRON, "J", "MeV"))
     }
     # TODO @je-cook: Is this needed or could we use reaction.name?
     reaction_sn = {Reactions.D_T: "DTn", Reactions.D_D: "DDn", Reactions.T_T: "TTn"}
@@ -119,22 +119,37 @@ def write_hdf5_source(  # noqa: PLR0914
             prt_name = f"var_{r_name}.prt_p"
             pos_r_name = f"var_{r_name}.pos_r"
 
-            histograms[erg_name] = Histogram(
-                name=erg_name,
-                property="energy",
-                dimension="e",
-                type="scalar",
-                value=reaction_energy[reaction],
-                unit="MeV",
-                children=[prt_name],
-            )
+            # Energy is a scalar for DD & DT, but a distribution for TT
+            if reaction == Reactions.T_T: 
+                bins, values = TT_N_SPECTRUM(0)
+                histograms[erg_name] = Histogram(
+                    name=erg_name,
+                    property="energy",
+                    dimension="e",
+                    type="histogram",
+                    interpolation="linear",
+                    bins=raw_uc(bins, "keV", "MeV"),
+                    value=values,
+                    unit="MeV",
+                    children=[prt_name for x in values],
+                )
+            else:
+                histograms[erg_name] = Histogram(
+                    name=erg_name,
+                    property="energy",
+                    dimension="e",
+                    type="scalar",
+                    value=reaction_energy[reaction],
+                    unit="MeV",
+                    children=[prt_name],
+                )
 
             histograms[prt_name] = Histogram(
                 name=prt_name,
                 property="particle",
                 dimension="p",
                 type="scalar",
-                value=np.atleast1d(reaction.num_neutrons),  # neutron
+                value=np.atleast_1d(1.0),  # neutron ID
                 children=[pos_r_name],
             )
 
