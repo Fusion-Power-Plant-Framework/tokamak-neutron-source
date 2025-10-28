@@ -97,6 +97,11 @@ def _plot_show_and_close_class(request):
 
 @pytest.fixture
 def jetto_skip():
-    with pytest.raises(ModuleNotFoundError, match="jetto_tools"):
+    try:
         import jetto_tools  # noqa: F401, PLC0415
-    pytest.importorskip("jetto_skip")
+
+    except ModuleNotFoundError as mnf:
+        if "jetto_tools" in mnf.msg:
+            pytest.importorskip("jetto_skip")
+        else:
+            raise
