@@ -27,6 +27,13 @@ def pytest_addoption(parser):
         help="switch on interactive plotting in tests",
     )
 
+    parser.addoption(
+        "--force-optional",
+        action="store_true",
+        default=False,
+        help="force optional tests to run",
+    )
+
 
 def pytest_configure(config):
     """Configures pytest"""
@@ -96,12 +103,12 @@ def _plot_show_and_close_class(request):
 
 
 @pytest.fixture
-def jetto_skip():
+def jetto_skip(request):
     try:
         import jetto_tools  # noqa: F401, PLC0415
 
     except ModuleNotFoundError as mnf:
-        if "jetto_tools" in mnf.msg:
+        if "jetto_tools" in mnf.msg and not request.config.option.force_optional:
             pytest.importorskip("jetto_skip")
         else:
             raise
