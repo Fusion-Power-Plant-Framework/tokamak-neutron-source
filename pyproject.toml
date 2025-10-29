@@ -47,7 +47,7 @@ Issues        = "https://github.com/Fusion-Power-Plant-Framework/tokamak-neutron
 
 [project.optional-dependencies]
 openmc = ["openmc"]
-jetto = ["jetto_tools == 1.8.13"]
+jetto = ["jetto_tools >= 2.0.9"]
 dev = ["pre-commit", "ruff", "ty"]
 test = [
   "pytest",

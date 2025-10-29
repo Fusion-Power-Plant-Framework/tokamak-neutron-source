@@ -73,7 +73,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Run pytest
-        run: hatch run test_optional.py${{ matrix.python-version }}:tests-cov
+        run: hatch run test_optional.py${{ matrix.python-version }}:tests-cov --force-optional
 
   integration:
     runs-on: ubuntu-latest
