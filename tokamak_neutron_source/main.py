@@ -260,17 +260,23 @@ class TokamakNeutronSource:
             self.strength,
         )
 
-    def to_h5_source(self):
+    def to_h5_source(self, filename):
         """
         Create a source in the HDF5 format such that the full distribution of neutron
         energies and position
-
-        Returns
-        -------
-        :
-            H5 format
         """
-        raise NotImplementedError
+        from tokamak_neutron_source.hdf5_interface import (  # noqa: PLC0415
+            write_hdf5_source,
+        )
+
+        write_hdf5_source(
+            filename,
+            self.x,
+            self.z,
+            self.cell_side_length,
+            self.temperature,
+            self.strength,
+        )
 
     def plot(
         self, reactions: list[AllReactions] | None = None
