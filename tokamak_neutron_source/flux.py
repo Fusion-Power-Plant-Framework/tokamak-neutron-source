@@ -591,7 +591,6 @@ class EQDSKFluxInterpolator(FluxInterpolator):
         if levels is None:
             levels = np.linspace(0, 1, 10)
         ax.contour(self.x, self.z, self._psi_norm, levels=levels, cmap="viridis")
-        ax.plot(self._o_point.x, self._o_point.z, marker="o", color="b")
         return ax
 
 
@@ -772,8 +771,8 @@ class FluxMap:
         lcfs = parameterisation.flux_surface(1.0, n_points)
         o_point = FluxPoint(
             parameterisation.lcfs_info.r_0 + parameterisation.lcfs_info.shafranov_shift,
+            parameterisation.lcfs_info.z_0,
             0.0,
-            1.0,
         )
         interpolator = ParameterisationInterpolator(
             parameterisation,
@@ -874,6 +873,7 @@ class FluxMap:
             f = ax.get_figure()
         self.interpolator.plot_normalised_flux(ax, levels=levels)
         ax.plot(self.lcfs.x, self.lcfs.z, color="r", lw=2)
+        ax.plot(self.o_point.x, self.o_point.z, marker="o", color="b")
         ax.set_xlabel("x [m]")
         ax.set_ylabel("z [m]")
         ax.set_aspect("equal")
