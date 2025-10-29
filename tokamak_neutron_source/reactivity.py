@@ -241,7 +241,7 @@ def _reactivity_from_xs(
 
     Parameters
     ----------
-    temp_keV:
+    temp_kev:
         Temperature [keV]
     xs:
         The reaction cross section data
