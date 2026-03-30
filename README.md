@@ -37,4 +37,3 @@ A neutron source from some arbitrary profiles and a free-boundary equilibrium:
 A neutron source from some typical parameterised profiles and a Fausser flux surface parameterisation:
 
 ![](documentation/source/fausser_source.svg)
-
