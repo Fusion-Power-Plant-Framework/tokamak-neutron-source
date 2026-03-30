@@ -30,10 +30,11 @@ Equilibrium information can be specified via an EQDSK file or as a parameterisat
 
 A source object can be used to create an idiomatic source for use in [OpenMC](https://openmc.org/) or exported as an sdef or h5 file for use in OpenMC and [MCNP6](https://mcnp.lanl.gov/).
 
+A neutron source from some arbitrary profiles and a free-boundary equilibrium:
+
+![](documentation/source/eqdsk_source.svg)
+
 A neutron source from some typical parameterised profiles and a Fausser flux surface parameterisation:
 
 ![](documentation/source/fausser_source.svg)
 
-A neutron source from some arbitrary profiles and a free-boundary equilibrium:
-
-![](documentation/source/eqdsk_source.svg)
