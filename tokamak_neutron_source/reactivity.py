@@ -200,21 +200,20 @@ def _reactivity_channel_bosch_hale(
             f"{np.min(temp_kev):.3f}keV -- {np.max(temp_kev):.3f} is detected!",
             stacklevel=4,
         )
-    else:
-        if np.min(temp_kev) < data.t_min:
-            logger.warning(
-                f"The Bosch-Hale parameterisation for reaction {data.name} is only valid "
-                f"between {data.t_min} and {data.t_max} keV; but out of range energies "
-                f"{np.min(temp_kev):.3f}keV detected!",
-                stacklevel=4,
-            )
-        if np.max(temp_kev) > data.t_max:
-            logger.warning(
-                f"The Bosch-Hale parameterisation for reaction {data.name} is only valid "
-                f"between {data.t_min} and {data.t_max} keV; but out of range energies "
-                f"{np.max(temp_kev):.3f} is detected!",
-                stacklevel=4,
-            )
+    elif np.min(temp_kev) < data.t_min:
+        logger.warning(
+            f"The Bosch-Hale parameterisation for reaction {data.name} is only valid "
+            f"between {data.t_min} and {data.t_max} keV; but out of range energies "
+            f"{np.min(temp_kev):.3f}keV detected!",
+            stacklevel=4,
+        )
+    elif np.max(temp_kev) > data.t_max:
+        logger.warning(
+            f"The Bosch-Hale parameterisation for reaction {data.name} is only valid "
+            f"between {data.t_min} and {data.t_max} keV; but out of range energies "
+            f"{np.max(temp_kev):.3f} is detected!",
+            stacklevel=4,
+        )
     # mask calculation to avoid division by zero
     safe = temp_kev > 0
 
