@@ -77,27 +77,36 @@ def get_x_dist(dist) -> npt.NDArray[np.float64]:
 
 @pytest.mark.integration
 @pytest.mark.parametrize("composition_dict", [dt_comp])
-def test_openmc_source_conversion(composition_dict: dict):
+@pytest.mark.parametrize("start_and_end_angles", [(0.0, 360.0), (0.0, 22.5)])
+def test_openmc_source_conversion(
+    composition_dict: dict, start_and_end_angles: tuple[float, float]
+):
     """
     Check that neutrons are produced in the correct locations.
     """
+    start_angle, end_angle = start_and_end_angles
     source = make_source(composition_dict)
-    openmc_source = source.to_openmc_source()
+    openmc_source = source.to_openmc_source(start_angle=start_angle, end_angle=end_angle)
     lcfs = source.flux_map.lcfs
     lower_lim_r, upper_lim_r = min(lcfs.x), max(lcfs.x)
     lower_lim_z, upper_lim_z = min(lcfs.z), max(lcfs.z)
     min_r, max_r, min_z, max_z = [], [], [], []
+    min_phi, max_phi = [], []
     dx, dz = source.cell_side_length, source.cell_side_length
     for src in openmc_source:
         min_r.append(get_x_dist(src.space.r).min() / 100)
         max_r.append(get_x_dist(src.space.r).max() / 100)
         min_z.append(get_x_dist(src.space.z).min() / 100)
         max_z.append(get_x_dist(src.space.z).max() / 100)
+        min_phi.append(get_x_dist(src.space.phi).min())
+        max_phi.append(get_x_dist(src.space.phi).max())
 
     assert lower_lim_r - dx <= min(min_r), "Sensible minimum radius"
     assert max(max_r) <= upper_lim_r + dx, "Sensible maximum radius"
     assert lower_lim_z - dz <= min(min_z), "Sensible minimum height"
     assert max(max_z) <= upper_lim_z + dz, "Sensible maximum height"
+    assert np.isclose(min(min_phi), np.deg2rad(start_angle)), "Sensible minimum phi"
+    assert np.isclose(min(min_phi), np.deg2rad(end_angle)), "Sensible maximum phi"
 
 
 @pytest.mark.integration
