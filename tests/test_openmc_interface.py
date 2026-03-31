@@ -106,7 +106,7 @@ def test_openmc_source_conversion(
     assert lower_lim_z - dz <= min(min_z), "Sensible minimum height"
     assert max(max_z) <= upper_lim_z + dz, "Sensible maximum height"
     assert np.isclose(min(min_phi), np.deg2rad(start_angle)), "Sensible minimum phi"
-    assert np.isclose(min(min_phi), np.deg2rad(end_angle)), "Sensible maximum phi"
+    assert np.isclose(max(max_phi), np.deg2rad(end_angle)), "Sensible maximum phi"
 
 
 @pytest.mark.integration
