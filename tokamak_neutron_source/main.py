@@ -213,6 +213,8 @@ class TokamakNeutronSource:
     def to_openmc_source(
         self,
         energy_method: EnergySpectrumMethod = EnergySpectrumMethod.AUTO,
+        start_angle: float = 0.0,
+        end_angle: float = 360.0,
     ) -> list[IndependentSource]:
         """
         Create an OpenMC tokamak neutron source.
@@ -221,6 +223,10 @@ class TokamakNeutronSource:
         ----------
         energy_method:
             Which method to use when calculating neutron spectra
+        start_angle:
+            Toroidal starting angle for sampling neutron emission in [degrees]
+        end_angle:
+            Toroidal end angle for sampling neutron emission in [degrees]
 
         Returns
         -------
@@ -239,6 +245,8 @@ class TokamakNeutronSource:
             self.strength,
             self.source_rate,
             energy_method,
+            start_angle,
+            end_angle,
         )
 
     def to_sdef_card(self, filename) -> str:

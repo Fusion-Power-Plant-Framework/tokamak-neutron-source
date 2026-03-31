@@ -62,12 +62,14 @@ def get_neutron_energy_spectrum(
     return Tabular(energy_ev, probability, interpolation="linear-linear")
 
 
-def make_openmc_ring_source(
+def make_openmc_ring_source(  # noqa: PLR0913, PLR0917
     r: float,
     z: float,
     half_cell_length: float,
     energy_distribution: Univariate,
     strength: float,
+    start_angle: float = 0.0,
+    end_angle: float = 360.0,
 ) -> IndependentSource:
     """
     Make a single OpenMC ring source with a square cross-section.
@@ -84,6 +86,10 @@ def make_openmc_ring_source(
         Neutron energy distribution
     strength:
         Strength of the source [number of neutrons]
+    start_angle:
+        Toroidal starting angle for sampling neutron emission in [degrees]
+    end_angle:
+        Toroidal end angle for sampling neutron emission in [degrees]
 
     Returns
     -------
@@ -95,6 +101,8 @@ def make_openmc_ring_source(
     The z values within the square cell are uniform, and the r values vary
     linearly with increasing radius.
     """
+    start_angle = np.deg2rad(start_angle)
+    end_angle = np.deg2rad(end_angle)
     if strength > 0:
         r_in, r_out = r - half_cell_length, r + half_cell_length
         z_down, z_up = z - half_cell_length, z + half_cell_length
@@ -105,7 +113,7 @@ def make_openmc_ring_source(
             energy=energy_distribution,
             space=CylindricalIndependent(
                 r=Tabular(r_lim_cm, r_lim_prob, interpolation="linear-linear"),
-                phi=Uniform(0, 2 * np.pi),
+                phi=Uniform(start_angle, end_angle),
                 z=Uniform(*z_lim_cm),
                 origin=(0.0, 0.0, 0.0),
             ),
@@ -123,6 +131,8 @@ def make_openmc_full_combined_source(  # noqa: PLR0913, PLR0917
     strength: dict[AllReactions, npt.NDArray],
     source_rate: float,
     energy_spectrum_method: EnergySpectrumMethod = EnergySpectrumMethod.AUTO,
+    start_angle: float = 0.0,
+    end_angle: float = 360.0,
 ) -> IndependentSource:
     """
     Make an OpenMC source combining multiple reactions across the whole plasma.
@@ -143,6 +153,10 @@ def make_openmc_full_combined_source(  # noqa: PLR0913, PLR0917
         Total source rate [neutrons/s]
     energy_spectrum_method:
         Which method to use when calculating neutron spectra
+    start_angle:
+        Toroidal starting angle for sampling neutron emission in [degrees]
+    end_angle:
+        Toroidal end angle for sampling neutron emission in [degrees]
 
     Returns
     -------
@@ -181,6 +195,8 @@ def make_openmc_full_combined_source(  # noqa: PLR0913, PLR0917
                 l_2,
                 distribution,
                 local_strength / source_rate,
+                start_angle,
+                end_angle,
             )
             if source is not None:
                 sources.append(source)
