@@ -8,6 +8,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+import imas
 import numba as nb
 import numpy as np
 import numpy.typing as npt
@@ -68,6 +69,35 @@ def get_tns_path(path: str = "", subfolder: str = "tokamak_neutron_source") -> P
     main_path = _get_relpath(root, subfolder)
     return Path(_get_relpath(main_path, path))
 
+def enforce_convention(eq: EQDSKInterface) -> EQDSKInterface:
+    """
+    Enforces the local convention that psi on axis is higher than
+    psi on the boundary. 
+    
+    Parameters
+    ----------
+    eq:
+        An EQDSKInterface.
+    
+    Returns
+    -------
+    :
+        The EQDSKInterface
+    
+    Notes
+    -----
+    This way, we do not need to ask the user
+    what COCOS convention they are using.
+
+    The actual values of psi are irrelevant here, and may be changed
+    to enforce this convention.
+    """
+    offset = eq.psimag
+    eq.psi = offset - eq.psi
+    eq.psibdry = offset - eq.psibdry
+    eq.psimag = 0.0
+    return eq
+
 
 def load_eqdsk(file: str | EQDSKInterface) -> EQDSKInterface:
     """
@@ -82,24 +112,30 @@ def load_eqdsk(file: str | EQDSKInterface) -> EQDSKInterface:
     -------
     :
         The EQDSKInterface object.
-
-    Notes
-    -----
-    Enforces the local convention that psi on axis is higher than
-    psi on the boundary. This way, we do not need to ask the user
-    what COCOS convention they are using.
-
-    The actual values of psi are irrelevant here, and may be changed
-    to enforce this convention.
     """
     eq = EQDSKInterface.from_file(file, no_cocos=True) if isinstance(file, str) else file
+    
+    return enforce_convention(eq) if eq.psimag < eq.psibdry else eq
 
-    if eq.psimag < eq.psibdry:
-        offset = eq.psimag
-        eq.psi = offset - eq.psi
-        eq.psibdry = offset - eq.psibdry
-        eq.psimag = 0.0
-    return eq
+
+def load_imas(file: str | imas.DBEntry) -> EQDSKInterface:
+    """
+    Load an IMAS db.
+
+    Parameters
+    ----------
+    file:
+        The path to the IMAS db.
+
+    Returns
+    -------
+    :
+        The EQDSKInterface object.
+    """
+    db = imas.DBEntry(file, mode="r") if isinstance(file, str) else file
+    eq = EQDSKInterface.from_imas(db)
+
+    return enforce_convention(eq) if eq.psimag < eq.psibdry else eq
 
 
 @dataclass
