@@ -3,22 +3,35 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 """Flux information."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from functools import cached_property
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
-import imas
 from contourpy import LineType, contour_generator
-from eqdsk import EQDSKInterface
 from scipy.interpolate import CloughTocher2DInterpolator, RectBivariateSpline, interp1d
 
 from tokamak_neutron_source.error import FluxSurfaceError
-from tokamak_neutron_source.tools import get_area_2d, get_centroid_2d, load_eqdsk, load_imas
+from tokamak_neutron_source.tools import (
+    IMAS_AVAIL,
+    get_area_2d,
+    get_centroid_2d,
+    load_eqdsk,
+    load_imas,
+)
+
+if TYPE_CHECKING:
+    from eqdsk import EQDSKInterface
+
+if IMAS_AVAIL:
+    from tokamak_neutron_source.tools import DBEntry
 
 __all__ = [
     "ClosedFluxSurface",
@@ -703,7 +716,7 @@ class FluxMap:
     @classmethod
     def from_file(
         cls,
-        file: str | EQDSKInterface | imas.DBEntry,
+        file: str | EQDSKInterface | DBEntry,
         flux_convention: FluxConvention = FluxConvention.LINEAR,
     ):
         """
@@ -712,7 +725,7 @@ class FluxMap:
 
         Parameters
         ----------
-        file_name:
+        file:
             EQDSK file name, EQDSKInterface, IMAS URI,
              or IMAS database.
         flux_convention:
@@ -723,9 +736,13 @@ class FluxMap:
         flux_map:
             FluxMap from the EQDSK or IMAS
         """
-        if (isinstance(file, imas.DBEntry)
-                or file.startswith("imas:")
-                or file.endswith(".nc")):
+        if IMAS_AVAIL and (
+            isinstance(file, DBEntry)
+            or (
+                isinstance(file, str)
+                and (file.startswith("imas:") or file.endswith(".nc"))
+            )
+        ):
             eq = load_imas(file)
         else:
             eq = load_eqdsk(file)

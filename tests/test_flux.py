@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024-present Tokamak Neutron Source Maintainers
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
+from __future__ import annotations
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -153,7 +155,7 @@ def flux_map(request):
         convention = FluxConvention.SQRT
     else:
         convention = FluxConvention.LINEAR
-    return FluxMap.from_eqdsk(request.param, flux_convention=convention)
+    return FluxMap.from_file(request.param, flux_convention=convention)
 
 
 @pytest.mark.usefixtures("flux_map")

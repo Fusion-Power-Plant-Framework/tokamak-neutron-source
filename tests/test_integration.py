@@ -192,7 +192,7 @@ def run_sim_and_track_particles(request, omc_path):
     density_profile = ParabolicPedestalProfile(0.8e20, 0.5e19, 0.5e17, 1.0, 2.0, 0.95)
     rho_profile = np.linspace(0, 1, 30)
 
-    flux_map = FluxMap.from_eqdsk("tests/test_data/eqref_OOB.json")
+    flux_map = FluxMap.from_file("tests/test_data/eqref_OOB.json")
     source = TokamakNeutronSource(
         transport=TransportInformation.from_parameterisations(
             ion_temperature_profile=temperature_profile,

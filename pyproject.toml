@@ -66,6 +66,7 @@ docs = [
   "mkdocs-jupyter",
   "jupytext",
 ]
+imas = ["imas"]
 
 [tool.hatch.envs.default]
 features = ["test", "lint"]

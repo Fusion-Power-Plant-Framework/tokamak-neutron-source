@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2024-present Tokamak Neutron Source Maintainers
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
+from __future__ import annotations
 
 import numpy as np
 import pytest
@@ -21,7 +22,7 @@ ion_temperature_profile = ParabolicPedestalProfile(
 )  # [keV]
 fuel_density_profile = ParabolicPedestalProfile(0.8e20, 0.5e19, 0.5e17, 1.0, 2.0, 0.95)
 rho_profile = np.linspace(0, 1, 30)
-flux_map = FluxMap.from_eqdsk("tests/test_data/eqref_OOB.json")
+flux_map = FluxMap.from_file("tests/test_data/eqref_OOB.json")
 
 dd_comp = {"D": 1.0, "T": 0.0}
 dt_comp = {"D": 0.5, "T": 0.5}

@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024-present Tokamak Neutron Source Maintainers
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
+from __future__ import annotations
+
 from pathlib import Path
 
 import numpy as np
@@ -41,8 +43,8 @@ flux_maps = [
         ),
         rho_profile=rho_profile,
     ),
-    FluxMap.from_eqdsk("tests/test_data/eqref_OOB.json"),
-    FluxMap.from_eqdsk(
+    FluxMap.from_file("tests/test_data/eqref_OOB.json"),
+    FluxMap.from_file(
         EQDSKInterface.from_file("tests/test_data/eqref_OOB.json", no_cocos=True)
     ),
 ]
@@ -200,7 +202,7 @@ class TestJETTOFusionBenchmark:
         data = load_jsp(self.jsp_path)
         source = TokamakNeutronSource(
             TransportInformation.from_jetto(self.jsp_path),
-            FluxMap.from_eqdsk(self.eqdsk_path, flux_convention=FluxConvention.SQRT),
+            FluxMap.from_file(self.eqdsk_path, flux_convention=FluxConvention.SQRT),
             source_type=[Reactions.D_T],
             cell_side_length=0.05,
         )
