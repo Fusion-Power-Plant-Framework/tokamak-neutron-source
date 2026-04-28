@@ -46,7 +46,7 @@ source = TokamakNeutronSource(
         rho_profile=rho_profile,
         fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
     ),
-    flux_map=FluxMap.from_eqdsk("tests/test_data/eqref_OOB.json"),
+    flux_map=FluxMap.from_eqdsk("../tests/test_data/eqref_OOB.json"),
     cell_side_length=0.05,
 )
 f, ax = source.plot()
@@ -67,3 +67,5 @@ f, ax = source.plot()
 print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
 source.normalise_fusion_power(2.2e9)
 print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
+
+# %%
