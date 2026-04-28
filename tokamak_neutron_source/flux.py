@@ -12,12 +12,13 @@ from functools import cached_property
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
+import imas
 from contourpy import LineType, contour_generator
 from eqdsk import EQDSKInterface
 from scipy.interpolate import CloughTocher2DInterpolator, RectBivariateSpline, interp1d
 
 from tokamak_neutron_source.error import FluxSurfaceError
-from tokamak_neutron_source.tools import get_area_2d, get_centroid_2d, load_eqdsk
+from tokamak_neutron_source.tools import get_area_2d, get_centroid_2d, load_eqdsk, load_imas
 
 __all__ = [
     "ClosedFluxSurface",
@@ -700,27 +701,35 @@ class FluxMap:
     interpolator: FluxInterpolator
 
     @classmethod
-    def from_eqdsk(
+    def from_file(
         cls,
-        file_name: str | EQDSKInterface,
+        file: str | EQDSKInterface | imas.DBEntry,
         flux_convention: FluxConvention = FluxConvention.LINEAR,
     ):
         """
-        Initialise a FluxMap from an EQDSK.
+        Initialise a FluxMap from an EQDSK
+        or IMAS.
 
         Parameters
         ----------
         file_name:
-            EQDSK file name (or the EQDSKInterface)
+            EQDSK file name, EQDSKInterface, IMAS URI,
+             or IMAS database.
         flux_convention:
             Flux normalisation convention
 
         Returns
         -------
         flux_map:
-            FluxMap from the EQDSK
+            FluxMap from the EQDSK or IMAS
         """
-        eq = load_eqdsk(file_name)
+        if (isinstance(file, imas.DBEntry)
+                or file.startswith("imas:")
+                or file.endswith(".nc")):
+            eq = load_imas(file)
+        else:
+            eq = load_eqdsk(file)
+
         x, z = np.meshgrid(eq.x, eq.z, indexing="ij")
 
         lcfs = ClosedFluxSurface(eq.xbdry, eq.zbdry)
