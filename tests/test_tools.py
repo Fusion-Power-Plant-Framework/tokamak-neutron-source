@@ -7,7 +7,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 from eqdsk import EQDSKInterface
-from imas import DBEntry
 
 from tokamak_neutron_source.tools import (
     get_centroid_2d,
@@ -52,8 +51,9 @@ class TestLoadEQDSK:
 
 
 class TestLoadIMAS:
+    imas = pytest.importorskip("imas")
     eq = EQDSKInterface.from_imas(
-        DBEntry(uri="tests/test_data/eqref_OOB_out.nc", mode="r")
+        imas.DBEntry(uri="tests/test_data/eqref_OOB_out.nc", mode="r")
     )
 
     @pytest.mark.parametrize(

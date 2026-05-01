@@ -17,6 +17,7 @@ from tokamak_neutron_source.flux import (
     FluxMap,
     LCFSInformation,
 )
+from tokamak_neutron_source.tools import IMAS_AVAIL
 
 
 def circle(r0, z0, radius, n_points):
@@ -154,6 +155,10 @@ TEST_DATA = Path(__file__).parent / "test_data"
 def flux_map(request):
     if request.param.startswith("jetto"):
         convention = FluxConvention.SQRT
+    elif (
+        request.param.endswith(".nc") or request.param.startswith("imas:")
+    ) and not IMAS_AVAIL:
+        pytest.skip("IMAS is not available for this file")
     else:
         convention = FluxConvention.LINEAR
     return FluxMap.from_file(request.param, flux_convention=convention)

@@ -724,8 +724,7 @@ class FluxMap:
         flux_convention: FluxConvention = FluxConvention.LINEAR,
     ):
         """
-        Initialise a FluxMap from an EQDSK
-        or IMAS.
+        Initialise a FluxMap from an EQDSK or IMAS.
 
         Parameters
         ----------
@@ -739,7 +738,12 @@ class FluxMap:
         -------
         flux_map:
             FluxMap from the EQDSK or IMAS
-        """
+
+        Raises
+        ------
+        ImportError:
+            If IMAS is not available, but an IMAS file name is used.
+        """  # noqa: DOC501
         if IMAS_AVAIL and (
             isinstance(file, DBEntry)
             or (
@@ -748,6 +752,13 @@ class FluxMap:
             )
         ):
             eq = load_imas(file)
+        elif not IMAS_AVAIL and (
+            isinstance(file, str) and (file.startswith("imas:") or file.endswith(".nc"))
+        ):
+            raise ImportError(
+                "IMAS is not available.\n"
+                "Please install IMAS or use a different file format."
+            )
         else:
             eq = load_eqdsk(file)
 
