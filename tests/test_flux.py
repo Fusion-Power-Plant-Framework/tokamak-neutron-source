@@ -141,13 +141,14 @@ class TestFluxMapFromParameterisation:
 TEST_DATA = Path(__file__).parent / "test_data"
 
 
-# Fixture yields one FluxMap per eqdsk_name
+# Fixture yields one FluxMap per file_name
 @pytest.fixture(
     scope="class",
     params=[
         Path(TEST_DATA, "DN-DEMO_eqref.json").as_posix(),
         Path(TEST_DATA, "eqref_OOB.json").as_posix(),
         Path(TEST_DATA, "jetto_600_100000.eqdsk").as_posix(),
+        Path(TEST_DATA, "eqref_OOB_out.nc").as_posix(),
     ],
 )
 def flux_map(request):
@@ -159,7 +160,7 @@ def flux_map(request):
 
 
 @pytest.mark.usefixtures("flux_map")
-class TestFluxMapFromEQDSK:
+class TestFluxMapFromFile:
     def test_flux_surface_single(self, flux_map):
         psi_norm = np.linspace(0, 1, 5)
         volume = -np.inf

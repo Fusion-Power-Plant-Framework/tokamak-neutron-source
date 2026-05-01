@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 from eqdsk import EQDSKInterface
+from imas import DBEntry
 
 from tokamak_neutron_source.tools import (
     get_centroid_2d,
@@ -40,6 +41,20 @@ class TestGetCentroid:
 
 class TestLoadEQDSK:
     eq = EQDSKInterface.from_file("tests/test_data/eqref_OOB.json", from_cocos=7)
+
+    @pytest.mark.parametrize(
+        "cocos", [1, 2, 3, 4, 5, 6, 8, 11, 12, 13, 14, 15, 16, 17, 18]
+    )
+    def test_load_psi(self, cocos):
+        neq = deepcopy(self.eq).to_cocos(cocos)
+        eq = load_eqdsk(neq)
+        assert eq.psimag > eq.psibdry
+
+
+class TestLoadIMAS:
+    eq = EQDSKInterface.from_imas(
+        DBEntry(uri="tests/test_data/eqref_OOB_out.nc", mode="r")
+    )
 
     @pytest.mark.parametrize(
         "cocos", [1, 2, 3, 4, 5, 6, 8, 11, 12, 13, 14, 15, 16, 17, 18]
