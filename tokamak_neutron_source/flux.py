@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass, field
@@ -32,6 +33,9 @@ if TYPE_CHECKING:
 
 if IMAS_AVAIL:
     from tokamak_neutron_source.tools import DBEntry
+
+logger = logging.getLogger(__name__)
+
 
 __all__ = [
     "ClosedFluxSurface",
@@ -766,6 +770,26 @@ class FluxMap:
         interpolator = EQDSKFluxInterpolator(x, z, psi_norm, o_point)
 
         return cls(lcfs, o_point, interpolator)
+
+    @classmethod
+    def from_eqdsk(
+        cls,
+        file: str | EQDSKInterface | DBEntry,
+        flux_convention: FluxConvention = FluxConvention.LINEAR,
+    ):
+        """
+        Old function name for from_file,
+        when it only handled EQDSK files.
+
+        Returns
+        -------
+        Call to from_file, which returns a FluxMap
+        """
+        logger.warning(
+            "This function will be deprecated before v1.0.\n"
+            "Please use from_file instead.",
+        )
+        return cls.from_file(cls, file, flux_convention)
 
     @classmethod
     def from_parameterisation(
