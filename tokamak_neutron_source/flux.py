@@ -722,6 +722,7 @@ class FluxMap:
         cls,
         file: str | EQDSKInterface | DBEntry,
         flux_convention: FluxConvention = FluxConvention.LINEAR,
+        **kwargs,
     ):
         """
         Initialise a FluxMap from an EQDSK or IMAS.
@@ -751,7 +752,7 @@ class FluxMap:
                 and (file.startswith("imas:") or file.endswith(".nc"))
             )
         ):
-            eq = load_imas(file)
+            eq = load_imas(file, **kwargs)
         elif not IMAS_AVAIL and (
             isinstance(file, str) and (file.startswith("imas:") or file.endswith(".nc"))
         ):

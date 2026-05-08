@@ -62,7 +62,9 @@ source_imas = TokamakNeutronSource(
         rho_profile=rho_profile,
         fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
     ),
-    flux_map=FluxMap.from_file("../tests/test_data/eqref_OOB_out.nc"),
+    flux_map=FluxMap.from_file(
+        "imas:hdf5?path=../tests/test_data/imasdb", dd_version="3.39.0"
+    ),
     cell_side_length=0.05,
 )
 f, ax = source_imas.plot()

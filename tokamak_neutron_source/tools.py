@@ -127,7 +127,7 @@ def load_eqdsk(file: str | EQDSKInterface) -> EQDSKInterface:
     return enforce_convention(eq) if eq.psimag < eq.psibdry else eq
 
 
-def load_imas(file: str | DBEntry) -> EQDSKInterface:
+def load_imas(file: str | DBEntry, **kwargs) -> EQDSKInterface:
     """
     Load an IMAS db.
 
@@ -141,7 +141,7 @@ def load_imas(file: str | DBEntry) -> EQDSKInterface:
     :
         The EQDSKInterface object.
     """
-    db = DBEntry(file, mode="r") if isinstance(file, str) else file
+    db = DBEntry(file, mode="r", **kwargs) if isinstance(file, str) else file
     eq = EQDSKInterface.from_imas(db)
 
     return enforce_convention(eq) if eq.psimag < eq.psibdry else eq
