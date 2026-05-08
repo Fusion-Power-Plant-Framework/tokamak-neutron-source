@@ -3,7 +3,10 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 from __future__ import annotations
 
+import os
 from pathlib import Path
+
+os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -146,22 +149,26 @@ TEST_DATA = Path(__file__).parent / "test_data"
 @pytest.fixture(
     scope="class",
     params=[
-        Path(TEST_DATA, "DN-DEMO_eqref.json").as_posix(),
-        Path(TEST_DATA, "eqref_OOB.json").as_posix(),
-        Path(TEST_DATA, "jetto_600_100000.eqdsk").as_posix(),
-        Path(TEST_DATA, "eqref_OOB_out.nc").as_posix(),
+        {"file": Path(TEST_DATA, "DN-DEMO_eqref.json").as_posix()},
+        {"file": Path(TEST_DATA, "eqref_OOB.json").as_posix()},
+        {"file": Path(TEST_DATA, "jetto_600_100000.eqdsk").as_posix()},
+        {"file": Path(TEST_DATA, "eqref_OOB_out.nc").as_posix()},
+        # Using literal as 'Path' removes the (very necessary) prefix
+        {
+            "file": f"imas:hdf5?path={TEST_DATA}/imasdb",
+            "dd_version": "3.39.0",
+        },
     ],
 )
 def flux_map(request):
-    if request.param.startswith("jetto"):
+    file = request.param["file"]
+    if file.startswith("jetto"):
         convention = FluxConvention.SQRT
-    elif (
-        request.param.endswith(".nc") or request.param.startswith("imas:")
-    ) and not IMAS_AVAIL:
+    elif (file.endswith(".nc") or file.startswith("imas:")) and not IMAS_AVAIL:
         pytest.skip("IMAS is not available for this file")
     else:
         convention = FluxConvention.LINEAR
-    return FluxMap.from_file(request.param, flux_convention=convention)
+    return FluxMap.from_file(**request.param, flux_convention=convention)
 
 
 @pytest.mark.usefixtures("flux_map")
