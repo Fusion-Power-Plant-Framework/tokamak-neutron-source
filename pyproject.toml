@@ -82,7 +82,7 @@ tests-cov  = "pytest --cov tokamak_neutron_source --cov-report html:htmlcov --co
 
 [tool.hatch.envs.test_optional]
 template = "test"
-features = ["jetto", "test"]
+features = ["jetto", "test", "imas"]
 
 [[tool.hatch.envs.test_optional.matrix]]
 python = ["3.10", "3.11", "3.12", "3.13"]

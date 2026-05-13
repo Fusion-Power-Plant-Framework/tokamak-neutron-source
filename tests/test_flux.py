@@ -3,10 +3,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 from __future__ import annotations
 
-import os
 from pathlib import Path
-
-os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 
 import matplotlib.pyplot as plt
 import numpy as np

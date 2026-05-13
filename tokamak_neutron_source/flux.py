@@ -798,7 +798,7 @@ class FluxMap:
         Call to from_file, which returns a FluxMap
         """
         logger.warning(
-            "This function will be deprecated before v1.0.\n"
+            "This function is deprecated and will be removed before v1.0.\n"
             "Please use from_file instead.",
         )
         return cls.from_file(cls, file, flux_convention)
