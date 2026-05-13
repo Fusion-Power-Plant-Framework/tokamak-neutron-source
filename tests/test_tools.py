@@ -50,6 +50,21 @@ class TestLoadEQDSK:
         assert eq.psimag > eq.psibdry
 
 
+class TestLoadIMAS:
+    imas = pytest.importorskip("imas")
+    eq = EQDSKInterface.from_imas(
+        imas.DBEntry(uri="tests/test_data/eqref_OOB_out.nc", mode="r")
+    )
+
+    @pytest.mark.parametrize(
+        "cocos", [1, 2, 3, 4, 5, 6, 8, 11, 12, 13, 14, 15, 16, 17, 18]
+    )
+    def test_load_psi(self, cocos):
+        neq = deepcopy(self.eq).to_cocos(cocos)
+        eq = load_eqdsk(neq)
+        assert eq.psimag > eq.psibdry
+
+
 TEST_DATA = Path(__file__).parent / "test_data"
 
 

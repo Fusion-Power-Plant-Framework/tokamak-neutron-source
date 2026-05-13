@@ -3,21 +3,39 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 """Flux information."""
 
+from __future__ import annotations
+
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from functools import cached_property
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 from contourpy import LineType, contour_generator
-from eqdsk import EQDSKInterface
 from scipy.interpolate import CloughTocher2DInterpolator, RectBivariateSpline, interp1d
 
 from tokamak_neutron_source.error import FluxSurfaceError
-from tokamak_neutron_source.tools import get_area_2d, get_centroid_2d, load_eqdsk
+from tokamak_neutron_source.tools import (
+    IMAS_AVAIL,
+    get_area_2d,
+    get_centroid_2d,
+    load_eqdsk,
+    load_imas,
+)
+
+if TYPE_CHECKING:
+    from eqdsk import EQDSKInterface
+
+if IMAS_AVAIL:
+    from tokamak_neutron_source.tools import DBEntry
+
+logger = logging.getLogger(__name__)
+
 
 __all__ = [
     "ClosedFluxSurface",
@@ -700,27 +718,51 @@ class FluxMap:
     interpolator: FluxInterpolator
 
     @classmethod
-    def from_eqdsk(
+    def from_file(
         cls,
-        file_name: str | EQDSKInterface,
+        file: str | EQDSKInterface | DBEntry,
         flux_convention: FluxConvention = FluxConvention.LINEAR,
+        **kwargs,
     ):
         """
-        Initialise a FluxMap from an EQDSK.
+        Initialise a FluxMap from an EQDSK or IMAS.
 
         Parameters
         ----------
-        file_name:
-            EQDSK file name (or the EQDSKInterface)
+        file:
+            EQDSK file name, EQDSKInterface, IMAS URI,
+             or IMAS database.
         flux_convention:
             Flux normalisation convention
 
         Returns
         -------
         flux_map:
-            FluxMap from the EQDSK
-        """
-        eq = load_eqdsk(file_name)
+            FluxMap from the EQDSK or IMAS
+
+        Raises
+        ------
+        ImportError:
+            If IMAS is not available, but an IMAS file name is used.
+        """  # noqa: DOC501
+        if IMAS_AVAIL and (
+            isinstance(file, DBEntry)
+            or (
+                isinstance(file, str)
+                and (file.startswith("imas:") or file.endswith(".nc"))
+            )
+        ):
+            eq = load_imas(file, **kwargs)
+        elif not IMAS_AVAIL and (
+            isinstance(file, str) and (file.startswith("imas:") or file.endswith(".nc"))
+        ):
+            raise ImportError(
+                "IMAS is not available.\n"
+                "Please install IMAS or use a different file format."
+            )
+        else:
+            eq = load_eqdsk(file)
+
         x, z = np.meshgrid(eq.x, eq.z, indexing="ij")
 
         lcfs = ClosedFluxSurface(eq.xbdry, eq.zbdry)
@@ -740,6 +782,26 @@ class FluxMap:
         interpolator = EQDSKFluxInterpolator(x, z, psi_norm, o_point)
 
         return cls(lcfs, o_point, interpolator)
+
+    @classmethod
+    def from_eqdsk(
+        cls,
+        file: str | EQDSKInterface | DBEntry,
+        flux_convention: FluxConvention = FluxConvention.LINEAR,
+    ):
+        """
+        Old function name for from_file,
+        when it only handled EQDSK files.
+
+        Returns
+        -------
+        Call to from_file, which returns a FluxMap
+        """
+        logger.warning(
+            "This function is deprecated and will be removed before v1.0.\n"
+            "Please use from_file instead.",
+        )
+        return cls.from_file(cls, file, flux_convention)
 
     @classmethod
     def from_parameterisation(

@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024-present Tokamak Neutron Source Maintainers
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
+from __future__ import annotations
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -15,6 +17,7 @@ from tokamak_neutron_source.flux import (
     FluxMap,
     LCFSInformation,
 )
+from tokamak_neutron_source.tools import IMAS_AVAIL
 
 
 def circle(r0, z0, radius, n_points):
@@ -139,25 +142,34 @@ class TestFluxMapFromParameterisation:
 TEST_DATA = Path(__file__).parent / "test_data"
 
 
-# Fixture yields one FluxMap per eqdsk_name
+# Fixture yields one FluxMap per file_name
 @pytest.fixture(
     scope="class",
     params=[
-        Path(TEST_DATA, "DN-DEMO_eqref.json").as_posix(),
-        Path(TEST_DATA, "eqref_OOB.json").as_posix(),
-        Path(TEST_DATA, "jetto_600_100000.eqdsk").as_posix(),
+        {"file": Path(TEST_DATA, "DN-DEMO_eqref.json").as_posix()},
+        {"file": Path(TEST_DATA, "eqref_OOB.json").as_posix()},
+        {"file": Path(TEST_DATA, "jetto_600_100000.eqdsk").as_posix()},
+        {"file": Path(TEST_DATA, "eqref_OOB_out.nc").as_posix()},
+        # Using literal as 'Path' removes the (very necessary) prefix
+        {
+            "file": f"imas:hdf5?path={TEST_DATA}/imasdb",
+            "dd_version": "3.39.0",
+        },
     ],
 )
 def flux_map(request):
-    if request.param.startswith("jetto"):
+    file = request.param["file"]
+    if file.startswith("jetto"):
         convention = FluxConvention.SQRT
+    elif (file.endswith(".nc") or file.startswith("imas:")) and not IMAS_AVAIL:
+        pytest.skip("IMAS is not available for this file")
     else:
         convention = FluxConvention.LINEAR
-    return FluxMap.from_eqdsk(request.param, flux_convention=convention)
+    return FluxMap.from_file(**request.param, flux_convention=convention)
 
 
 @pytest.mark.usefixtures("flux_map")
-class TestFluxMapFromEQDSK:
+class TestFluxMapFromFile:
     def test_flux_surface_single(self, flux_map):
         psi_norm = np.linspace(0, 1, 5)
         volume = -np.inf

@@ -18,7 +18,7 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-"""Example reading from eqdsk file"""
+"""Example reading from eqdsk and imas files"""
 # %%
 
 import numpy as np
@@ -32,7 +32,7 @@ from tokamak_neutron_source import (
 from tokamak_neutron_source.profile import ParabolicPedestalProfile
 
 # %% [markdown]
-# # Creation from an EQDSK file.
+# # Creation from an EQDSK or IMAS file.
 
 # %%
 temperature_profile = ParabolicPedestalProfile(25.0, 5.0, 0.1, 1.45, 2.0, 0.95)  # [keV]
@@ -46,11 +46,28 @@ source = TokamakNeutronSource(
         rho_profile=rho_profile,
         fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
     ),
-    flux_map=FluxMap.from_eqdsk("tests/test_data/eqref_OOB.json"),
+    flux_map=FluxMap.from_file("../tests/test_data/eqref_OOB.json"),
     cell_side_length=0.05,
 )
 f, ax = source.plot()
 
+# %% [markdown]
+# We can also load FluxMaps from IMAS databases
+
+# %%
+source_imas = TokamakNeutronSource(
+    transport=TransportInformation.from_parameterisations(
+        ion_temperature_profile=temperature_profile,
+        fuel_density_profile=density_profile,
+        rho_profile=rho_profile,
+        fuel_composition=FractionalFuelComposition(D=0.5, T=0.5),
+    ),
+    flux_map=FluxMap.from_file(
+        "imas:hdf5?path=../tests/test_data/imasdb", dd_version="3.39.0"
+    ),
+    cell_side_length=0.05,
+)
+f, ax = source_imas.plot()
 # %% [markdown]
 # # Normalising fusion power
 # We can calculate the total fusion power from the reactions specified.
@@ -67,3 +84,5 @@ f, ax = source.plot()
 print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
 source.normalise_fusion_power(2.2e9)
 print(f"Total fusion power: {source.calculate_total_fusion_power() / 1e9} GW")
+
+# %%
